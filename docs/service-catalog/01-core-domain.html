@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Core Domain — Service Catalog | My Learnings</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-logo" href="../index.html">⚡ <span>My</span>Learnings</a>
+  <div class="topnav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Service Catalog</a>
+  </div>
+</nav>
+<div class="page-layout">
+  <aside class="page-sidebar">
+    <h3>Navigation</h3>
+    <div class="sidebar-cat">Service Catalog</div><a class="sidebar-link" href="index.html">🏠 Service Catalog Home</a><a class="sidebar-link" href="00-overview.html">📐 Module Overview</a><a class="sidebar-link current-page" href="01-core-domain.html">🏗 Core Domain</a><a class="sidebar-link" href="02-valve-producer-scripts.html">⚙ Valve & Producers</a><a class="sidebar-link" href="03-variables-system.html">📋 Variables System</a><a class="sidebar-link" href="04-cache-db-metrics.html">💾 Cache & Infra</a><a class="sidebar-link" href="05-processors-graphql-search.html">🔌 Processors & API</a><a class="sidebar-link" href="06-appengine-builder-atf-templates-scoped.html">🛠 Builder & Templates</a><a class="sidebar-link" href="interactive-guide.html">🎬 Interactive Guide ↗</a><div class="sidebar-sep"></div><a class="sidebar-link" href="../index.html">← All Categories</a>
+  </aside>
+  <div class="page-content">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">›</span>
+      <a href="index.html">Service Catalog</a><span class="breadcrumb-sep">›</span>
+      <span>Core Domain</span>
+    </div>
+    <h1>Core Domain</h1>
+    <div class="page-meta">
+      <span class="meta-tag">glide-servicecatalog</span>
+      <span class="meta-tag">Catalog</span><span class="meta-tag">Category</span><span class="meta-tag">CatalogItem</span><span class="meta-tag">Cart</span>
+    </div>
+    <div class="md-body">
+<h2 id="package-comglideappservicecatalog-root">Package: <code>com.glideapp.servicecatalog</code> (root)</h2>
+<hr />
+<h2 id="1-catalogrecord-abstract-base">1. CatalogRecord (abstract base)</h2>
+<p><strong>File:</strong> <code>CatalogRecord.java</code><br />
+<strong>Role:</strong> Abstract base class for all catalog domain objects. Wraps a <code>GlideRecord</code> and provides common CRUD operations.</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>getGr()</code> | Return the underlying GlideRecord |
+| <code>find(query)</code> | Execute a GlideRecord query |
+| <code>update()</code> | Persist field changes |
+| <code>delete()</code> | Remove record |
+| <code>getValue(field)</code> | Read a field value |
+| <code>updateValue(field, value)</code> | Write a field value |</p>
+<p><strong>Implements:</strong> <code>ICatalogRecord</code> — defines the CRUD contract for all catalog entities.</p>
+<hr />
+<h2 id="2-catalog">2. Catalog</h2>
+<p><strong>File:</strong> <code>Catalog.java</code><br />
+<strong>Extends:</strong> <code>CatalogRecord</code><br />
+<strong>Table:</strong> <code>sc_catalog</code></p>
+<p><strong>Purpose:</strong> Top-level container for categories and catalog items. A platform instance can have multiple catalogs (e.g., Service Catalog, HR Catalog).</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>get(id)</code> | Static factory — load by sys_id |
+| <code>getAllCatalogs()</code> | Return all active catalogs |
+| <code>createView()</code> | Build display view |
+| <code>hasCategories()</code> | Check if catalog has child categories |
+| <code>hasItems()</code> | Check if catalog has directly-attached items |
+| <code>getDefaultView()</code> | Return configured default view |
+| <code>getCategories()</code> | Load child Category objects |
+| <code>getBackgroundColor()</code> | Return UI color setting |
+| <code>getHeaderIconSRC()</code> | Return header icon path |</p>
+<p><strong>Relationships:</strong>
+- <code>Catalog</code> → has many → <code>Category</code> (sc_catalog_category M2M)
+- <code>Catalog</code> → has many → <code>CatalogItem</code> (sc_cat_item_catalog_mtom M2M)</p>
+<hr />
+<h2 id="3-category">3. Category</h2>
+<p><strong>File:</strong> <code>Category.java</code><br />
+<strong>Extends:</strong> <code>CatalogRecord</code><br />
+<strong>Table:</strong> <code>sc_category</code></p>
+<p><strong>Purpose:</strong> Organizes catalog items hierarchically. Supports nested sub-categories.</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>get(id)</code> | Static factory |
+| <code>getItems()</code> | Return CatalogItem list for this category |
+| <code>getCategories()</code> | Return child sub-categories |
+| <code>getParent()</code> | Return parent category |
+| <code>getCatalog()</code> | Return owning Catalog |
+| <code>canView()</code> | ACL check |
+| <code>hasVisibleItem()</code> | Check if any item is user-visible |
+| <code>getItemsCount()</code> | Count of visible items |
+| <code>getChildCategoriesInHierarchy()</code> | Recursive subtree |</p>
+<p><strong>Caching:</strong> User-aware category visibility cached in <code>UserCategoriesCacheableManager</code>.</p>
+<hr />
+<h2 id="4-catalogitem">4. CatalogItem</h2>
+<p><strong>File:</strong> <code>CatalogItem.java</code> (2664 lines)<br />
+<strong>Extends:</strong> <code>CatalogItemImpl</code> → <code>CatalogRecord</code><br />
+<strong>Table:</strong> <code>sc_cat_item</code></p>
+<p><strong>Purpose:</strong> The primary catalog offering. Represents everything from simple request items to record producers, order guides, wizards, and content items.</p>
+<h3 id="item-types-enum-itemtype">Item Types (enum <code>ItemType</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ITEM</code></td>
+<td>Standard service request item</td>
+</tr>
+<tr>
+<td><code>RECORD_PRODUCER</code></td>
+<td>Creates a target ITSM record (incident, change, etc.)</td>
+</tr>
+<tr>
+<td><code>ORDER_GUIDE</code></td>
+<td>Multi-step guided ordering bundle</td>
+</tr>
+<tr>
+<td><code>WIZARD</code></td>
+<td>Form wizard with steps and sections</td>
+</tr>
+<tr>
+<td><code>CONTENT</code></td>
+<td>Informational/knowledge article</td>
+</tr>
+<tr>
+<td><code>KB_ARTICLE</code></td>
+<td>Knowledge base article link</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-fields">Key Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fGr</code></td>
+<td>Backing GlideRecord (sc_cat_item)</td>
+</tr>
+<tr>
+<td><code>fVariables</code></td>
+<td>Cached List<Question> — form variables</td>
+</tr>
+<tr>
+<td><code>fOrderGuide</code></td>
+<td>Associated OrderGuide (if type=ORDER_GUIDE)</td>
+</tr>
+<tr>
+<td><code>fPrice</code></td>
+<td>One-time price</td>
+</tr>
+<tr>
+<td><code>fRecurringPrice</code></td>
+<td>Recurring price</td>
+</tr>
+<tr>
+<td><code>fCategories</code></td>
+<td>Cached category memberships</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-methods">Key Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get(id)</code></td>
+<td>Static factory, cached</td>
+</tr>
+<tr>
+<td><code>canOrder()</code></td>
+<td>Checks user criteria, active status, availability</td>
+</tr>
+<tr>
+<td><code>canView()</code></td>
+<td>ACL and user criteria check</td>
+</tr>
+<tr>
+<td><code>canViewOnSearch()</code></td>
+<td>Additional search-context check</td>
+</tr>
+<tr>
+<td><code>getVariables()</code></td>
+<td>Load and return Question list</td>
+</tr>
+<tr>
+<td><code>getVariableSetNames()</code></td>
+<td>Return M2M variable set names</td>
+</tr>
+<tr>
+<td><code>getPrice()</code></td>
+<td>Return one-time price</td>
+</tr>
+<tr>
+<td><code>getRecurringPrice()</code></td>
+<td>Return recurring price</td>
+</tr>
+<tr>
+<td><code>getOrderGuide()</code></td>
+<td>Return associated OrderGuide</td>
+</tr>
+<tr>
+<td><code>getCategories()</code></td>
+<td>Return Category list</td>
+</tr>
+<tr>
+<td><code>getCatalogs()</code></td>
+<td>Return Catalog list</td>
+</tr>
+<tr>
+<td><code>isActive()</code></td>
+<td>Check active flag</td>
+</tr>
+<tr>
+<td><code>getTemplateUsed()</code></td>
+<td>Return CatalogTemplate if one is applied</td>
+</tr>
+<tr>
+<td><code>submitProducer(vars)</code></td>
+<td>Delegate to ProducerValve for record production</td>
+</tr>
+<tr>
+<td><code>availableForUserCriteria()</code></td>
+<td>Manage M2M availability rules</td>
+</tr>
+<tr>
+<td><code>notAvailableForUserCriteria()</code></td>
+<td>Manage M2M restriction rules</td>
+</tr>
+</tbody>
+</table>
+<h3 id="caching">Caching</h3>
+<p>Items are cached in a domain- and translation-aware cache keyed by sys_id. Cache invalidated on DB update via <code>StaleItemCacheFinder</code>.</p>
+<hr />
+<h2 id="5-catalogitemimpl-abstract">5. CatalogItemImpl (abstract)</h2>
+<p><strong>File:</strong> <code>CatalogItemImpl.java</code><br />
+<strong>Extends:</strong> <code>CatalogRecord</code><br />
+<strong>Implements:</strong> <code>ICatalogItem</code></p>
+<p><strong>Purpose:</strong> Abstract middle layer shared by CatalogItem, CartItem, and RequestItem. Provides the unified <code>ICatalogItem</code> contract.</p>
+<p><strong>Key interface methods implemented:</strong>
+- <code>getCatalogItem()</code> — return the underlying CatalogItem
+- <code>getPrice()</code> / <code>getRecurringPrice()</code> — pricing delegation
+- <code>getQuantity()</code> — item quantity
+- <code>getOrderGuideRule()</code> — associated OrderGuide rule
+- <code>includePrice()</code> — whether to include in total</p>
+<hr />
+<h2 id="6-cartitem">6. CartItem</h2>
+<p><strong>File:</strong> <code>CartItem.java</code><br />
+<strong>Extends:</strong> <code>CatalogItemImpl</code><br />
+<strong>Table:</strong> <code>sc_cart_item</code></p>
+<p><strong>Purpose:</strong> Represents an item placed in a shopping cart. Wraps a CatalogItem with quantity, pricing, and variable state.</p>
+<p><strong>Key Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fCatalogItem</code> | Reference to the underlying CatalogItem |
+| <code>fQuantity</code> | Number of units ordered |
+| <code>fVariables</code> | Captured variable values |
+| <code>fPrice</code> | Computed price at cart time |
+| <code>fRecurringPrice</code> | Computed recurring price |</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>getVariables()</code> | Return captured variable answers |
+| <code>setVariable(name, value)</code> | Set a variable answer |
+| <code>getPrice()</code> | Computed price × quantity |
+| <code>getRecurringPrice()</code> | Recurring price × quantity |
+| <code>getOrderGuideRule()</code> | Return associated OrderGuideRule |</p>
+<hr />
+<h2 id="7-cart-cartrecord">7. Cart / CartRecord</h2>
+<p><strong>File:</strong> <code>Cart.java</code>, <code>CartRecord.java</code> (1874 lines)<br />
+<strong>Table:</strong> <code>sc_cart</code></p>
+<p><strong>Purpose:</strong> Shopping cart container. Manages item collection, checkout, domain conflict detection, and order guide integration.</p>
+<h3 id="key-fields_1">Key Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fCartName</code></td>
+<td>Unique cart identifier (default: "gui")</td>
+</tr>
+<tr>
+<td><code>fUserId</code></td>
+<td>Owner user sys_id</td>
+</tr>
+<tr>
+<td><code>fItems</code></td>
+<td>List<CartItem></td>
+</tr>
+<tr>
+<td><code>fGuide</code></td>
+<td>Associated OrderGuide (if any)</td>
+</tr>
+<tr>
+<td><code>fRequestedFor</code></td>
+<td>User items are being ordered for</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-methods_1">Key Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get()</code></td>
+<td>Static factory — get/create session cart</td>
+</tr>
+<tr>
+<td><code>get(cartName, userId)</code></td>
+<td>Get named cart for specific user</td>
+</tr>
+<tr>
+<td><code>addToCart(itemId)</code></td>
+<td>Add CatalogItem to cart, return CartItem</td>
+</tr>
+<tr>
+<td><code>addItemToCart(itemId, params)</code></td>
+<td>Add with pre-filled parameters</td>
+</tr>
+<tr>
+<td><code>updateItem(cartItemId, params)</code></td>
+<td>Update existing cart item</td>
+</tr>
+<tr>
+<td><code>remove(cartItemId)</code></td>
+<td>Remove item from cart</td>
+</tr>
+<tr>
+<td><code>checkoutCart()</code></td>
+<td>Submit cart → create Request + RequestItems</td>
+</tr>
+<tr>
+<td><code>checkoutGuide()</code></td>
+<td>Submit guided cart through OrderGuide</td>
+</tr>
+<tr>
+<td><code>orderNow(itemId)</code></td>
+<td>Add item and immediately check out</td>
+</tr>
+<tr>
+<td><code>isEmpty()</code></td>
+<td>Check if cart has items</td>
+</tr>
+<tr>
+<td><code>cleanupCart()</code></td>
+<td>Delete cart record</td>
+</tr>
+<tr>
+<td><code>findConflictingDomain()</code></td>
+<td>Detect domain conflicts across cart items</td>
+</tr>
+<tr>
+<td><code>findUserCriteriaRestrictedItems()</code></td>
+<td>Find items user can no longer access</td>
+</tr>
+<tr>
+<td><code>validateCartItems()</code></td>
+<td>Run all validation rules</td>
+</tr>
+<tr>
+<td><code>setRequestedFor(userId)</code></td>
+<td>Set the "requested for" user</td>
+</tr>
+<tr>
+<td><code>setDeliveryAddress(address)</code></td>
+<td>Set delivery address</td>
+</tr>
+<tr>
+<td><code>setSpecialInstructions(text)</code></td>
+<td>Add instructions</td>
+</tr>
+<tr>
+<td><code>getFrequencyList()</code></td>
+<td>Return list of delivery frequencies</td>
+</tr>
+<tr>
+<td><code>getFrequencyItems(freq)</code></td>
+<td>Return items grouped by frequency</td>
+</tr>
+</tbody>
+</table>
+<h3 id="checkout-flow">Checkout Flow</h3>
+<pre><code>checkoutCart()
+  → validate items (UserCriteria, domain)
+  → create sc_request record
+  → for each CartItem:
+      → create sc_req_item record
+      → copy variable answers
+      → ProducerValve (if record producer type)
+  → Request.recalculatePrice()
+  → Request.recalculateRecurringCost()
+  → return Request
+</code></pre>
+<h3 id="domain-conflict-detection">Domain Conflict Detection</h3>
+<p>CartRecord enforces single-domain carts. If items from different domains are added, <code>findConflictingDomain()</code> returns the conflict for the UI to display.</p>
+<hr />
+<h2 id="8-request">8. Request</h2>
+<p><strong>File:</strong> <code>Request.java</code><br />
+<strong>Extends:</strong> <code>CatalogRecord</code><br />
+<strong>Table:</strong> <code>sc_request</code></p>
+<p><strong>Purpose:</strong> Represents a submitted catalog request. Aggregates RequestItems, manages price rollup, recurring cost rollup, and cancellation.</p>
+<h3 id="key-fields_2">Key Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fId</code></td>
+<td>Request sys_id</td>
+</tr>
+<tr>
+<td><code>fRequestItems</code></td>
+<td>Cached List<RequestItem></td>
+</tr>
+<tr>
+<td><code>fPrice</code></td>
+<td>Total request price</td>
+</tr>
+<tr>
+<td><code>preGr</code> / <code>curGr</code></td>
+<td>Pre/post update tracking GlideRecords</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-methods_2">Key Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Request(gr)</code></td>
+<td>Constructor — loads items</td>
+</tr>
+<tr>
+<td><code>Request(sysId, preGr, curGr)</code></td>
+<td>Constructor with update tracking</td>
+</tr>
+<tr>
+<td><code>recalculatePrice()</code></td>
+<td>Sum all item prices × quantities</td>
+</tr>
+<tr>
+<td><code>recalculateRecurringCost()</code></td>
+<td>Aggregate recurring costs by frequency into sc_recurring_rollup</td>
+</tr>
+<tr>
+<td><code>cancelRelatedRecords()</code></td>
+<td>Cancel items and approvals</td>
+</tr>
+<tr>
+<td><code>cloneForUser(userId)</code></td>
+<td>Deep-copy request for another user</td>
+</tr>
+</tbody>
+</table>
+<h3 id="price-recalculation-logic">Price Recalculation Logic</h3>
+<pre><code>On full recalculation:
+  sum(item.price × quantity) for items where includePrice() == true
+  → handles multi-currency via GlideElementCurrency
+  → writes total to sc_request.price
+
+On item update:
+  subtract previous item contribution
+  add current item contribution
+
+On item delete:
+  subtract deleted item contribution
+</code></pre>
+<h3 id="recurring-cost-rollup">Recurring Cost Rollup</h3>
+<ul>
+<li>Aggregates recurring prices by frequency string ("monthly", "quarterly", etc.)</li>
+<li>Creates/updates <code>sc_recurring_rollup</code> records (one per frequency)</li>
+<li>On full recalculation: deletes existing rollups, regenerates from scratch</li>
+</ul>
+<h3 id="cancellation-rules">Cancellation Rules</h3>
+<ul>
+<li>Never cancels items in <code>closed_complete</code> state</li>
+<li>Respects <code>glide.sc.cancel_closed_incomplete_ritm</code> property</li>
+<li>Cascades to <code>sysapproval_approver</code> records (bulk cancel via <code>updateMultiple()</code>)</li>
+</ul>
+<hr />
+<h2 id="9-requestitem">9. RequestItem</h2>
+<p><strong>File:</strong> <code>RequestItem.java</code> (442 lines)<br />
+<strong>Extends:</strong> <code>CatalogItemImpl</code><br />
+<strong>Table:</strong> <code>sc_req_item</code></p>
+<p><strong>Purpose:</strong> Line item within a submitted request. Mirrors CartItem but is persistent and represents committed work.</p>
+<h3 id="key-fields_3">Key Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fCatalogItem</code></td>
+<td>Reference to source CatalogItem</td>
+</tr>
+<tr>
+<td><code>fVariables</code></td>
+<td>Saved variable answers</td>
+</tr>
+<tr>
+<td><code>fPrice</code></td>
+<td>Committed price</td>
+</tr>
+<tr>
+<td><code>fRecurringPrice</code></td>
+<td>Committed recurring price</td>
+</tr>
+<tr>
+<td><code>fState</code></td>
+<td>Current fulfillment state</td>
+</tr>
+</tbody>
+</table>
+<p><strong>States:</strong> Open (1), Work in Progress (2), Closed Complete (3), Closed Incomplete (4), Cancelled (7)</p>
+<hr />
+<h2 id="10-orderguide">10. OrderGuide</h2>
+<p><strong>File:</strong> <code>OrderGuide.java</code> (1507 lines)<br />
+<strong>Table:</strong> <code>sc_order_guide</code></p>
+<p><strong>Purpose:</strong> Multi-step guided ordering workflow. Bundles multiple catalog items together with conditional logic, variable mapping, and optionally PAD-based sequencing.</p>
+<h3 id="key-fields_4">Key Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fId</code></td>
+<td>Order guide sys_id</td>
+</tr>
+<tr>
+<td><code>fIncludedItems</code></td>
+<td>List of IncludedItem objects</td>
+</tr>
+<tr>
+<td><code>fRules</code></td>
+<td>List of OrderGuideRule conditions</td>
+</tr>
+<tr>
+<td><code>fVariableMappings</code></td>
+<td>Cross-item variable sync config</td>
+</tr>
+<tr>
+<td><code>fSequenced</code></td>
+<td>Whether PAD sequencing is enabled</td>
+</tr>
+<tr>
+<td><code>fTwoStep</code></td>
+<td>Two-step mode (browse then order)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-methods_3">Key Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>init(request)</code></td>
+<td>Initialize guide, evaluate conditions, return included items</td>
+</tr>
+<tr>
+<td><code>processGuide(params)</code></td>
+<td>Process user input through guide</td>
+</tr>
+<tr>
+<td><code>evaluateConditions()</code></td>
+<td>Run OrderGuideRule conditions to determine active items</td>
+</tr>
+<tr>
+<td><code>mapVariables(sourceItem, targetItem)</code></td>
+<td>Sync variable values between included items</td>
+</tr>
+<tr>
+<td><code>navigateFromMap(varMap)</code></td>
+<td>Convert variable name → sys_id, manage sequence</td>
+</tr>
+<tr>
+<td><code>isSequencedGuide()</code></td>
+<td>Check if PAD sequencing is active</td>
+</tr>
+<tr>
+<td><code>isTwoStep()</code></td>
+<td>Check two-step mode</td>
+</tr>
+<tr>
+<td><code>isIncludeItems()</code></td>
+<td>Check include-items mode</td>
+</tr>
+<tr>
+<td><code>isUseCustomCart()</code></td>
+<td>Check custom cart mode</td>
+</tr>
+<tr>
+<td><code>checkoutGuide()</code></td>
+<td>Submit all guide items via Cart</td>
+</tr>
+</tbody>
+</table>
+<h3 id="orderguiderule">OrderGuideRule</h3>
+<p>Conditional logic controlling which items appear in the guide. Rules evaluate against variable answers from previous steps and filter <code>IncludedItem</code> objects.</p>
+<h3 id="includeditem">IncludedItem</h3>
+<p>Represents one catalog item bundled into an order guide, with:
+- <code>fCatalogItem</code> — the item
+- <code>fRule</code> — the associated OrderGuideRule
+- <code>fVariableAssignments</code> — pre-filled variable values
+- <code>fCascadeVariableMap</code> — variable propagation map</p>
+<h3 id="variable-mapping-cascade_variable_map">Variable Mapping (cascade_variable_map)</h3>
+<p>When a user fills a variable on one guide item, the cascade map propagates that value to matching variables on other guide items automatically.</p>
+<h3 id="sequencing-integration">Sequencing Integration</h3>
+<p>When <code>fSequenced=true</code>, after checkout the <code>OrderGuideSequencing</code> class creates a PAD (Process/Activity Designer) process:
+1. Creates a workflow trigger filtered by <code>order_guide</code> + approval status
+2. Creates one activity (lane) per included item
+3. Items execute as parallel PAD activities</p>
+<hr />
+<h2 id="11-pricing">11. Pricing</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.pricing</code></p>
+<h3 id="pricegenerator-strategy-pattern">PriceGenerator (Strategy pattern)</h3>
+<p>Calculates price for a catalog item given user context.</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>getPrice(item)</code> | Compute one-time price |
+| <code>getRecurringPrice(item)</code> | Compute recurring price |
+| <code>getCompleteItemPrice(item)</code> | Return formatted display string including recurring |
+| <code>shouldDisplayPrice()</code> | Check display mode: always / never / nonzero |</p>
+<p><strong>Display Modes:</strong>
+- <code>always</code> — always show price (even $0)
+- <code>never</code> — never show price
+- <code>nonzero</code> — only show when price &gt; 0</p>
+<h3 id="catalogpriceutil">CatalogPriceUtil</h3>
+<p>Static utility methods for price formatting and currency conversion.</p>
+<p><strong>Multi-currency handling:</strong>
+- <code>GlideElementCurrency</code> for raw currency values
+- Session currency code or system-wide single currency
+- <code>GlideLocale</code> for locale-aware formatting
+- <code>Converter</code> for cross-currency exchange</p>
+<h3 id="price-fields-on-sc_cat_item">Price Fields on sc_cat_item</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>price</code></td>
+<td>One-time purchase price</td>
+</tr>
+<tr>
+<td><code>recurring_price</code></td>
+<td>Recurring charge amount</td>
+</tr>
+<tr>
+<td><code>recurring_frequency</code></td>
+<td>Frequency string (monthly, yearly, etc.)</td>
+</tr>
+<tr>
+<td><code>price_model</code></td>
+<td>Pricing model type</td>
+</tr>
+<tr>
+<td><code>cost</code></td>
+<td>Internal cost (not displayed)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="12-catalogutil-singleton">12. CatalogUtil (Singleton)</h2>
+<p><strong>File:</strong> <code>CatalogUtil.java</code> (1028 lines)<br />
+<strong>Pattern:</strong> Thread-safe singleton (<code>getInstance()</code> with double-checked locking)</p>
+<p><strong>Purpose:</strong> Central utility factory and access point for catalog operations. Acts as a facade over the cache, session, property, and GlideRecord systems.</p>
+<h3 id="key-responsibilities">Key Responsibilities</h3>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Methods</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Session</td>
+<td><code>setSessionProperties()</code>, <code>getSessionScope()</code></td>
+</tr>
+<tr>
+<td>Permissions</td>
+<td><code>canWrite()</code>, <code>canRead()</code>, <code>canOrder()</code></td>
+</tr>
+<tr>
+<td>Property access</td>
+<td><code>getProperty(key)</code>, <code>getBooleanProperty(key)</code></td>
+</tr>
+<tr>
+<td>Cache access</td>
+<td><code>getCache()</code>, <code>flushCache()</code></td>
+</tr>
+<tr>
+<td>Validation</td>
+<td><code>isValidScopedAPITable()</code></td>
+</tr>
+<tr>
+<td>Domain</td>
+<td><code>getDomain()</code>, <code>isDomainSeparation()</code></td>
+</tr>
+<tr>
+<td>URL</td>
+<td>Delegates to <code>CatalogURLGenerator</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Thread Safety:</strong> Singleton verified with <code>ExecutorService</code>-based test in <code>CatalogUtilTest</code>.</p>
+<hr />
+<h2 id="13-icatalogconstants-777-lines">13. ICatalogConstants (777 lines)</h2>
+<p><strong>File:</strong> <code>ICatalogConstants.java</code><br />
+<strong>Type:</strong> Interface (constants only)</p>
+<p>Central registry for all string constants used across the module:</p>
+<ul>
+<li><strong>Table names:</strong> <code>SC_CAT_ITEM</code>, <code>SC_CART</code>, <code>SC_REQUEST</code>, <code>SC_REQ_ITEM</code>, <code>SC_ORDER_GUIDE</code>, <code>SC_CAT_ITEM_DELIVERY_PLAN</code>, etc.</li>
+<li><strong>Field names:</strong> <code>PRICE</code>, <code>RECURRING_PRICE</code>, <code>QUANTITY</code>, <code>STATE</code>, <code>REQUESTED_FOR</code>, etc.</li>
+<li><strong>System properties:</strong> <code>glide.sc.cancel_closed_incomplete_ritm</code>, <code>glide.sc.multirow_set.rows.size</code>, etc.</li>
+<li><strong>Special values:</strong> State codes, action type strings, item type strings</li>
+</ul>
+<hr />
+<h2 id="14-catalogsearch">14. CatalogSearch</h2>
+<p><strong>File:</strong> <code>CatalogSearch.java</code><br />
+<strong>Pattern:</strong> Singleton</p>
+<p><strong>Purpose:</strong> Text search across catalog items and categories.</p>
+<p><strong>Key Method:</strong></p>
+<pre><code class="language-java">processSearch(catalogID, categoryID, term, mobile, depthSearch, searchPortal)
+    → returns ScopedGlideRecord results
+</code></pre>
+<p><strong>Search behavior:</strong>
+- Filters by active status and user criteria
+- Respects catalog and category scope
+- Supports full-text and keyword matching
+- Mobile-mode filtering</p>
+<hr />
+<h2 id="key-inter-class-relationships-core-domain">Key Inter-Class Relationships (Core Domain)</h2>
+<pre><code>Catalog ──[M2M]──→ Category ──[M2M]──→ CatalogItem
+                                              │
+                      ┌───────────────────────┤
+                      │                       │
+                  CartItem ←── Cart      OrderGuide
+                      │         │              │
+                  RequestItem ←─┤         IncludedItem
+                      │         │              │
+                  Request ←─────┘         OrderGuideRule
+                      │
+               RecurringRollup
+</code></pre>
+    </div>
+    <div class="doc-nav">
+      <a class="doc-nav-btn" href="00-overview.html"><div class="doc-nav-label">← Previous</div><div class="doc-nav-title">Module Overview & Architecture</div></a>
+      <a class="doc-nav-btn next" href="02-valve-producer-scripts.html"><div class="doc-nav-label">Next →</div><div class="doc-nav-title">Valve Pipeline & Producers</div></a>
+    </div>
+  </div>
+</div>
+<footer>
+  Built with ⚡ · <a href="../index.html">← All Categories</a> · <a href="index.html">Service Catalog</a>
+</footer>
+</body>
+</html>

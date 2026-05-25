@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Processors, GraphQL & Scoped APIs — Service Catalog | My Learnings</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-logo" href="../index.html">⚡ <span>My</span>Learnings</a>
+  <div class="topnav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Service Catalog</a>
+  </div>
+</nav>
+<div class="page-layout">
+  <aside class="page-sidebar">
+    <h3>Navigation</h3>
+    <div class="sidebar-cat">Service Catalog</div><a class="sidebar-link" href="index.html">🏠 Service Catalog Home</a><a class="sidebar-link" href="00-overview.html">📐 Module Overview</a><a class="sidebar-link" href="01-core-domain.html">🏗 Core Domain</a><a class="sidebar-link" href="02-valve-producer-scripts.html">⚙ Valve & Producers</a><a class="sidebar-link" href="03-variables-system.html">📋 Variables System</a><a class="sidebar-link" href="04-cache-db-metrics.html">💾 Cache & Infra</a><a class="sidebar-link current-page" href="05-processors-graphql-search.html">🔌 Processors & API</a><a class="sidebar-link" href="06-appengine-builder-atf-templates-scoped.html">🛠 Builder & Templates</a><a class="sidebar-link" href="interactive-guide.html">🎬 Interactive Guide ↗</a><div class="sidebar-sep"></div><a class="sidebar-link" href="../index.html">← All Categories</a>
+  </aside>
+  <div class="page-content">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">›</span>
+      <a href="index.html">Service Catalog</a><span class="breadcrumb-sep">›</span>
+      <span>Processors, GraphQL & Scoped APIs</span>
+    </div>
+    <h1>Processors, GraphQL & Scoped APIs</h1>
+    <div class="page-meta">
+      <span class="meta-tag">glide-servicecatalog</span>
+      <span class="meta-tag">Command Processors</span><span class="meta-tag">GraphQL</span><span class="meta-tag">DataLookup</span><span class="meta-tag">CartJS</span>
+    </div>
+    <div class="md-body">
+<hr />
+<h2 id="1-command-processor-framework">1. Command Processor Framework</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.processor.command</code></p>
+<p>The processor layer implements a <strong>Command pattern</strong> for dispatching AJAX and HTTP requests to the appropriate catalog operation handler.</p>
+<h3 id="icommand-interface">ICommand (Interface)</h3>
+<pre><code class="language-java">Object execute(ICommandContext context)
+</code></pre>
+<p>All command implementations receive a context object and return a result.</p>
+<h3 id="icommandprocessor-interface">ICommandProcessor (Interface)</h3>
+<pre><code class="language-java">ICommand resolve(String action)  // finds the right command for an action name
+void process(ICommandContext context)
+</code></pre>
+<h3 id="command-registry">Command Registry</h3>
+<p>Commands are registered by action name. Processor resolves the action string from the HTTP request → finds the command → executes it.</p>
+<h3 id="http-adapter">HTTP Adapter</h3>
+<p>Bridges servlet HTTP requests into the command framework:
+- Extracts action parameter from request
+- Builds <code>ICommandContext</code> with request/response
+- Delegates to <code>ICommandProcessor.process()</code></p>
+<h3 id="key-command-implementations-processorcommandimpl">Key Command Implementations (<code>processor/command/impl/</code>)</h3>
+<ul>
+<li>Cart operations: add, remove, update, checkout</li>
+<li>Catalog browsing: item details, category listing</li>
+<li>Variable operations: get/set variable values</li>
+<li>Policy evaluation: on-change/on-load triggers</li>
+</ul>
+<hr />
+<h2 id="2-ajax-processors">2. AJAX Processors</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.processor</code> + <code>com.glideapp.servicecatalog</code> (root)</p>
+<p>These are servlet-style processors handling specific AJAX operations from the catalog UI.</p>
+<h3 id="cartajaxprocessor-cartajaxprocessorv2">CartAjaxProcessor / CartAjaxProcessorV2</h3>
+<p><strong>Purpose:</strong> Handle all cart AJAX operations.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>addToCart</code></td>
+<td>Add item to cart, return updated cart JSON</td>
+</tr>
+<tr>
+<td><code>updateCart</code></td>
+<td>Update existing cart item (quantity, variables)</td>
+</tr>
+<tr>
+<td><code>removeFromCart</code></td>
+<td>Remove item by cart_item sys_id</td>
+</tr>
+<tr>
+<td><code>checkoutCart</code></td>
+<td>Submit cart, return request sys_id</td>
+</tr>
+<tr>
+<td><code>getCart</code></td>
+<td>Return current cart contents as JSON</td>
+</tr>
+<tr>
+<td><code>orderNow</code></td>
+<td>Add + immediately checkout</td>
+</tr>
+</tbody>
+</table>
+<p><strong>V2 differences:</strong> Improved error handling, JSON response envelope, better domain validation.</p>
+<h3 id="catalogsuggestprocessor">CatalogSuggestProcessor</h3>
+<p><strong>Purpose:</strong> Type-ahead/autocomplete suggestions.</p>
+<ul>
+<li>Input: partial text + catalog context</li>
+<li>Output: JSON array of matching catalog items/categories</li>
+<li>Respects user criteria and domain</li>
+</ul>
+<h3 id="requesthintprocessor">RequestHintProcessor</h3>
+<p><strong>Purpose:</strong> Return helpful hints for request fields.</p>
+<ul>
+<li>Returns hint text for specific question/field combinations</li>
+<li>Used in forms to guide user input</li>
+</ul>
+<h3 id="lookupselectprocessor">LookupSelectProcessor</h3>
+<p><strong>Purpose:</strong> Reference field lookup for variable questions.</p>
+<ul>
+<li>Input: reference table, qualifier, partial text</li>
+<li>Output: matching records for dropdown population</li>
+<li>Evaluates reference qualifiers in variable context</li>
+</ul>
+<h3 id="currencyajaxprocessor">CurrencyAjaxProcessor</h3>
+<p><strong>Purpose:</strong> Real-time currency conversion for price display.</p>
+<ul>
+<li>Input: amount, source currency code</li>
+<li>Output: converted amount in session currency</li>
+<li>Uses <code>GlideElementCurrency</code> and <code>Converter</code></li>
+</ul>
+<hr />
+<h2 id="3-ng-ui-layer">3. NG UI Layer</h2>
+<p><strong>Package:</strong> <code>com.glide.ui.ng.catalog</code></p>
+<p>The NG (Angular/Next-Gen) UI layer provides API endpoints consumed by the ServiceNow portal and workspace interfaces.</p>
+<h3 id="ngcatalogclientscriptprocessor">NGCatalogClientScriptProcessor</h3>
+<p><strong>Purpose:</strong> Load client scripts (ON_LOAD, ON_CHANGE, ON_SUBMIT) for a catalog item or variable set in NG UI context.</p>
+<p><strong>Returns:</strong> Structured JSON of scripts filtered by:
+- Script type (on_load, on_change, on_submit)
+- Record type (sc_cat_item, sc_req_item, sc_task, producer target)
+- Domain applicability</p>
+<h3 id="sc-model-classes-scmodel">SC Model Classes (<code>sc/model/</code>)</h3>
+<p>Data transfer objects (DTOs) for NG UI responses:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Data Carried</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SCCatalogModel</code></td>
+<td>Catalog metadata for NG portal</td>
+</tr>
+<tr>
+<td><code>SCCategoryModel</code></td>
+<td>Category metadata + visibility</td>
+</tr>
+<tr>
+<td><code>SCItemModel</code></td>
+<td>CatalogItem data for item detail view</td>
+</tr>
+<tr>
+<td><code>SCCartModel</code></td>
+<td>Cart contents + pricing for NG cart</td>
+</tr>
+<tr>
+<td><code>SCRequestModel</code></td>
+<td>Request confirmation data</td>
+</tr>
+</tbody>
+</table>
+<h3 id="utility-classes-util">Utility Classes (<code>util/</code>)</h3>
+<p>Helpers for transforming domain objects into NG-consumable JSON structures.</p>
+<hr />
+<h2 id="4-data-lookup-system">4. Data Lookup System</h2>
+<p><strong>Package:</strong> <code>com.glide.data_lookup.catalog</code></p>
+<p>Data lookups are <strong>table-driven auto-population</strong> rules. When a user fills a specific variable, data lookup queries a related table and pre-fills other variables.</p>
+<h3 id="catalogdatalookup">CatalogDataLookup</h3>
+<p><strong>Purpose:</strong> Evaluates data lookup rules for a catalog item and applies matching values.</p>
+<p><strong>Flow:</strong></p>
+<pre><code>1. Load data lookup rules for catalog item
+2. For each rule:
+   a. Evaluate condition: does the trigger variable match?
+   b. If match: query target table with field conditions
+   c. Apply matching record values to destination variables
+3. Return map of {variableName: newValue}
+</code></pre>
+<p><strong>Caching:</strong> Lookup rules cached per catalog item sys_id.</p>
+<h3 id="graphql-data-lookup-cataloggraphql">GraphQL Data Lookup (<code>catalog/graphql/</code>)</h3>
+<p>Extends data lookup capabilities with GraphQL-compatible query structures.</p>
+<h3 id="script-api-catalogscript">Script API (<code>catalog/script/</code>)</h3>
+<p>Exposes data lookup operations to server-side Rhino scripts for custom rule evaluation.</p>
+<hr />
+<h2 id="5-graphql-schema">5. GraphQL Schema</h2>
+<p><strong>Package:</strong> <code>com.glideapp.catalog.graphql.schema</code></p>
+<p>Defines the GraphQL types and queries for catalog data access (used by portal and mobile).</p>
+<h3 id="key-types">Key Types</h3>
+<table>
+<thead>
+<tr>
+<th>GraphQL Type</th>
+<th>Maps To</th>
+<th>Key Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CatalogItem</code></td>
+<td><code>sc_cat_item</code></td>
+<td>id, name, shortDescription, price, active, canOrder</td>
+</tr>
+<tr>
+<td><code>Category</code></td>
+<td><code>sc_category</code></td>
+<td>id, title, description, items, subCategories</td>
+</tr>
+<tr>
+<td><code>Catalog</code></td>
+<td><code>sc_catalog</code></td>
+<td>id, title, categories, items</td>
+</tr>
+<tr>
+<td><code>Variable</code></td>
+<td><code>item_option_new</code></td>
+<td>id, name, label, type, mandatory, choices</td>
+</tr>
+<tr>
+<td><code>VariableSet</code></td>
+<td><code>item_option_new_set</code></td>
+<td>id, variables, layout</td>
+</tr>
+<tr>
+<td><code>CartItem</code></td>
+<td><code>sc_cart_item</code></td>
+<td>id, catalogItem, quantity, variables</td>
+</tr>
+</tbody>
+</table>
+<h3 id="security-definitions">Security Definitions</h3>
+<ul>
+<li>Every query/field respects ACL enforcement</li>
+<li>User criteria evaluated at resolver level</li>
+<li>Domain filtering applied via <code>DomainSupport</code></li>
+<li><code>canOrder()</code> / <code>canView()</code> checked before returning items</li>
+</ul>
+<h3 id="query-types">Query Types</h3>
+<pre><code class="language-graphql">type Query {
+  catalogItem(id: ID!): CatalogItem
+  category(id: ID!): Category
+  catalog(id: ID!): Catalog
+  searchItems(term: String!, catalogId: ID): [CatalogItem]
+}
+</code></pre>
+<hr />
+<h2 id="6-streaming">6. Streaming</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.stream</code></p>
+<h3 id="sysid2objectproducerstream">SysId2ObjectProducerStream</h3>
+<p><strong>Purpose:</strong> Lazy-evaluation stream over a list of sys_ids, producing domain objects on demand.</p>
+<p><strong>Pattern:</strong> Supplies objects one-at-a-time rather than loading all into memory. Useful for large catalog/category item sets.</p>
+<p><strong>Interface: <code>IStream&lt;T&gt;</code></strong></p>
+<pre><code class="language-java">boolean hasNext()
+T next()
+void close()
+</code></pre>
+<p><strong>Use cases:</strong>
+- Streaming category items for large catalogs
+- Large-scale search result iteration
+- Cart item enumeration without full list materialization</p>
+<hr />
+<h2 id="7-global-search">7. Global Search</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.globalsearch</code></p>
+<h3 id="servicecatalogglobalsearchconfig">ServiceCatalogGlobalSearchConfig</h3>
+<p><strong>Purpose:</strong> Configures ServiceNow's global search to index catalog items.</p>
+<p><strong>Indexed fields:</strong>
+- Item name (<code>name</code>)
+- Short description (<code>short_description</code>)
+- Description (<code>description</code>)
+- Keywords</p>
+<p><strong>Security:</strong> Index only includes items the user can view (user criteria evaluated at index time).</p>
+<p><strong>Search config registers:</strong>
+- Table: <code>sc_cat_item</code>
+- Fields to index and rank
+- User criteria filter for personalized results</p>
+<hr />
+<h2 id="8-ai-search">8. AI Search</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.aisearch</code></p>
+<h3 id="aiscatalogitemindexer">AisCatalogItemIndexer</h3>
+<p><strong>Purpose:</strong> Indexes catalog items for AI-powered search (NLU/semantic search).</p>
+<p><strong>Indexing behavior:</strong>
+- Extends <code>ServiceCatalogGlobalSearchConfig</code> with semantic metadata
+- Includes: item name, short description, keywords, category names
+- <strong>Security-bound criteria:</strong> Index respects active status + user criteria at index time
+- Registers index schema for AIS (AI Search) engine</p>
+<p><strong>Difference from global search:</strong>
+- Global search: keyword/field matching
+- AI search: semantic/NLU-based similarity matching</p>
+<hr />
+<h2 id="9-tags">9. Tags</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.tags</code></p>
+<p><strong>Purpose:</strong> Manages catalog item tagging for organization and filtering.</p>
+<p><strong>Key operations:</strong>
+- Tag a catalog item with a label
+- Search/filter catalog items by tag
+- Display tag chips in catalog UI</p>
+<p><strong>Backed by:</strong> Platform tagging infrastructure (<code>label_entry</code> / <code>label</code> tables).</p>
+<hr />
+<h2 id="10-standard-ticket-configuration">10. Standard Ticket Configuration</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.standard_ticket</code></p>
+<h3 id="standardticketconfig-standardticketconfigcache">StandardTicketConfig / StandardTicketConfigCache</h3>
+<p><strong>Purpose:</strong> Configuration-driven ticket creation. Defines default field values for tickets created from catalog items.</p>
+<p><strong>StandardTicketConfigCache:</strong>
+- Cached per catalog item sys_id
+- Cache invalidated via <code>CatalogDBListener</code> on config changes</p>
+<p><strong>Operations:</strong>
+- Load standard ticket configuration for an item
+- Apply default field values to new ticket/request records</p>
+<hr />
+<h2 id="11-scoped-api-catalog-javascript-apis">11. Scoped API — Catalog JavaScript APIs</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.scoped.api</code></p>
+<p>These classes expose catalog operations as server-side JavaScript APIs (via <code>ScopedScriptableObject</code>).</p>
+<h3 id="catalogjs">CatalogJS</h3>
+<pre><code class="language-javascript">// Construction
+var cat = new sn_sc.CatalogJS();
+var cat = new sn_sc.CatalogJS(gr);
+var cat = new sn_sc.CatalogJS(sysId);
+
+// Methods
+cat.getTitle()
+cat.hasCategories()
+cat.hasItems()
+cat.getMobilePicture()
+cat.getID()
+cat.getCategoryIds()
+cat.getCategories()         // ArrayList&lt;Map&gt;
+cat.getDefaultView()
+cat.getDescription()
+cat.getBackgroundColor()
+cat.getHomepageCategories()
+
+// Static
+sn_sc.CatalogJS.getDefaultCatalog()
+sn_sc.CatalogJS.getAvailableCatalog()
+sn_sc.CatalogJS.getCatalogCount()
+</code></pre>
+<h3 id="catalogitemjs">CatalogItemJS</h3>
+<pre><code class="language-javascript">var item = new sn_sc.CatItem(sysId);
+
+// CRUD
+item.create()
+item.deleteRecord()
+item.read()
+item.setAttributes(map)
+item.update()
+
+// Catalog/Category
+item.getCatalogs()
+item.isAssociatedWithCatalog(catId)
+item.setCatalogs(catIds)
+item.setCategories(catIds)
+
+// Variables
+item.getVariables()                      // questions + layout
+item.getVariablesDynamicValueConfig()    // data lookup + dynamic value config
+item.getVariablesLayout()               // layout-only
+
+// Pricing
+item.getCompleteItemPrice()              // formatted string including recurring
+
+// Permissions
+item.canView()
+item.isActive()
+item.isDelegationAllowed()
+item.canViewOnSearch()
+
+// User Criteria (M2M management)
+item.availableForUserCriteria()
+item.notAvailableForUserCriteria()
+
+// Producer
+item.submitProducer(vars)
+
+// Template
+item.getTemplateUsed()
+</code></pre>
+<h3 id="categoryjs">CategoryJS</h3>
+<pre><code class="language-javascript">var cat = new sn_sc.CatCategory(sysId);
+
+// CRUD
+cat.setAttributes(map)
+cat.create()
+cat.update()
+cat.deleteRecord()
+cat.read()
+
+// Hierarchy
+cat.getCatalog()
+cat.getParent()
+cat.getSubCategories()
+cat.getChildCategoriesInHierarchy()
+
+// Visibility
+cat.canView()
+cat.canViewForMobile()
+cat.hasVisibleItem()
+cat.getItemsCount()
+
+// Display
+cat.getTitle()
+cat.getDescription()
+cat.getIconSRC()
+cat.getFullDescription()
+</code></pre>
+<h3 id="cartjs">CartJS</h3>
+<pre><code class="language-javascript">var cart = new sn_sc.CartJS();
+var cart = new sn_sc.CartJS(cartName);
+var cart = new sn_sc.CartJS(cartName, userId);
+
+// Cart state
+cart.getCart()
+cart.getCartID()
+cart.getCartItems()
+cart.isEmpty()
+cart.remove(cartItemId)
+cart.cleanupCart()
+
+// Requested For
+cart.getRequestedFor()
+cart.setRequestedFor(userId)
+cart.setDeliveryAddress(addr)
+cart.setSpecialInstructions(text)
+
+// Item management
+cart.addToCart(itemId)
+cart.addItemToCart(itemId, params)
+cart.updateItem(cartItemId, params)
+
+// Checkout
+cart.checkoutSummary()           // frequency-grouped summary
+cart.checkoutCart()
+cart.checkoutGuide()
+cart.orderNow(itemId)
+cart.submitOrder()               // validates requested_for
+
+// Validation
+cart.findConflictingDomain()
+cart.findUserCriteriaRestrictedItems()
+cart.validateCartItems()
+cart.checkAllItemsHaveRequestedFor()
+cart.canEmptyCart()
+
+// Guide
+cart.getGuide()
+cart.setGuide(guideId)
+cart.newGuide(guideId)
+cart.activateGuide()
+
+// Static
+sn_sc.CartJS.checkSequence(orderGuideId)
+sn_sc.CartJS.canViewRF()
+sn_sc.CartJS.getRequestedForAddress(userId)
+sn_sc.CartJS.copyRPVariables(sourceRitmId, targetRitmId)
+sn_sc.CartJS.moveRPVariables(sourceRitmId, targetRitmId)
+</code></pre>
+<h3 id="catalogsearchjs">CatalogSearchJS</h3>
+<pre><code class="language-javascript">var search = new sn_sc.CatalogSearch();
+search.search(catalogId, categoryId, term, mobile, depthSearch, searchPortal)
+// → returns ScopedGlideRecord results
+</code></pre>
+<h3 id="catalogclientscriptjs">CatalogClientScriptJS</h3>
+<pre><code class="language-javascript">var cs = new sn_sc.CatalogClientScript();
+cs.setAttributes(map)
+cs.appliesToCatalogItem(bool)
+cs.appliesToRequestedItem(bool)
+cs.appliesToCatalogTask(bool)
+cs.appliesToTargetRecord(bool)
+cs.setCatalogItem(sysId)
+cs.setVariableSet(sysId)
+cs.setOnChangeVariable(sysId)
+cs.addScript(script)
+cs.create(standardUpdate)
+cs.deleteRecord(sysId, standardUpdate)
+
+// Static
+sn_sc.CatalogClientScript.getOnChangeVariableChoices(itemId)
+</code></pre>
+<hr />
+<h2 id="12-variable-set-scoped-apis">12. Variable Set Scoped APIs</h2>
+<h3 id="itemoptionquestionsetjs">ItemOptionQuestionSetJS</h3>
+<pre><code class="language-javascript">var qs = new sn_sc.ItemOptionQuestionSetJS(mode);
+qs.setCatalogItemID(id)
+qs.load()
+qs.getFlatQuestionsAndContainersList(excludeDummyContainers)   // List&lt;Question&gt;
+qs.getFlatQuestionsAndContainersListSummary(excludeDummyContainers) // List&lt;Map&gt;
+</code></pre>
+<h3 id="tablevariablesetjs">TableVariableSetJS</h3>
+<pre><code class="language-javascript">var tvs = new sn_sc.TableVariableSetJS(varSetId, sourceTable, sourceId);
+tvs.setSequence(variableIds)          // NativeArray override order
+tvs.setRowData(rowData)              // set current row context
+tvs.setFetchQuestionsFromModel(bool)
+tvs.load()
+tvs.getFlatQuestions()               // List&lt;Map&gt; with useNonDefaultValue=true
+tvs.getVariablesDynamicValueConfig() // List&lt;Map&gt; with TYPE, ID, dynamic attrs
+</code></pre>
+<h3 id="orderguidejs">OrderGuideJS</h3>
+<pre><code class="language-javascript">var og = new sn_sc.OrderGuide(sysId);
+og.init(request)           // → included items with cascade_variable_map + variable_assignments
+og.isTwoStep()
+og.isIncludeItems()
+og.isUseCustomCart()
+og.isSequencedGuide()
+og.getID()
+og.navigateFromMap(varMap) // convert variable names → sys_ids, manage sequence ordering
+</code></pre>
+<h3 id="catalogitemvariablejs-catalogitemvariablesetjs-catalogitemvariablesetm2mjs">CatalogItemVariableJS / CatalogItemVariableSetJS / CatalogItemVariableSetM2MJS</h3>
+<p>Full CRUD wrappers for:
+- <code>item_option_new</code> (individual variable)
+- <code>item_option_new_set</code> (variable set definition)
+- <code>sc_item_option_mtom</code> (M2M between item and variable set)</p>
+<hr />
+<h2 id="13-key-integration-points">13. Key Integration Points</h2>
+<pre><code>Portal / Mobile UI
+    ↓ REST/GraphQL
+GraphQL Schema (com.glideapp.catalog.graphql)
+    ↓
+CatalogItem / Category / Cart domain objects
+    ↓
+CatalogItemJS / CartJS / CategoryJS (Scoped API)
+    ↓
+Business logic (CatalogUtil, CatalogItem, Cart, etc.)
+    ↓
+GlideRecord (DB)
+
+NG UI (Angular)
+    ↓ AJAX
+CartAjaxProcessor / CommandProcessor
+    ↓
+NGCatalogClientScriptProcessor (scripts)
+CatalogUIPolicyFetcher (policies)
+CatalogDataLookup (auto-populate)
+    ↓
+Variables / Questions system
+</code></pre>
+    </div>
+    <div class="doc-nav">
+      <a class="doc-nav-btn" href="04-cache-db-metrics.html"><div class="doc-nav-label">← Previous</div><div class="doc-nav-title">Cache, DB Listeners & Metrics</div></a>
+      <a class="doc-nav-btn next" href="06-appengine-builder-atf-templates-scoped.html"><div class="doc-nav-label">Next →</div><div class="doc-nav-title">AppEngine, Builder, ATF & Templates</div></a>
+    </div>
+  </div>
+</div>
+<footer>
+  Built with ⚡ · <a href="../index.html">← All Categories</a> · <a href="index.html">Service Catalog</a>
+</footer>
+</body>
+</html>

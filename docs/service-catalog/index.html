@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Service Catalog — My Learnings</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="topnav-logo" href="../index.html">⚡ <span>My</span>Learnings</a>
+  <div class="topnav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Service Catalog</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1><span class="hl">Service Catalog</span> Deep Dive</h1>
+  <p>Complete technical reference for <code style="background:#1f2937;padding:2px 8px;border-radius:4px;font-size:14px">glide-servicecatalog</code> — from domain model to Catalog Builder, variables, producers, caching, and scripting.</p>
+  <div class="hero-tags">
+    <span class="htag htag-blue">551 Java Classes</span>
+    <span class="htag htag-green">8 Docs</span>
+    <span class="htag htag-orange">1 Interactive Guide</span>
+    <span class="htag htag-purple">5 Scenarios</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- FEATURED: Interactive Guide -->
+  <div class="section" style="padding-bottom:0">
+    <div class="section-title">Featured</div>
+    <div class="section-sub">Interactive step-through with real instance screenshots and live data model</div>
+
+    <a class="featured" href="interactive-guide.html">
+      <div class="featured-icon">🎬</div>
+      <div class="featured-body">
+        <div class="featured-label">Interactive Guide</div>
+        <div class="featured-title">Service Catalog Deep Dive — Step-Through Visual Guide</div>
+        <div class="featured-desc">5 scenarios × 35 steps. Real ServiceNow instance screenshots synchronized with data model changes, processing class chains, and SQL operations at each step.</div>
+        <div class="featured-pills">
+          <span class="fpill">Classic Admin</span>
+          <span class="fpill">Catalog Builder</span>
+          <span class="fpill">Variable Types</span>
+          <span class="fpill">Record Producer</span>
+          <span class="fpill">UI Policies &amp; Scripts</span>
+        </div>
+      </div>
+      <div class="featured-cta">Open Guide →</div>
+    </a>
+  </div>
+
+  <!-- DOCUMENTATION -->
+  <div class="section">
+    <div class="section-title">Documentation</div>
+    <div class="section-sub">Comprehensive reference documents by subsystem</div>
+
+    <div class="doc-grid">
+
+      <a class="doc-card" href="00-overview.html">
+        <div class="doc-card-num">00 · OVERVIEW</div>
+        <div class="doc-card-title">Module Overview &amp; Architecture</div>
+        <div class="doc-card-desc">Full directory map, module composition, end-to-end order flow, design patterns, plugin architecture, and documentation index.</div>
+        <div class="doc-card-tags">
+          <span class="dtag">Architecture</span>
+          <span class="dtag">Patterns</span>
+          <span class="dtag">Plugins</span>
+        </div>
+        <div class="doc-card-arrow">→</div>
+      </a>
+
+      <a class="doc-card" href="01-core-domain.html">
+        <div class="doc-card-num">01 · CORE DOMAIN</div>
+        <div class="doc-card-title">Catalog, Cart, Request, OrderGuide, Pricing</div>
+        <div class="doc-card-desc">CatalogRecord hierarchy, CatalogItem (2664 lines), Cart/CartRecord checkout flow, Request recalculation, OrderGuide with PAD sequencing, PriceGenerator.</div>
+        <div class="doc-card-tags">
+          <span class="dtag">sc_cat_item</span>
+          <span class="dtag">sc_cart</span>
+          <span class="dtag">sc_request</span>
+        </div>
+        <div class="doc-card-arrow">→</div>
+      </a>
+
+      <a class="doc-card" href="02-valve-producer-scripts.html">
+        <div class="doc-card-num">02 · VALVE PIPELINE</div>
+        <div class="doc-card-title">Valves, Producers, Script Evaluators, Wizard</div>
+        <div class="doc-card-desc">ProducerValve 5-step pipeline, CompositeProducerValve with rollback, 7 script evaluators chain (SaveScript→PreScript→DB→PostScript), Wizard framework.</div>
+        <div class="doc-card-tags">
+          <span class="dtag">ProducerValve</span>
+          <span class="dtag">Rhino</span>
+          <span class="dtag">SCWizard</span>
+        </div>
+        <div class="doc-card-arrow">→</div>
+      </a>
+
+      <a class="doc-card" href="03-variables-system.html">
+        <div class="doc-card-num">03 · VARIABLES</div>
+        <div class="doc-card-title">Runtime Models, Persistence, Views, Scripting</div>
+        <div class="doc-card-desc">3-layer architecture: VariableNodeDatabaseModel, sc_multi_row_question_answer node tree, TableVariableViewImpl, GlideElementScriptingModel Rhino bridge.</div>
+        <div class="doc-card-tags">
+          <span class="dtag">MRVS</span>
+          <span class="dtag">sc_multi_row_qa</span>
+          <span class="dtag">Rhino</span>
+        </div>
+        <div class="doc-card-arrow">→</div>
+      </a>
+
+      <a class="doc-card" href="04-cache-db-metrics.html">
+        <div class="doc-card-num">04 · CACHE &amp; INFRA</div>
+        <div class="doc-card-title">Cache, DB Listeners, Metrics, Component Registry</div>
+        <div class="doc-card-desc">TypeSafeCacheManager, SCStaleCacheListener with 40+ table mappings, CatalogDBListener, metrics, ServiceCatalogToggles, UI policy evaluation, Virtual Agent.</div>
+        <div class="doc-card-tags">
+          <span class="dtag">CacheManager</span>
+          <span class="dtag">DBListener</span>
+          <span class="dtag">Metrics</span>
+        </div>
+        <div class="doc-card-arrow">→</div>
+      </a>
+
+      <a class="doc-card" href="05-processors-graphql-search.html">
+        <div class="doc-card-num">05 · PROCESSORS &amp; API</div>
+        <div class="doc-card-title">Processors, GraphQL, DataLookup, Scoped APIs</div>
+        <div class="doc-card-desc">Command processor framework, AJAX processors, NG UI layer, GraphQL schema, CatalogDataLookup, Global/AI Search, CartJS/CatalogItemJS/CategoryJS scoped APIs.</div>
+        <div class="doc-card-tags">
+          <span class="dtag">GraphQL</span>
+          <span class="dtag">Scoped API</span>
+          <span class="dtag">AJAX</span>
+        </div>
+        <div class="doc-card-arrow">→</div>
+      </a>
+
+      <a class="doc-card" href="06-appengine-builder-atf-templates-scoped.html">
+        <div class="doc-card-num">06 · BUILDER &amp; TEMPLATES</div>
+        <div class="doc-card-title">AppEngine, Catalog Builder, ATF, Execution Plans</div>
+        <div class="doc-card-desc">AppEngine IO: tokenization unloaders, QuestionDesignerReorder LCS algorithm, ATF ReplayRequestItemRunner, TaskToken DAG, CatalogTemplate, ServiceFulfillment.</div>
+        <div class="doc-card-tags">
+          <span class="dtag">LCS Algorithm</span>
+          <span class="dtag">ExecutionPlan</span>
+          <span class="dtag">ATF</span>
+        </div>
+        <div class="doc-card-arrow">→</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- QUICK REFERENCE -->
+  <div class="section">
+    <div class="section-title">Quick Reference</div>
+    <div class="section-sub">Key tables and classes at a glance</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--acc);font-family:monospace;margin-bottom:10px">KEY TABLES</div>
+        <div style="font-size:12px;display:flex;flex-direction:column;gap:6px;color:var(--txt2)">
+          <div><code style="color:var(--acc4)">sc_cat_item</code> — Catalog item definition</div>
+          <div><code style="color:var(--acc4)">sc_cart</code> / <code style="color:var(--acc4)">sc_cart_item</code> — Shopping cart</div>
+          <div><code style="color:var(--acc4)">sc_request</code> / <code style="color:var(--acc4)">sc_req_item</code> — Submitted requests</div>
+          <div><code style="color:var(--acc4)">item_option_new</code> — Variables/questions</div>
+          <div><code style="color:var(--acc4)">item_option_new_set</code> — Variable sets</div>
+          <div><code style="color:var(--acc4)">sc_multi_row_question_answer</code> — MRVS data</div>
+          <div><code style="color:var(--acc4)">catalog_ui_policy</code> — Field visibility rules</div>
+          <div><code style="color:var(--acc4)">catalog_script_client</code> — Client scripts</div>
+          <div><code style="color:var(--acc4)">sc_item_produced_record</code> — Producer link</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--acc2);font-family:monospace;margin-bottom:10px">VARIABLE TYPES</div>
+        <div style="font-size:12px;display:flex;flex-direction:column;gap:5px;color:var(--txt2);font-family:monospace">
+          <div>1 → Yes/No &nbsp;&nbsp; 2 → Single Line Text</div>
+          <div>3 → Multiple Choice &nbsp;&nbsp; 4 → Multi Line</div>
+          <div>5 → Numeric Scale &nbsp;&nbsp; 6 → Reference</div>
+          <div>7 → CheckBox &nbsp;&nbsp; 8 → Select Box</div>
+          <div>9 → Date &nbsp;&nbsp; 10 → Date/Time</div>
+          <div>12 → Container Start</div>
+          <div>13 → Container End</div>
+          <div>14 → Container Split</div>
+          <div>16 → Label &nbsp;&nbsp; 18 → Lookup Select</div>
+          <div>21 → Masked &nbsp;&nbsp; 24 → Duration</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--acc5);font-family:monospace;margin-bottom:10px">SCRIPT CHAIN (ProducerValve)</div>
+        <div style="font-size:12px;display:flex;flex-direction:column;gap:6px;color:var(--txt2)">
+          <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--acc3);font-weight:700">1</span> SaveScriptEvaluator — SAVE_SCRIPT</div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--acc3);font-weight:700">2</span> PreScriptEvaluator — SCRIPT (pre-insert)</div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--acc3);font-weight:700">3</span> MacroSaveScriptEvaluator</div>
+          <div style="background:rgba(63,185,80,.1);border:1px solid var(--acc2);border-radius:3px;padding:4px 8px;color:var(--acc2);font-weight:700">── gr.insert() ── RECORD CREATED</div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--acc2);font-weight:700">4</span> PostScriptEvaluator — POST_INSERTION_SCRIPT</div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--acc2);font-weight:700">5</span> MacroPostScriptEvaluator</div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--acc);font-weight:700">✓</span> sc_item_produced_record logged</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Built with ⚡ · <a href="../index.html">← All Categories</a> · <a href="https://code.devsnc.com/chaitanya-saragadam/mylearnings">Source</a>
+</footer>
+
+</body>
+</html>

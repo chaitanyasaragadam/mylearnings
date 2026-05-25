@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interactive Guide — Service Catalog | My Learnings</title>
+<style>
+:root{
+  --bg:#0d1117;--surf:#161b22;--surf2:#1f2937;--surf3:#2d333b;
+  --bdr:#30363d;--acc:#58a6ff;--acc2:#3fb950;--acc3:#f78166;
+  --acc4:#d2a8ff;--acc5:#ffa657;--acc6:#39d353;
+  --txt:#e6edf3;--txt2:#8b949e;--txt3:#6e7681;
+  --gnew:#1a3a1a;--gnewb:#3fb950;--gnewt:#7ee787;
+  --gupd:#2d1a0a;--gupdb:#f78166;--gupdt:#ffa28b;
+  --gref:#1a2540;--grefb:#58a6ff;--greft:#79c0ff;
+  --gwrn:#2d2008;--gwrnb:#ffa657;--gwrnt:#ffc17a;
+  --gdel:#3a1a1a;--gdelb:#f85149;--gdelt:#ff9492;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);display:flex;flex-direction:column}
+
+/* HEADER */
+header{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--surf);border-bottom:1px solid var(--bdr);flex-shrink:0;flex-wrap:wrap;gap:6px}
+.logo{font-size:14px;font-weight:700;white-space:nowrap}
+.logo span{color:var(--acc)}
+.hbadge{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--gref);color:var(--greft);border:1px solid var(--grefb)}
+.stabs{display:flex;gap:3px;margin-left:auto;flex-wrap:wrap}
+.stabs button{padding:5px 11px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;border-radius:5px;font-size:11px;font-weight:500;transition:all .15s;white-space:nowrap}
+.stabs button:hover{background:var(--surf2);color:var(--txt)}
+.stabs button.active{background:var(--acc);color:#000;border-color:var(--acc)}
+
+/* BODY */
+.body{display:flex;flex:1;overflow:hidden}
+
+/* STEP SIDEBAR */
+.sidebar{width:210px;flex-shrink:0;background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-title{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;padding:10px 12px 6px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.sidebar-scroll{flex:1;overflow-y:auto}
+.sitem{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.sitem:hover{background:var(--surf2)}
+.sitem.active{border-left-color:var(--acc);background:#1c2333}
+.sitem.done .snum{background:var(--gnewb);color:#000;border-color:var(--gnewb)}
+.sitem.active .snum{background:var(--acc);color:#000;border-color:var(--acc)}
+.snum{width:18px;height:18px;border-radius:50%;background:var(--surf2);border:1px solid var(--bdr);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--txt2);margin-top:1px}
+.slabel{font-size:11px;color:var(--txt2);line-height:1.35}
+.sitem.active .slabel{color:var(--txt);font-weight:500}
+.scon{width:1px;height:8px;background:var(--bdr);margin:0 0 0 18px}
+
+/* CENTER + RIGHT */
+.center-right{display:flex;flex:1;overflow:hidden;flex-direction:column}
+.center-right-top{display:flex;flex:1;overflow:hidden}
+
+/* PREVIEW */
+.preview{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.prev-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surf);border-bottom:1px solid var(--bdr);flex-shrink:0}
+.prev-title{font-size:13px;font-weight:700;color:var(--txt);flex:1;min-width:0}
+.prev-desc{font-size:11px;color:var(--txt2);max-width:360px;text-align:right;line-height:1.35;flex-shrink:0}
+.browser{background:#161616;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px;padding:6px 10px;flex-shrink:0}
+.dots{display:flex;gap:4px}
+.dots span{width:9px;height:9px;border-radius:50%}
+.dots span:nth-child(1){background:#ff5f57}
+.dots span:nth-child(2){background:#febc2e}
+.dots span:nth-child(3){background:#28c840}
+.urlbar{flex:1;background:var(--surf2);border:1px solid var(--bdr);border-radius:5px;padding:3px 8px;font-size:10px;color:var(--txt2);font-family:monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.screen{flex:1;overflow:hidden;position:relative;background:#111}
+.screen img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:top center;display:block;transition:opacity .25s}
+
+/* ANNOTATIONS overlay */
+.ann-wrap{position:absolute;inset:0;pointer-events:none}
+.ann{position:absolute;border:2px solid var(--acc);border-radius:3px;box-shadow:0 0 0 3px rgba(88,166,255,.12)}
+.ann-tag{position:absolute;top:-20px;left:0;background:var(--acc);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;white-space:nowrap}
+
+/* DATA MODEL */
+.dm-panel{width:360px;flex-shrink:0;background:var(--surf);border-left:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+.dm-hdr{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;padding:10px 12px 8px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px;flex-shrink:0}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--gnewb);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.dm-scroll{flex:1;overflow-y:auto;padding:8px}
+
+.dbt{border:1px solid var(--bdr);border-radius:5px;margin-bottom:8px;overflow:hidden;font-size:10px}
+.dbth{background:var(--surf2);padding:5px 8px;display:flex;align-items:center;gap:5px;border-bottom:1px solid var(--bdr)}
+.dbtn{font-weight:700;color:var(--acc);font-family:monospace;font-size:10px}
+.dbbadge{font-size:8px;padding:1px 4px;border-radius:2px;font-weight:700;border:1px solid}
+.b-new{background:var(--gnew);color:var(--gnewt);border-color:var(--gnewb)}
+.b-upd{background:var(--gupd);color:var(--gupdt);border-color:var(--gupdb)}
+.b-ref{background:var(--gref);color:var(--greft);border-color:var(--grefb)}
+.b-del{background:var(--gdel);color:var(--gdelt);border-color:var(--gdelb)}
+.b-wrn{background:var(--gwrn);color:var(--gwrnt);border-color:var(--gwrnb)}
+.dbr{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--bdr)}
+.dbr:last-child{border-bottom:none}
+.dbf{padding:3px 6px;color:var(--txt3);font-family:monospace;border-right:1px solid var(--bdr);word-break:break-all;line-height:1.3}
+.dbv{padding:3px 6px;color:var(--txt);font-family:monospace;word-break:break-all;line-height:1.3}
+.hl-new{background:var(--gnew)}.hl-new .dbv{color:var(--gnewt);font-weight:700}
+.hl-upd{background:var(--gupd)}.hl-upd .dbv{color:var(--gupdt);font-weight:700}
+.hl-wrn{background:var(--gwrn)}.hl-wrn .dbv{color:var(--gwrnt)}
+.hl-del{background:var(--gdel)}.hl-del .dbv{color:var(--gdelt)}
+
+/* NOTES */
+.notes{height:120px;flex-shrink:0;background:var(--surf);border-top:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+.notes-hdr{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;padding:6px 14px 4px;border-bottom:1px solid var(--bdr);flex-shrink:0;background:var(--surf)}
+.notes-body{display:flex;flex-wrap:wrap;gap:5px;padding:6px 10px;overflow-y:auto;flex:1}
+.chip{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:10px;border:1px solid;line-height:1.2}
+.ch-java{background:#1a2d40;border-color:#58a6ff;color:#79c0ff}
+.ch-sql{background:#2d1a2d;border-color:#d2a8ff;color:#e2beff}
+.ch-cache{background:#1a2d1a;border-color:#3fb950;color:#7ee787}
+.ch-event{background:#2d2008;border-color:#ffa657;color:#ffc17a}
+.ch-warn{background:#3a1a1a;border-color:#f85149;color:#ff9492}
+.ch-info{background:var(--surf2);border-color:var(--bdr);color:var(--txt2)}
+.ch-rhino{background:#2d1a40;border-color:#a371f7;color:#c9a0ff}
+.ch-db{background:#1a2540;border-color:#388bfd;color:#79c0ff}
+
+/* CONTROLS */
+.ctrl{display:flex;align-items:center;gap:8px;padding:6px 16px;background:var(--surf);border-top:1px solid var(--bdr);flex-shrink:0}
+.cbtn{padding:5px 12px;border:1px solid var(--bdr);background:var(--surf2);color:var(--txt);cursor:pointer;border-radius:5px;font-size:11px;font-weight:500;transition:all .15s}
+.cbtn:hover{border-color:var(--acc);color:var(--acc)}
+.cbtn:disabled{opacity:.3;cursor:not-allowed}
+.cbtn.pri{background:var(--acc);color:#000;border-color:var(--acc);font-weight:700}
+.cbtn.pri:hover{background:#79c0ff}
+.ptrack{flex:1;height:3px;background:var(--surf3);border-radius:2px;cursor:pointer;position:relative}
+.pfill{height:100%;background:var(--acc);border-radius:2px;transition:width .3s}
+.ctr{font-size:11px;color:var(--txt2);white-space:nowrap}
+.autolbl{font-size:10px;color:var(--txt3)}
+.tog{width:28px;height:14px;border-radius:7px;background:var(--surf3);border:1px solid var(--bdr);cursor:pointer;position:relative;flex-shrink:0}
+.tog.on{background:var(--acc);border-color:var(--acc)}
+.tog::after{content:'';position:absolute;width:10px;height:10px;top:1px;left:1px;background:#fff;border-radius:50%;transition:left .15s}
+.tog.on::after{left:15px}
+.speed-lbl{font-size:10px;color:var(--txt3)}
+.speed-sel{background:var(--surf2);border:1px solid var(--bdr);color:var(--txt2);font-size:10px;padding:2px 5px;border-radius:4px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚙ Service Catalog <span>Deep Dive</span></div>
+  <div class="hbadge">glide-servicecatalog</div>
+  <div class="stabs" id="stabs">
+    <button type="button" class="active" onclick="loadScenario('classic')">🖥 Classic Admin</button>
+    <button type="button" onclick="loadScenario('builder')">🏗 Catalog Builder</button>
+    <button type="button" onclick="loadScenario('variables')">📋 Variable Types</button>
+    <button type="button" onclick="loadScenario('producer')">🏭 Record Producer</button>
+    <button type="button" onclick="loadScenario('policies')">🔒 UI Policies & Scripts</button>
+  </div>
+</header>
+
+<div class="body">
+  <div class="sidebar">
+    <div class="sidebar-title">Steps</div>
+    <div class="sidebar-scroll" id="sidebar-scroll"></div>
+  </div>
+
+  <div class="center-right">
+    <div class="center-right-top">
+      <div class="preview">
+        <div class="prev-hdr">
+          <div class="prev-title" id="prev-title">Loading…</div>
+          <div class="prev-desc" id="prev-desc"></div>
+        </div>
+        <div class="browser">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="urlbar" id="urlbar"></div>
+        </div>
+        <div class="screen" id="screen">
+          <img id="screen-img" src="" alt="">
+          <div class="ann-wrap" id="ann-wrap"></div>
+        </div>
+      </div>
+
+      <div class="dm-panel">
+        <div class="dm-hdr"><div class="pulse"></div>Data Model Changes</div>
+        <div class="dm-scroll" id="dm-scroll"></div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="notes-hdr">⚡ Processing — Classes · Listeners · DB Operations</div>
+      <div class="notes-body" id="notes-body"></div>
+    </div>
+  </div>
+</div>
+
+<div class="ctrl">
+  <button type="button" class="cbtn" id="btn-prev" onclick="prev()">◀ Prev</button>
+  <button type="button" class="cbtn pri" id="btn-play" onclick="togglePlay()">▶ Play</button>
+  <button type="button" class="cbtn" id="btn-next" onclick="next()">Next ▶</button>
+  <div class="ptrack" id="ptrack" onclick="seek(event)"><div class="pfill" id="pfill"></div></div>
+  <div class="ctr" id="ctr">1/1</div>
+  <div class="autolbl">Auto</div>
+  <div class="tog on" id="tog" onclick="toggleAuto()"></div>
+  <div class="speed-lbl">Speed</div>
+  <select class="speed-sel" id="speed" aria-label="Playback speed" onchange="updateSpeed()">
+    <option value="6000">0.5×</option>
+    <option value="4000" selected>1×</option>
+    <option value="2500">1.5×</option>
+    <option value="1500">2×</option>
+  </select>
+</div>
+
+<script>
+const INST='https://k8s0893285-node1.thunder.devsnc.com';
+const S='screenshots/';
+
+// ─── SCENARIO DATA ───────────────────────────────────────────────────────────
+const scenarios={
+
+// ════════════════════════════════════════════════════════
+// SCENARIO 1: CLASSIC ADMIN
+// ════════════════════════════════════════════════════════
+classic:{name:'Classic Admin — Standard Catalog Item',steps:[
+{
+  title:'1 · Service Catalog Portal — Browse',
+  desc:'User opens portal, Catalog.getAllCatalogs() fires, UserCriteria evaluated.',
+  url:`${INST}/sp?id=sc_home`,img:`${S}01-catalog-home.png`,
+  tables:[
+    {n:'sc_catalog',b:'ref',rows:[
+      {f:'sys_id',v:'e0d08b13c333…',h:''},
+      {f:'title',v:'Service Catalog',h:''},
+      {f:'active',v:'true',h:''},
+      {f:'homepage',v:'→ sp_page',h:''},
+    ]},
+    {n:'sc_category',b:'ref',rows:[
+      {f:'parent',v:'null (top-level)',h:''},
+      {f:'catalog',v:'→ sc_catalog',h:''},
+      {f:'active',v:'true',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'Catalog.getAllCatalogs() — TypeSafeCacheManager hit'},
+    {t:'java',i:'☕',v:'Category.getCategories() — user-aware, domain-filtered'},
+    {t:'cache',i:'💾',v:'UserCategoriesCacheableManager — per-user visibility cache'},
+    {t:'sql',i:'🗄',v:'SELECT * FROM sc_catalog WHERE active=true'},
+    {t:'event',i:'⚡',v:'SCStaleCacheListener watches sc_catalog for invalidation'},
+  ]
+},
+{
+  title:'2 · Classic Admin — sc_cat_item.do',
+  desc:'Admin opens sc_cat_item.do to create/edit a catalog item with all its metadata.',
+  url:`${INST}/sc_cat_item.do?sys_id=1e01f08ac0a801070187b08d81c0845c`,
+  img:`${S}classic-item-form.png`,
+  tables:[
+    {n:'sc_cat_item',b:'ref',rows:[
+      {f:'sys_id',v:'1e01f08ac0a80107…',h:''},
+      {f:'name',v:'Sample Item',h:''},
+      {f:'type',v:'item',h:'hl-wrn'},
+      {f:'active',v:'true',h:''},
+      {f:'category',v:'→ sc_category',h:''},
+      {f:'sc_catalogs',v:'→ sc_catalog (M2M)',h:''},
+      {f:'price',v:'$0.00',h:''},
+      {f:'delivery_plan',v:'→ sc_cat_item_delivery_plan',h:''},
+      {f:'availability',v:'on_desktop, on_mobile',h:''},
+    ]},
+    {n:'sc_cat_item_catalog_mtom',b:'ref',rows:[
+      {f:'sc_cat_item',v:'→ sc_cat_item',h:''},
+      {f:'sc_catalog',v:'→ sc_catalog',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'info',i:'ℹ',v:'Classic admin: sc_cat_item.do — full GlideRecord form'},
+    {t:'java',i:'☕',v:'CatalogItem.get(sysId) — Singleton cache lookup'},
+    {t:'java',i:'☕',v:'CatalogUtil.canWrite() — ACL check before save'},
+    {t:'cache',i:'💾',v:'StaleItemCacheFinder — invalidates on INSERT/UPDATE'},
+    {t:'event',i:'⚡',v:'CatalogDBListener fires → cache chain cleared'},
+  ]
+},
+{
+  title:'3 · Add Reference Variable (item_option_new.do)',
+  desc:'Admin creates a Reference-type variable — defines table, reference qualifier, and mapping.',
+  url:`${INST}/item_option_new.do?sys_id=1e09bd6dc0a80107`,
+  img:`${S}variable-reference-form.png`,
+  tables:[
+    {n:'item_option_new',b:'new',rows:[
+      {f:'sys_id',v:'1e09bd6dc0a80107',h:'hl-new'},
+      {f:'cat_item',v:'→ sc_cat_item',h:'hl-new'},
+      {f:'name',v:'reference',h:'hl-new'},
+      {f:'question_text',v:'Reference to sys_user',h:''},
+      {f:'type',v:'6 (Reference)',h:'hl-wrn'},
+      {f:'reference',v:'sys_user',h:'hl-wrn'},
+      {f:'reference_qual',v:'active=true^department=IT',h:'hl-wrn'},
+      {f:'map_to_field',v:'assigned_to (target field)',h:'hl-wrn'},
+      {f:'mandatory',v:'false',h:''},
+      {f:'order',v:'600',h:''},
+    ]},
+    {n:'question_choice (n/a for ref)',b:'ref',rows:[
+      {f:'note',v:'Choice list not used for Reference type',h:''},
+      {f:'used for',v:'type=2 (Select Box), type=3 (Multiple Choice)',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'LookupSelectQuestion.setReferenceContext() — qualifier eval'},
+    {t:'java',i:'☕',v:'AbstractVariableSet.getRefResolverRecord() — transient sc_cart_item'},
+    {t:'sql',i:'🗄',v:'Reference qualifier: addEncodedQuery(reference_qual)'},
+    {t:'java',i:'☕',v:'map_to_field: ProducerTargetVariableMapper copies value to target'},
+    {t:'info',i:'ℹ',v:'type=6 → Reference; type=18 → Lookup Select Box (cached lookup)'},
+    {t:'cache',i:'💾',v:'Reference result cached per qualifier + user context'},
+  ]
+},
+{
+  title:'4 · Add Choice/Select Variable',
+  desc:'Choice variable uses question_choice child records — each choice maps to a value.',
+  url:`${INST}/item_option_new.do?sys_id=1e071ec6c0a80107`,
+  img:`${S}variable-choice-form.png`,
+  tables:[
+    {n:'item_option_new',b:'ref',rows:[
+      {f:'name',v:'multiple_choice',h:''},
+      {f:'type',v:'3 (Multiple Choice)',h:'hl-wrn'},
+      {f:'question_text',v:'Multi choice',h:''},
+      {f:'default_value',v:'(none)',h:''},
+    ]},
+    {n:'question_choice',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'question',v:'→ item_option_new',h:'hl-new'},
+      {f:'text',v:'Option A',h:'hl-new'},
+      {f:'value',v:'option_a',h:'hl-new'},
+      {f:'order',v:'100',h:''},
+      {f:'selected',v:'false',h:''},
+    ]},
+    {n:'question_choice #2',b:'new',rows:[
+      {f:'text',v:'Option B',h:'hl-new'},
+      {f:'value',v:'option_b',h:'hl-new'},
+      {f:'order',v:'200',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'sql',i:'🗄',v:'INSERT INTO question_choice per option (question=item_option_new.sys_id)'},
+    {t:'java',i:'☕',v:'Question.getChoices() → List<QuestionChoice> loaded at form render'},
+    {t:'info',i:'ℹ',v:'type=2 → Select Box (single); type=3 → Multiple Choice (multi-select)'},
+    {t:'info',i:'ℹ',v:'type=7 → CheckBox; type=1 → Yes/No (boolean, no choices needed)'},
+    {t:'cache',i:'💾',v:'choice list cached with SCStaleCacheListener on question_choice table'},
+  ]
+},
+{
+  title:'5 · Multi-Row Variable Set (ONE_TO_MANY)',
+  desc:'Variable set configured as ONE_TO_MANY — each row creates a separate sc_multi_row_question_answer.',
+  url:`${INST}/item_option_new_set.do?sys_id=7a86c1f673221010`,
+  img:`${S}variable-set-form.png`,
+  tables:[
+    {n:'item_option_new_set',b:'ref',rows:[
+      {f:'sys_id',v:'7a86c1f673221010',h:''},
+      {f:'type',v:'one_to_many',h:'hl-wrn'},
+      {f:'internal_name',v:'auto-generated by VariableSetListener',h:'hl-wrn'},
+      {f:'max_rows',v:'-1 (unlimited)',h:''},
+      {f:'display_title',v:'true',h:''},
+    ]},
+    {n:'sc_item_option_mtom',b:'ref',rows:[
+      {f:'sc_cat_item',v:'→ sc_cat_item',h:''},
+      {f:'variable_set',v:'→ item_option_new_set',h:''},
+      {f:'order',v:'500',h:''},
+    ]},
+    {n:'sc_multi_row_question_answer',b:'new',rows:[
+      {f:'node_type',v:'"table" (root node)',h:'hl-new'},
+      {f:'node_variable_set_id',v:'→ item_option_new_set',h:'hl-new'},
+      {f:'node_owner_id',v:'→ sc_cart_item or sc_req_item',h:'hl-new'},
+      {f:'node_owner_table',v:'sc_cart_item',h:''},
+    ]},
+    {n:'sc_multi_row_question_answer (row)',b:'new',rows:[
+      {f:'node_type',v:'"tr" (row)',h:'hl-new'},
+      {f:'node_index',v:'System.nanoTime() — ordering key',h:'hl-wrn'},
+      {f:'node_parent_id',v:'→ "table" root node',h:''},
+      {f:'node_question_id',v:'→ item_option_new',h:''},
+      {f:'node_value',v:'user input value',h:'hl-new'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'TableVariableSet (ONE_TO_MANY) loads from IVariableModelInstanceProvider'},
+    {t:'java',i:'☕',v:'TableVariableNode.addRow() — index = System.nanoTime() for ordering'},
+    {t:'java',i:'☕',v:'VariableNodeDatabaseModel.save() — batch INSERT to sc_multi_row_question_answer'},
+    {t:'java',i:'☕',v:'getMaxAllowedRows() = min(system_prop_limit, item_option_new_set.max_rows)'},
+    {t:'event',i:'⚡',v:'CatalogDBListener → VariableSetListenerConfigMeta on INSERT/UPDATE/DELETE'},
+    {t:'java',i:'☕',v:'VariableSetListener.onDelete() — cleans up JSON arrays in catalog template records'},
+  ]
+},
+{
+  title:'6 · Cart Created — Add to Cart',
+  desc:'User fills variables and clicks Add to Cart. Cart.addToCart() creates sc_cart + sc_cart_item.',
+  url:`${INST}/sp?id=sc_cart`,img:`${S}05-cart.png`,
+  tables:[
+    {n:'sc_cart',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'name',v:'"gui" (default session cart)',h:'hl-new'},
+      {f:'u_user',v:'→ sys_user (maint)',h:'hl-new'},
+      {f:'requested_for',v:'→ sys_user',h:''},
+      {f:'special_instructions',v:'(empty)',h:''},
+    ]},
+    {n:'sc_cart_item',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'cart',v:'→ sc_cart',h:'hl-new'},
+      {f:'cat_item',v:'→ sc_cat_item',h:'hl-new'},
+      {f:'quantity',v:'1',h:''},
+      {f:'price',v:'$0.00',h:''},
+    ]},
+    {n:'sc_item_option (variable values)',b:'new',rows:[
+      {f:'sc_item_option.item_id',v:'→ sc_cart_item',h:'hl-new'},
+      {f:'value',v:'per question captured',h:'hl-new'},
+    ]},
+    {n:'sc_multi_row_question_answer',b:'new',rows:[
+      {f:'node_owner_id',v:'→ sc_cart_item',h:'hl-new'},
+      {f:'(rows)',v:'one row per MRVS row added',h:'hl-new'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'Cart.addToCart(itemId) → CartItem created, variables captured'},
+    {t:'java',i:'☕',v:'Cart.findConflictingDomain() — enforces single-domain cart rule'},
+    {t:'java',i:'☕',v:'Cart.findUserCriteriaRestrictedItems() — re-validates user access'},
+    {t:'sql',i:'🗄',v:'INSERT INTO sc_cart + sc_cart_item'},
+    {t:'sql',i:'🗄',v:'INSERT INTO sc_multi_row_question_answer (ONE_TO_MANY rows)'},
+    {t:'cache',i:'💾',v:'CartAjaxProcessorV2 handles AJAX add-to-cart request'},
+  ]
+},
+{
+  title:'7 · Checkout → Request + RITM Created',
+  desc:'Cart.checkoutCart() → CartValve → sc_request + sc_req_item inserted, cart deleted.',
+  url:`${INST}/sp?id=sc_cart`,img:`${S}05-cart.png`,
+  tables:[
+    {n:'sc_request',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'number',v:'REQ0010001',h:'hl-new'},
+      {f:'requested_for',v:'→ sys_user',h:'hl-new'},
+      {f:'state',v:'1 (Open)',h:'hl-new'},
+      {f:'price',v:'$0.00 → recalculated',h:'hl-wrn'},
+      {f:'sys_domain',v:'global',h:''},
+    ]},
+    {n:'sc_req_item',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'number',v:'RITM0010001',h:'hl-new'},
+      {f:'request',v:'→ sc_request',h:'hl-new'},
+      {f:'cat_item',v:'→ sc_cat_item',h:'hl-new'},
+      {f:'state',v:'1 (Open)',h:'hl-new'},
+      {f:'quantity',v:'1',h:''},
+    ]},
+    {n:'sc_cart (deleted)',b:'del',rows:[
+      {f:'name',v:'gui',h:''},
+      {f:'status',v:'→ DELETED post-checkout',h:'hl-del'},
+    ]},
+    {n:'sc_recurring_rollup',b:'new',rows:[
+      {f:'note',v:'created only when recurring_price > 0',h:''},
+      {f:'frequency',v:'monthly / yearly / etc.',h:''},
+      {f:'total',v:'summed recurring price',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'Cart.checkoutCart() → CartValve.before() → Request constructor'},
+    {t:'java',i:'☕',v:'Request.recalculatePrice() — sum(price × qty) where includePrice()=true'},
+    {t:'java',i:'☕',v:'Request.recalculateRecurringCost() → sc_recurring_rollup per frequency'},
+    {t:'sql',i:'🗄',v:'INSERT INTO sc_request + sc_req_item'},
+    {t:'sql',i:'🗄',v:'DELETE FROM sc_cart (cart cleaned up after checkout)'},
+    {t:'event',i:'⚡',v:'Business rules fire on sc_request INSERT (approval workflow, etc.)'},
+  ]
+},
+{
+  title:'8 · Delivery Plan + Tasks',
+  desc:'ExecutionPlan.get() builds TaskToken DAG — sc_task records scheduled from delivery plan.',
+  url:`${INST}/sc_req_item_list.do`,img:`${S}classic-item-form.png`,
+  tables:[
+    {n:'sc_cat_item_delivery_plan',b:'ref',rows:[
+      {f:'name',v:'Standard Fulfillment',h:''},
+      {f:'sys_id',v:'→ sc_cat_item.delivery_plan',h:''},
+    ]},
+    {n:'sc_cat_item_delivery_task',b:'ref',rows:[
+      {f:'delivery_plan',v:'→ sc_cat_item_delivery_plan',h:''},
+      {f:'order',v:'100 (BasicPlanLoader island)',h:'hl-wrn'},
+      {f:'delivery_time',v:'P2D (GlideDuration)',h:''},
+      {f:'upon_reject',v:'ON_REJECT_CANCEL=0',h:''},
+    ]},
+    {n:'sc_task',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'number',v:'SCTASK0010001',h:'hl-new'},
+      {f:'request_item',v:'→ sc_req_item',h:'hl-new'},
+      {f:'state',v:'1 (Open)',h:'hl-new'},
+      {f:'expected_start',v:'basis + pathLength - deliveryTime',h:'hl-wrn'},
+      {f:'due_date',v:'basis + pathLength + GlideCalendar',h:'hl-wrn'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'AbstractExecutionPlan.get(planId) — PrivateCache "zzDeliveryPlanCacheyy"'},
+    {t:'java',i:'☕',v:'BasicPlanLoader: calcSequence() → calcRudder() → setTokens() (island grouping)'},
+    {t:'java',i:'☕',v:'TaskToken.calculatePathLengths() — recursive DFS, GlideDuration accumulation'},
+    {t:'java',i:'☕',v:'TaskToken.shouldSkip() → Filter.checkRecord + condition_script evaluated'},
+    {t:'java',i:'☕',v:'TaskToken.getPredecessorApprovalIds() — stack traversal for approval chain'},
+    {t:'sql',i:'🗄',v:'INSERT INTO sc_task for each non-skipped delivery task'},
+  ]
+},
+]},
+
+// ════════════════════════════════════════════════════════
+// SCENARIO 2: CATALOG BUILDER (Now Experience)
+// ════════════════════════════════════════════════════════
+builder:{name:'Catalog Builder — Now Experience',steps:[
+{
+  title:'1 · Catalog Builder Home',
+  desc:'Admin navigates to /now/build/catalog/home. Recently updated items listed.',
+  url:`${INST}/now/build/catalog/home`,img:`${S}cb-home.png`,
+  tables:[
+    {n:'sys_app_module',b:'ref',rows:[
+      {f:'title',v:'Catalog Builder ➚',h:''},
+      {f:'query',v:'/now/build/catalog/home',h:'hl-wrn'},
+      {f:'link_type',v:'DIRECT',h:''},
+      {f:'roles',v:'catalog_builder_editor, catalog_template_editor',h:'hl-wrn'},
+    ]},
+    {n:'sc_cat_item (recent)',b:'ref',rows:[
+      {f:'sys_updated_on',v:'DESC order — last 10',h:''},
+      {f:'active',v:'true',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'info',i:'ℹ',v:'Plugin: com.glideapp.servicecatalog.catalog_builder_experience (Active)'},
+    {t:'info',i:'ℹ',v:'URL: /now/build/catalog/home — differs from classic /sc_cat_item_list.do'},
+    {t:'java',i:'☕',v:'QuestionDesignerJS — ScopedScriptableObject entry point for all operations'},
+    {t:'java',i:'☕',v:'CatalogUtil.setSessionProperties() — sets scope before every DB write'},
+    {t:'info',i:'ℹ',v:'Role guards: catalog_builder_editor required; catalog_template_editor for templates'},
+  ]
+},
+{
+  title:'2 · Item Details Tab',
+  desc:'Admin edits item metadata — name, category, catalogs, price, availability.',
+  url:`${INST}/now/build/catalog/item/f0caa23e97c2019021983d1e6253af9a/details`,
+  img:`${S}cb-item-details.png`,
+  tables:[
+    {n:'sc_cat_item (fields updated)',b:'upd',rows:[
+      {f:'name',v:'"Add/Remove users from group"',h:'hl-upd'},
+      {f:'short_description',v:'inline edit',h:'hl-upd'},
+      {f:'category',v:'→ sc_category (Services)',h:'hl-upd'},
+      {f:'active',v:'true',h:''},
+      {f:'availability',v:'on_desktop',h:''},
+    ]},
+    {n:'sc_cat_item_catalog_mtom',b:'upd',rows:[
+      {f:'sc_cat_item',v:'→ this item',h:''},
+      {f:'sc_catalog',v:'→ Service Catalog',h:'hl-upd'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'QuestionDesignerJS.updateResource(params) — action="details"'},
+    {t:'java',i:'☕',v:'AQuestionDesignerDAO.applyAttributesToGr() — field-level ACL filter'},
+    {t:'sql',i:'🗄',v:'UPDATE sc_cat_item SET name=?, category=? WHERE sys_id=?'},
+    {t:'event',i:'⚡',v:'CatalogDBListener.onUpdate(sc_cat_item) → StaleItemCacheFinder'},
+    {t:'cache',i:'💾',v:'UserItemsCacheableManager invalidated — all user item caches cleared'},
+  ]
+},
+{
+  title:'3 · Question Set Tab — All Field Types',
+  desc:'Question set shows all variable types on the Sample Item: 10 types in one view.',
+  url:`${INST}/now/build/catalog/item/1e01f08ac0a801070187b08d81c0845c/question_set`,
+  img:`${S}cb-sample-questions.png`,
+  tables:[
+    {n:'item_option_new (types present)',b:'ref',rows:[
+      {f:'type=1',v:'Yes / No — boolean checkbox',h:''},
+      {f:'type=2',v:'Single Line Text — free text',h:''},
+      {f:'type=3',v:'Multiple Choice — radio group',h:''},
+      {f:'type=4',v:'Multi Line Text — textarea',h:''},
+      {f:'type=5',v:'Numeric Scale — slider',h:''},
+      {f:'type=6',v:'Reference — lookup to sys_user',h:'hl-wrn'},
+      {f:'type=7',v:'CheckBox — boolean',h:''},
+      {f:'type=9',v:'Date — GlideDate field',h:''},
+      {f:'type=10',v:'Date/Time — GlideDateTime',h:''},
+      {f:'type=8',v:'Select Box — choice list',h:'hl-wrn'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogItem.getVariables() → ordered List<Question> by order field'},
+    {t:'java',i:'☕',v:'QuestionDesignerJS.createResource() → QuestionDAO.create() per type'},
+    {t:'java',i:'☕',v:'QuestionDAO.transformAttributes(params, type) — type-specific field filter'},
+    {t:'info',i:'ℹ',v:'Container types: container_start=12, container_split=14, container_end=13'},
+    {t:'info',i:'ℹ',v:'Advanced types: type=16 (Label/annotation), type=21 (Masked), type=24 (Duration)'},
+    {t:'cache',i:'💾',v:'CATALOG_UI_POLICY_CACHE keyed by sourceId — rebuilt after variable changes'},
+  ]
+},
+{
+  title:'4 · Add Question — QuestionDAO Creates Record',
+  desc:'Dragging a field type creates item_option_new — LCS order algorithm assigns gap value.',
+  url:`${INST}/now/build/catalog/item/79c99042b7321010e54deb56ee11a907/question_set`,
+  img:`${S}cb-variable-creation-qs.png`,
+  tables:[
+    {n:'item_option_new (newly added)',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'cat_item',v:'→ sc_cat_item',h:'hl-new'},
+      {f:'name',v:'auto_generated_name',h:'hl-new'},
+      {f:'type',v:'6 (Reference)',h:'hl-new'},
+      {f:'order',v:'gap value from LCS',h:'hl-wrn'},
+      {f:'active',v:'true',h:''},
+      {f:'mandatory',v:'false (default)',h:''},
+    ]},
+    {n:'QuestionDesignerReorder (in-memory)',b:'ref',rows:[
+      {f:'algorithm',v:'Longest Common Subsequence',h:'hl-wrn'},
+      {f:'goal',v:'minimize DB UPDATE operations',h:''},
+      {f:'old order',v:'[q1, q2, q3] → orders 100,200,300',h:''},
+      {f:'new order',v:'[q1, q4, q2, q3] → only q4 inserted',h:'hl-upd'},
+      {f:'DB updates',v:'1 (just q4.order) not all 4',h:'hl-new'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'QuestionDesignerJS.createResource() → action="question"'},
+    {t:'java',i:'☕',v:'QuestionDAO.create() — AQuestionDesignerDAO.insert(gr)'},
+    {t:'java',i:'☕',v:'QuestionDesignerReorder.computeNewQuestionOrders() — LCS algorithm'},
+    {t:'java',i:'☕',v:'QuestionOrderList (DoublyLinkedList) + gap rebalancing on collision'},
+    {t:'sql',i:'🗄',v:'INSERT INTO item_option_new + UPDATE order for non-LCS questions only'},
+    {t:'event',i:'⚡',v:'CatalogDBListener → VariableListenerConfigMeta on each INSERT/UPDATE'},
+  ]
+},
+{
+  title:'5 · UI Policy Tab in Catalog Builder',
+  desc:'CB UI Policy tab lists all policies. Admin adds conditions + actions (visible, mandatory, disabled).',
+  url:`${INST}/now/build/catalog/item/79c99042b7321010e54deb56ee11a907/ui_policy`,
+  img:`${S}cb-ui-policy-tab.png`,
+  tables:[
+    {n:'catalog_ui_policy',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'catalog_item',v:'→ sc_cat_item',h:'hl-new'},
+      {f:'short_description',v:'Hide field X when type=Y',h:'hl-new'},
+      {f:'active',v:'true',h:''},
+      {f:'on_load',v:'true — evaluate on form load',h:'hl-wrn'},
+      {f:'applies_to',v:'catalog_item',h:''},
+      {f:'conditions',v:'type_of_request=hardware',h:'hl-wrn'},
+      {f:'reverse_if_false',v:'true — auto-reverse on false',h:''},
+    ]},
+    {n:'catalog_ui_policy_action',b:'new',rows:[
+      {f:'ui_policy',v:'→ catalog_ui_policy',h:'hl-new'},
+      {f:'catalog_variable',v:'→ item_option_new (field)',h:'hl-new'},
+      {f:'visible',v:'"true" / "false" / "leave_alone"',h:'hl-wrn'},
+      {f:'mandatory',v:'"true" / "false" / "leave_alone"',h:'hl-wrn'},
+      {f:'disabled',v:'"true" / "false" / "leave_alone"',h:'hl-wrn'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogUIPolicyFetcher.getAllPolicies() — CATALOG_UI_POLICY_CACHE'},
+    {t:'java',i:'☕',v:'CatalogUIPolicyEvaluator.evaluatePolicy() — builds CatalogFormModel'},
+    {t:'java',i:'☕',v:'getHighestOrderVariableInConditions() → determines which change triggers re-eval'},
+    {t:'java',i:'☕',v:'filterQuestions() excludes FormatterQuestion, UIPageQuestion, MacroQuestion'},
+    {t:'sql',i:'🗄',v:'INSERT INTO catalog_ui_policy + catalog_ui_policy_action'},
+    {t:'cache',i:'💾',v:'CATALOG_UI_POLICY_CACHE invalidated on policy INSERT/UPDATE/DELETE'},
+  ]
+},
+{
+  title:'6 · Client Script Tab in Catalog Builder',
+  desc:'CB Client Script tab — add on_load, on_change, on_submit scripts with variable binding.',
+  url:`${INST}/now/build/catalog/item/79c99042b7321010e54deb56ee11a907/script`,
+  img:`${S}cb-script-tab.png`,
+  tables:[
+    {n:'catalog_script_client',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'cat_item',v:'→ sc_cat_item',h:'hl-new'},
+      {f:'name',v:'Populate user fields on load',h:'hl-new'},
+      {f:'type',v:'onLoad',h:'hl-wrn'},
+      {f:'applies_to',v:'catalog_item',h:''},
+      {f:'active',v:'true',h:''},
+      {f:'script',v:'function onLoad(){g_form.setReadonly("field",true);}',h:'hl-wrn'},
+      {f:'cat_item_option',v:'→ item_option_new (on_change only)',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'NGCatalogClientScriptProcessor — serves scripts to NG UI (portal/workspace)'},
+    {t:'event',i:'⚡',v:'on_load: fires once when form renders — use for defaults/readonly'},
+    {t:'event',i:'⚡',v:'on_change: fires when field value changes — must bind to cat_item_option'},
+    {t:'event',i:'⚡',v:'on_submit: fires before form submit — return false to block submission'},
+    {t:'info',i:'ℹ',v:'g_form API: getValue(), setValue(), setMandatory(), setVisible(), setReadonly()'},
+    {t:'rhino',i:'🔷',v:'Scripts run client-side — NOT via Rhino. Server scripts use pre/post insert.'},
+  ]
+},
+{
+  title:'7 · Access Tab — User Criteria & Availability',
+  desc:'Access tab controls who can see/order the item via user_criteria M2M tables.',
+  url:`${INST}/now/build/catalog/item/f0caa23e97c2019021983d1e6253af9a/access`,
+  img:`${S}cb-access.png`,
+  tables:[
+    {n:'sc_cat_item_user_criteria_mtom',b:'ref',rows:[
+      {f:'sc_cat_item',v:'→ sc_cat_item',h:''},
+      {f:'user_criteria',v:'→ user_criteria (snc_internal)',h:'hl-wrn'},
+      {f:'type',v:'include — can access',h:''},
+    ]},
+    {n:'sc_cat_item_user_criteria_no_mtom',b:'ref',rows:[
+      {f:'sc_cat_item',v:'→ sc_cat_item',h:''},
+      {f:'user_criteria',v:'→ user_criteria (restrict)',h:'hl-wrn'},
+      {f:'type',v:'exclude — cannot access',h:'hl-wrn'},
+    ]},
+    {n:'CatalogItem.canView() logic',b:'ref',rows:[
+      {f:'step 1',v:'check active=true',h:''},
+      {f:'step 2',v:'evaluate include user_criteria M2M',h:'hl-wrn'},
+      {f:'step 3',v:'evaluate exclude user_criteria M2M',h:'hl-wrn'},
+      {f:'step 4',v:'domain check (DomainSupport)',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogItem.canOrder() — UserCriteria + active + domain check'},
+    {t:'java',i:'☕',v:'CatalogItemJS.availableForUserCriteria() — manage include M2M'},
+    {t:'java',i:'☕',v:'CatalogItemJS.notAvailableForUserCriteria() — manage exclude M2M'},
+    {t:'cache',i:'💾',v:'UserItemsCacheableManager — per-user visibility cached by domain+language'},
+    {t:'cache',i:'💾',v:'CatalogCriteriaDependentStaleCacheFinder — invalidates when user_criteria changes'},
+    {t:'info',i:'ℹ',v:'Availability: on_desktop, on_mobile — controls portal vs. mobile app rendering'},
+  ]
+},
+]},
+
+// ════════════════════════════════════════════════════════
+// SCENARIO 3: VARIABLE DEEP DIVE
+// ════════════════════════════════════════════════════════
+variables:{name:'Variable Types — Deep Dive',steps:[
+{
+  title:'1 · All Variable Types — Portal Rendering',
+  desc:'Sample Item renders all 10 variable types in the portal simultaneously.',
+  url:`${INST}/sp?id=sc_cat_item&sys_id=1e01f08ac0a801070187b08d81c0845c`,
+  img:`${S}portal-sample-item.png`,
+  tables:[
+    {n:'item_option_new — type map',b:'ref',rows:[
+      {f:'type=1',v:'Yes/No — <input type=radio>',h:''},
+      {f:'type=2',v:'Single Line Text — <input type=text>',h:''},
+      {f:'type=3',v:'Multiple Choice — <input type=radio> per choice',h:''},
+      {f:'type=4',v:'Multi Line Text — <textarea>',h:''},
+      {f:'type=5',v:'Numeric Scale — <input type=range>',h:''},
+      {f:'type=6',v:'Reference — typeahead lookup widget',h:'hl-wrn'},
+      {f:'type=7',v:'CheckBox — <input type=checkbox>',h:''},
+      {f:'type=8',v:'Select Box — <select>',h:''},
+      {f:'type=9',v:'Date — date picker widget',h:''},
+      {f:'type=10',v:'Date/Time — datetime picker',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogItem.getVariables() → ordered List<Question>'},
+    {t:'java',i:'☕',v:'CatalogUIPolicyFetcher — loads UI policies for field state'},
+    {t:'java',i:'☕',v:'CatalogDataLookup.evaluate() — auto-populate on trigger field change'},
+    {t:'event',i:'⚡',v:'on_load scripts fire → set defaults, hide/show fields, set read-only'},
+    {t:'info',i:'ℹ',v:'Date/DateTime stored as display value only in sc_multi_row_question_answer'},
+    {t:'info',i:'ℹ',v:'Masked (type=21): stored encrypted, DECRYPTED_VALUE returned in API'},
+  ]
+},
+{
+  title:'2 · Reference Field — Lookup Chain',
+  desc:'Reference variable triggers typeahead. Qualifier evaluated server-side per user context.',
+  url:`${INST}/item_option_new.do?sys_id=1e09bd6dc0a80107`,
+  img:`${S}variable-reference-form.png`,
+  tables:[
+    {n:'item_option_new (Reference)',b:'ref',rows:[
+      {f:'type',v:'6 (Reference)',h:'hl-wrn'},
+      {f:'reference',v:'sys_user',h:'hl-wrn'},
+      {f:'reference_qual',v:'active=true^department=IT',h:'hl-wrn'},
+      {f:'reference_qual_condition',v:'javascript: current.state==1',h:'hl-wrn'},
+    ]},
+    {n:'Qualifier Evaluation (server)',b:'ref',rows:[
+      {f:'resolver',v:'AbstractVariableSet.getRefResolverRecord()',h:'hl-wrn'},
+      {f:'transient record',v:'new GlideRecord("sc_cart_item")',h:''},
+      {f:'context values',v:'all current question answers set',h:''},
+      {f:'result',v:'encoded query applied to sys_user lookup',h:''},
+    ]},
+    {n:'LookupSelectProcessor (AJAX)',b:'ref',rows:[
+      {f:'input',v:'partial text + qualifier context',h:''},
+      {f:'output',v:'JSON array of {value, displayValue} matches',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'LookupSelectQuestion.setReferenceContext() — called during load()'},
+    {t:'java',i:'☕',v:'LookupSelectProcessor — handles AJAX typeahead requests'},
+    {t:'sql',i:'🗄',v:'SELECT sys_id,name FROM sys_user WHERE active=true AND department=IT AND name LIKE ?'},
+    {t:'info',i:'ℹ',v:'reference_qual_condition: JS evaluated server-side against current question answers'},
+    {t:'info',i:'ℹ',v:'type=18 (Lookup Select Box): pre-cached options, no live query on each keystroke'},
+    {t:'cache',i:'💾',v:'Reference results NOT cached — fresh query per user input for accuracy'},
+  ]
+},
+{
+  title:'3 · Data Lookup — Auto-Population',
+  desc:'Data lookup rule: when trigger field changes → query table → fill target variables.',
+  url:`${INST}/sc_cat_item.do?sys_id=1e01f08ac0a801070187b08d81c0845c`,
+  img:`${S}classic-item-form.png`,
+  tables:[
+    {n:'sc_data_lookup_rule (config)',b:'ref',rows:[
+      {f:'catalog_item',v:'→ sc_cat_item',h:''},
+      {f:'trigger_field',v:'→ item_option_new (e.g. department)',h:'hl-wrn'},
+      {f:'lookup_table',v:'cmn_department',h:'hl-wrn'},
+      {f:'lookup_value',v:'name = trigger_value',h:''},
+    ]},
+    {n:'sc_data_lookup_set_item',b:'ref',rows:[
+      {f:'lookup_rule',v:'→ sc_data_lookup_rule',h:''},
+      {f:'target_field',v:'→ item_option_new (cost_center)',h:'hl-wrn'},
+      {f:'lookup_field',v:'cost_center (from cmn_department)',h:'hl-wrn'},
+    ]},
+    {n:'Runtime (on trigger change)',b:'ref',rows:[
+      {f:'1. user changes',v:'"department" field value',h:''},
+      {f:'2. AJAX POST',v:'to CatalogDataLookup processor',h:'hl-wrn'},
+      {f:'3. query',v:'cmn_department WHERE name=value',h:''},
+      {f:'4. auto-fill',v:'"cost_center" variable set to result',h:'hl-new'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogDataLookup.evaluate() — evaluates all rules for item'},
+    {t:'sql',i:'🗄',v:'SELECT {lookup_field} FROM {lookup_table} WHERE {lookup_value}=?'},
+    {t:'event',i:'⚡',v:'Client-side on_change fires → AJAX call to data lookup processor'},
+    {t:'cache',i:'💾',v:'Data lookup rules cached per catalog item sys_id'},
+    {t:'info',i:'ℹ',v:'Multiple set items per rule: one trigger can fill multiple target fields'},
+    {t:'info',i:'ℹ',v:'GraphQL data_lookup extension: com.glide.data_lookup.catalog.graphql'},
+  ]
+},
+{
+  title:'4 · UI Policy Evaluation — Real Example',
+  desc:'Policy: "Show Select Question when client script type is onChange". Conditions + actions.',
+  url:`${INST}/catalog_ui_policy.do?sys_id=003117e7ffec2210a579fffffffffff0`,
+  img:`${S}ui-policy-form.png`,
+  tables:[
+    {n:'catalog_ui_policy',b:'ref',rows:[
+      {f:'short_description',v:'Show Select Question when type=onChange',h:''},
+      {f:'active',v:'true',h:''},
+      {f:'on_load',v:'true — eval on form render',h:'hl-wrn'},
+      {f:'applies_to',v:'catalog_item',h:''},
+      {f:'conditions',v:'type=onChange (encoded query)',h:'hl-wrn'},
+      {f:'reverse_if_false',v:'true — hide when condition false',h:'hl-wrn'},
+    ]},
+    {n:'catalog_ui_policy_action',b:'ref',rows:[
+      {f:'catalog_variable',v:'→ item_option_new (select_question)',h:''},
+      {f:'visible',v:'"true"',h:'hl-wrn'},
+      {f:'mandatory',v:'"leave_alone"',h:''},
+      {f:'disabled',v:'"leave_alone"',h:''},
+    ]},
+    {n:'Evaluation sequence',b:'ref',rows:[
+      {f:'1',v:'CatalogUIPolicyFetcher loads all policies',h:''},
+      {f:'2',v:'CatalogFormModel built from questions',h:''},
+      {f:'3',v:'conditions evaluated per GlideFilter',h:'hl-wrn'},
+      {f:'4',v:'if true → apply actions (visible=true)',h:'hl-new'},
+      {f:'5 (reverse)',v:'if false → apply reverse (visible=false)',h:'hl-upd'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogUIPolicyEvaluator.evaluatePolicy(questions, policies, targetRecord)'},
+    {t:'java',i:'☕',v:'CatalogUIPolicy.getHighestOrderVariableInConditions() — change trigger detection'},
+    {t:'java',i:'☕',v:'CatalogUIPolicyFetcher — CATALOG_UI_POLICY_CACHE (TypeSafeCacheManager)'},
+    {t:'java',i:'☕',v:'filterQuestions(): excludes Formatter, UIPage, Macro question types'},
+    {t:'event',i:'⚡',v:'on_change field → server AJAX → re-evaluate all policies → update form state'},
+    {t:'cache',i:'💾',v:'Cache key: {sourceId}_{domain} (V2) or {sourceId}_{domain}_{lang} (V1)'},
+  ]
+},
+{
+  title:'5 · Client Script — onChange Chain',
+  desc:'onChange client script fires when bound variable changes — runs before server policy re-eval.',
+  url:`${INST}/catalog_script_client.do?sys_id=027e1a630f831010`,
+  img:`${S}client-script-form.png`,
+  tables:[
+    {n:'catalog_script_client',b:'ref',rows:[
+      {f:'name',v:'Set builder onchange of list table',h:''},
+      {f:'type',v:'onChange',h:'hl-wrn'},
+      {f:'cat_item',v:'→ sc_cat_item (Catalog Variable Creation)',h:''},
+      {f:'cat_item_option',v:'→ item_option_new (trigger variable)',h:'hl-wrn'},
+      {f:'applies_to',v:'catalog_item',h:''},
+      {f:'active',v:'true',h:''},
+      {f:'script',v:'function onChange(ctrl,oldVal,newVal,isLoading){\n  if(isLoading) return;\n  // logic here\n}',h:'hl-wrn'},
+    ]},
+    {n:'Script execution order (client-side)',b:'ref',rows:[
+      {f:'1',v:'User changes field value',h:''},
+      {f:'2',v:'onChange scripts bound to field → execute',h:'hl-wrn'},
+      {f:'3',v:'g_form API calls: setValue, setMandatory…',h:''},
+      {f:'4',v:'AJAX: UI policy re-evaluation request',h:'hl-wrn'},
+      {f:'5',v:'AJAX: Data lookup evaluation (if rule exists)',h:'hl-wrn'},
+      {f:'6',v:'Server returns new field states → form updates',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'NGCatalogClientScriptProcessor serves script list to NG UI'},
+    {t:'event',i:'⚡',v:'onChange: args = (control, oldValue, newValue, isLoading)'},
+    {t:'event',i:'⚡',v:'isLoading=true on form load — guard with if(isLoading) return'},
+    {t:'event',i:'⚡',v:'onLoad: fires once; onSubmit: return false to block; onChange: per field'},
+    {t:'info',i:'ℹ',v:'g_form.getValue(field) — reads current value; g_form.setValue() — writes'},
+    {t:'rhino',i:'🔷',v:'Client scripts run in browser (NOT Rhino) — no server-side GlideRecord access'},
+  ]
+},
+{
+  title:'6 · Multi-Row Runtime — Persistence Deep Dive',
+  desc:'MRVS: each row/cell stored as node in sc_multi_row_question_answer hierarchy.',
+  url:`${INST}/item_option_new_set.do?sys_id=7a86c1f673221010`,
+  img:`${S}variable-set-form.png`,
+  tables:[
+    {n:'Node tree structure',b:'ref',rows:[
+      {f:'root (table)',v:'node_type="table", node_variable_set_id=?',h:''},
+      {f:'├── row 1 (tr)',v:'node_type="tr", node_index=nanoTime1',h:'hl-wrn'},
+      {f:'│   ├── cell A (td)',v:'node_type="td", node_question_id=q1, node_value=v1',h:'hl-new'},
+      {f:'│   └── cell B (td)',v:'node_type="td", node_question_id=q2, node_value=v2',h:'hl-new'},
+      {f:'└── row 2 (tr)',v:'node_type="tr", node_index=nanoTime2',h:'hl-wrn'},
+    ]},
+    {n:'Type-specific value handling',b:'ref',rows:[
+      {f:'Date/DateTime',v:'stored as display value — no parsing',h:'hl-wrn'},
+      {f:'Duration',v:'GlideDuration.getValue() conversion',h:'hl-wrn'},
+      {f:'Reference',v:'stores sys_id as value',h:''},
+      {f:'Others',v:'raw user-entered value',h:''},
+    ]},
+    {n:'Query cache (in-memory)',b:'ref',rows:[
+      {f:'IQuery → fQueryResultCache',v:'cacheKey() string → result list',h:''},
+      {f:'invalidated by',v:'markDirty() on any node modification',h:'hl-upd'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'VariableNodeDatabaseModel — in-memory document, lazy-loaded from DB'},
+    {t:'java',i:'☕',v:'IQuery Visitor pattern: EqualsQuery, AndQuery, OrQuery → QueryConditionBuilder'},
+    {t:'java',i:'☕',v:'TableVariableCellNode.getCellDisplayValue() — evaluates via Question object'},
+    {t:'java',i:'☕',v:'TableVariableJsonModel serializes rows to List<Map<questionId,{value,display}>>'},
+    {t:'rhino',i:'🔷',v:'VariableNodeScriptingModel — jsFunction_* expose rows/cells to server scripts'},
+    {t:'java',i:'☕',v:'IGlideElementWiringCallback.commit() — triggers save() when script writes'},
+  ]
+},
+]},
+
+// ════════════════════════════════════════════════════════
+// SCENARIO 4: RECORD PRODUCER
+// ════════════════════════════════════════════════════════
+producer:{name:'Record Producer — Scripts & Target Records',steps:[
+{
+  title:'1 · Record Producer Admin Form',
+  desc:'sc_cat_item_producer.do — type=record_producer, table_name set to target ITSM table.',
+  url:`${INST}/sc_cat_item_producer.do?sys_id=011f117a9f300200`,
+  img:`${S}classic-producer-form.png`,
+  tables:[
+    {n:'sc_cat_item (producer)',b:'ref',rows:[
+      {f:'type',v:'record_producer',h:'hl-wrn'},
+      {f:'table_name',v:'std_change_proposal',h:'hl-wrn'},
+      {f:'script',v:'(pre-insertion script)',h:'hl-wrn'},
+      {f:'post_insertion_script',v:'(post-insertion script)',h:'hl-wrn'},
+      {f:'save_option',v:'insert_into_target / save_as_draft',h:'hl-wrn'},
+      {f:'redirect',v:'URL to navigate after production',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'info',i:'ℹ',v:'Table: sc_cat_item_producer extends sc_cat_item — additional script fields'},
+    {t:'info',i:'ℹ',v:'table_name = the ITSM target table (incident, change_request, hr_case…)'},
+    {t:'info',i:'ℹ',v:'save_option: insert_into_target (creates record) or save_as_draft (draft only)'},
+    {t:'java',i:'☕',v:'ProducerValve reads table_name → new GlideRecord(table_name)'},
+    {t:'info',i:'ℹ',v:'Variables with map_to_field → auto-mapped to target record columns'},
+  ]
+},
+{
+  title:'2 · Variables Mapped to Target Fields',
+  desc:'item_option_new.map_to_field links variable answer to a column on the target table.',
+  url:`${INST}/sc_cat_item_producer.do?sys_id=02c78de49f331200`,
+  img:`${S}classic-producer-hr.png`,
+  tables:[
+    {n:'item_option_new (producer var)',b:'ref',rows:[
+      {f:'cat_item',v:'→ sc_cat_item (producer)',h:''},
+      {f:'name',v:'beneficiary_name',h:''},
+      {f:'type',v:'8 (Single Line Text)',h:''},
+      {f:'map_to_field',v:'u_beneficiary_name',h:'hl-wrn'},
+      {f:'note',v:'maps to column on sn_hr_core_case_payroll',h:'hl-wrn'},
+    ]},
+    {n:'ProducerTargetVariableMapper',b:'ref',rows:[
+      {f:'producerId',v:'→ sc_cat_item (producer)',h:''},
+      {f:'targetRecordId',v:'→ existing ITSM record (edit mode)',h:'hl-wrn'},
+      {f:'getValue(question)',v:'reads target.u_beneficiary_name',h:'hl-wrn'},
+      {f:'ACL check',v:'canRead() enforced per field',h:''},
+    ]},
+    {n:'Edit-mode population',b:'ref',rows:[
+      {f:'trigger',v:'user opens existing record via producer',h:''},
+      {f:'flow',v:'getTargetRecord() → load → fill variables',h:'hl-wrn'},
+      {f:'macro READ_SCRIPT',v:'MacroReadScriptEvaluator runs if macro type',h:'hl-wrn'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'ProducerValve Step 3: HTTP params merged → map_to_field columns on gr'},
+    {t:'java',i:'☕',v:'ProducerTargetVariableMapper.Builder — fluent: producerId, prefix, ignoreScope'},
+    {t:'java',i:'☕',v:'MacroReadScriptEvaluator — READ_SCRIPT on macro question for computed values'},
+    {t:'java',i:'☕',v:'CompositeProducerTargetVariableMapper — handles multi-row ProducerSets'},
+    {t:'info',i:'ℹ',v:'map_to_field empty → value stored only in sc_item_option, not on target record'},
+  ]
+},
+{
+  title:'3 · Pre-Insertion Script (SCRIPT field)',
+  desc:'SCRIPT field runs BEFORE gr.insert(). Access current (target), producer (item), gs, user.',
+  url:`${INST}/sc_cat_item_producer.do?sys_id=011f117a9f300200`,
+  img:`${S}classic-producer-form.png`,
+  tables:[
+    {n:'Script context variables',b:'ref',rows:[
+      {f:'current',v:'GlideRecord — target table (std_change_proposal)',h:'hl-wrn'},
+      {f:'producer',v:'GlideRecord — sc_cat_item (the producer)',h:'hl-wrn'},
+      {f:'cat_item',v:'CatalogItem object',h:''},
+      {f:'gs',v:'GlideSystem — log, addInfoMessage, etc.',h:''},
+      {f:'producer.redirect',v:'set to override redirect URL',h:''},
+    ]},
+    {n:'Example SCRIPT (Retire Change)',b:'ref',rows:[
+      {f:'line 1',v:'producer.redirect = current.getLink(true);',h:'hl-wrn'},
+      {f:'line 2',v:'current.proposal_type = 3;',h:'hl-wrn'},
+      {f:'line 3',v:'gs.addInfoMessage(gs.getMessage("Retired"));',h:''},
+    ]},
+    {n:'SaveScriptEvaluator',b:'ref',rows:[
+      {f:'field evaluated',v:'SAVE_SCRIPT (if save_option=SAVE_IN_DESTINATION)',h:'hl-wrn'},
+      {f:'PreScriptEvaluator',v:'field=SCRIPT — runs before gr.insert()',h:'hl-new'},
+    ]},
+  ],
+  notes:[
+    {t:'rhino',i:'🔷',v:'GlideScopedEvaluator — Rhino JS engine, current+producer set as globals'},
+    {t:'java',i:'☕',v:'PreScriptEvaluator.doEvaluate() — returns false if SAVE_PRODUCER or field empty'},
+    {t:'java',i:'☕',v:'shouldReturnError()=true — exceptions propagate and abort production'},
+    {t:'warn',i:'⚠',v:'Script runs BEFORE insert — current.sys_id not set yet at this point'},
+    {t:'info',i:'ℹ',v:'producer.redirect overrides default redirect after production completes'},
+    {t:'rhino',i:'🔷',v:'ScriptOutputParser: NativeObject/Array → JSONObject/Array for client'},
+  ]
+},
+{
+  title:'4 · Script Chain — Full Execution Order',
+  desc:'5-step valve: SaveScript → PreScript → DB insert → PostScript → MacroPostScript per question.',
+  url:`${INST}/sc_cat_item_producer.do?sys_id=02c78de49f331200`,
+  img:`${S}classic-producer-hr.png`,
+  tables:[
+    {n:'ProducerValve 5-step pipeline',b:'ref',rows:[
+      {f:'Step 1',v:'new GlideRecord(table_name) — create target',h:''},
+      {f:'Step 2',v:'CatalogTemplateManager.apply() — template values',h:'hl-wrn'},
+      {f:'Step 3',v:'merge HTTP params / map_to_field onto gr',h:'hl-wrn'},
+      {f:'Step 4a: SaveScript',v:'SAVE_SCRIPT — if SAVE_IN_DESTINATION',h:'hl-wrn'},
+      {f:'Step 4b: PreScript',v:'SCRIPT — pre-insertion, current not yet saved',h:'hl-wrn'},
+      {f:'Step 4c: MacroSave',v:'SAVE_SCRIPT per macro question',h:''},
+      {f:'──────── gr.insert() ────────',v:'TARGET RECORD CREATED',h:'hl-new'},
+      {f:'Step 4d: PostScript',v:'POST_INSERTION_SCRIPT — current.sys_id available',h:'hl-wrn'},
+      {f:'Step 4e: MacroPost',v:'POST_INSERTION_SCRIPT per macro question',h:''},
+      {f:'Step 5',v:'INSERT INTO sc_item_produced_record',h:'hl-new'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'ProducerValve.evaluateScript() — chains all evaluators in order'},
+    {t:'java',i:'☕',v:'PostScriptEvaluator: current.sys_id IS available — can link related records'},
+    {t:'java',i:'☕',v:'MacroPostScriptEvaluator: putAdditionalProps() adds question record to scope'},
+    {t:'warn',i:'⚠',v:'If any evaluator throws and shouldReturnError()=true → abort + rollback'},
+    {t:'sql',i:'🗄',v:'INSERT INTO {table_name} (fields from map_to_field + script writes)'},
+    {t:'sql',i:'🗄',v:'INSERT INTO sc_item_produced_record (ritm→target link)'},
+  ]
+},
+{
+  title:'5 · Post-Insertion Script — Real Example',
+  desc:'POST_INSERTION_SCRIPT runs after insert. current.sys_id available — link related records.',
+  url:`${INST}/sc_cat_item_producer.do?sys_id=02c78de49f331200`,
+  img:`${S}classic-producer-hr.png`,
+  tables:[
+    {n:'POST_INSERTION_SCRIPT context',b:'ref',rows:[
+      {f:'current',v:'GlideRecord — target (SAVED, sys_id set)',h:'hl-new'},
+      {f:'current.sys_id',v:'«generated UUID available now»',h:'hl-new'},
+      {f:'producer',v:'GlideRecord — sc_cat_item',h:''},
+      {f:'request_item',v:'GlideRecord — sc_req_item',h:'hl-wrn'},
+    ]},
+    {n:'Example POST script (HR)',b:'ref',rows:[
+      {f:'line 1',v:'new sn_hr_core.hr_ServicesUtil(',h:'hl-wrn'},
+      {f:'       ',v:'  current, gs',h:'hl-wrn'},
+      {f:'       ',v:').createCaseFromProducer(producer, cat_item.sys_id);',h:'hl-wrn'},
+    ]},
+    {n:'sc_item_produced_record',b:'new',rows:[
+      {f:'sys_id',v:'«generated»',h:'hl-new'},
+      {f:'request_item',v:'→ sc_req_item',h:'hl-new'},
+      {f:'produced_from',v:'→ sc_cat_item (producer)',h:'hl-new'},
+      {f:'table_name',v:'sn_hr_core_case_payroll',h:'hl-new'},
+      {f:'record_id',v:'→ hr_case.sys_id',h:'hl-new'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'PostScriptEvaluator: post_insertion_script field evaluated after gr.insert()'},
+    {t:'rhino',i:'🔷',v:'request_item variable available: producer.request_item.getDisplayValue()'},
+    {t:'sql',i:'🗄',v:'INSERT INTO sn_hr_core_case_payroll (from map_to_field mapping)'},
+    {t:'sql',i:'🗄',v:'INSERT INTO sc_item_produced_record (RITM ↔ target record link)'},
+    {t:'event',i:'⚡',v:'Business rules on sn_hr_core_case_payroll fire after insert'},
+    {t:'java',i:'☕',v:'ProducerValve.getProducedRecordId() → returns new case sys_id for redirect'},
+  ]
+},
+{
+  title:'6 · Composite Producer — Multi Target',
+  desc:'CompositeProducerValve creates N records across different tables with rollback safety.',
+  url:`${INST}/sc_cat_item_producer.do?sys_id=011f117a9f300200`,
+  img:`${S}classic-producer-form.png`,
+  tables:[
+    {n:'sc_producer_set (ProducerSets)',b:'ref',rows:[
+      {f:'set #1 table',v:'incident',h:'hl-wrn'},
+      {f:'set #1 type',v:'ONE_TO_ONE',h:''},
+      {f:'set #2 table',v:'change_request',h:'hl-wrn'},
+      {f:'set #2 type',v:'ONE_TO_MANY (multi-row)',h:'hl-wrn'},
+    ]},
+    {n:'RollbackContext (transaction)',b:'ref',rows:[
+      {f:'class',v:'RollbackContext + RollbackRecorder',h:'hl-wrn'},
+      {f:'tracks',v:'every INSERT/UPDATE during production',h:''},
+      {f:'on failure',v:'DELETE all created records (exact reversal)',h:'hl-wrn'},
+    ]},
+    {n:'Records created',b:'new',rows:[
+      {f:'incident',v:'«generated A» — from set #1',h:'hl-new'},
+      {f:'change_request #1',v:'«generated B» — row 1 of multi',h:'hl-new'},
+      {f:'change_request #2',v:'«generated C» — row 2 of multi',h:'hl-new'},
+      {f:'sc_item_produced_record',v:'3 rows (RITM→ each target)',h:'hl-new'},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CompositeProducerValve.before() → generateProducerSetTargetRecords()'},
+    {t:'java',i:'☕',v:'ONE_TO_ONE: single record per set; ONE_TO_MANY: JSON array → N records'},
+    {t:'java',i:'☕',v:'insertOrUpdateRecords() — persists all; deleteRemovedTargetRecords() on edit'},
+    {t:'java',i:'☕',v:'RollbackRecorder: on exception → RollbackContext.rollback() removes all'},
+    {t:'sql',i:'🗄',v:'INSERT INTO incident, change_request × N, sc_item_produced_record × (1+N)'},
+    {t:'warn',i:'⚠',v:'Failure in ANY set aborts all — atomic-style across tables via rollback'},
+  ]
+},
+]},
+
+// ════════════════════════════════════════════════════════
+// SCENARIO 5: UI POLICIES & CLIENT SCRIPTS DEEP DIVE
+// ════════════════════════════════════════════════════════
+policies:{name:'UI Policies & Client Scripts — Full Detail',steps:[
+{
+  title:'1 · UI Policy Form — Conditions',
+  desc:'catalog_ui_policy.do — conditions define WHEN the policy fires. Catalog conditions differ from regular conditions.',
+  url:`${INST}/catalog_ui_policy.do?sys_id=003117e7ffec2210a579fffffffffff0`,
+  img:`${S}ui-policy-form.png`,
+  tables:[
+    {n:'catalog_ui_policy',b:'ref',rows:[
+      {f:'catalog_item',v:'→ sc_cat_item',h:''},
+      {f:'short_description',v:'Show Select Question…',h:''},
+      {f:'active',v:'true',h:''},
+      {f:'on_load',v:'true — evaluates on form render',h:'hl-wrn'},
+      {f:'applies_to',v:'"catalog_item" (also: req_item, task, target)',h:'hl-wrn'},
+      {f:'conditions',v:'GlideFilter encoded query on variables',h:'hl-wrn'},
+      {f:'catalog_conditions',v:'variable sys_ids in IO: prefix format',h:'hl-wrn'},
+      {f:'reverse_if_false',v:'true — auto-reverses actions on false',h:''},
+    ]},
+    {n:'Applies-to mapping',b:'ref',rows:[
+      {f:'catalog_item',v:'sc_cat_item context (portal form)',h:'hl-wrn'},
+      {f:'requested_item',v:'sc_req_item context (fulfiller view)',h:''},
+      {f:'catalog_task',v:'sc_task context',h:''},
+      {f:'target',v:'producer target record context',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogUIPolicy extends UIPolicy — adds catalog-specific condition handling'},
+    {t:'java',i:'☕',v:'catalog_conditions stores IO:{sys_id} tokens — unloaded by AppEngine unloaders'},
+    {t:'java',i:'☕',v:'CatalogUIPolicy.getHighestOrderVariableInConditions() — finds trigger variable'},
+    {t:'java',i:'☕',v:'filterPolicies(): filters by applies_to matching current record type'},
+    {t:'java',i:'☕',v:'on_load=true: policy evaluated when form first renders (no user interaction)'},
+    {t:'cache',i:'💾',v:'CATALOG_UI_POLICY_CACHE: TypeSafeCacheManager<String,List<CatalogUIPolicy>>'},
+  ]
+},
+{
+  title:'2 · UI Policy Actions — Field State Changes',
+  desc:'Actions define WHAT changes: visible, mandatory, disabled per variable. "leave_alone" = no change.',
+  url:`${INST}/catalog_ui_policy.do?sys_id=003117e7ffec2210a579fffffffffff0`,
+  img:`${S}ui-policy-form.png`,
+  tables:[
+    {n:'catalog_ui_policy_action',b:'ref',rows:[
+      {f:'ui_policy',v:'→ catalog_ui_policy',h:''},
+      {f:'catalog_variable',v:'→ item_option_new (the field)',h:'hl-wrn'},
+      {f:'visible',v:'"true"/"false"/"leave_alone"',h:'hl-wrn'},
+      {f:'mandatory',v:'"true"/"false"/"leave_alone"',h:'hl-wrn'},
+      {f:'disabled',v:'"true"/"false"/"leave_alone"',h:'hl-wrn'},
+      {f:'field_message',v:'message shown below field (optional)',h:''},
+    ]},
+    {n:'CatalogFormModel (runtime)',b:'ref',rows:[
+      {f:'fields',v:'Map<variableName, FieldState>',h:''},
+      {f:'FieldState.visible',v:'boolean — controls display',h:'hl-wrn'},
+      {f:'FieldState.mandatory',v:'boolean — controls required',h:'hl-wrn'},
+      {f:'FieldState.disabled',v:'boolean — controls read-only',h:'hl-wrn'},
+    ]},
+    {n:'Reverse logic',b:'ref',rows:[
+      {f:'condition=true',v:'apply: visible="true" → visible=true',h:'hl-new'},
+      {f:'condition=false',v:'reverse: visible="true" → visible=false',h:'hl-upd'},
+      {f:'leave_alone',v:'never reversed — field state unchanged',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogUIPolicyEvaluator.evaluatePolicy() builds CatalogFormModel'},
+    {t:'java',i:'☕',v:'CatalogUIPolicyAction.CatalogUIPolicyActionBuilder — Lombok immutable builder'},
+    {t:'java',i:'☕',v:'CatalogUIPolicyActionTranslationService — deferred translation of field_message'},
+    {t:'event',i:'⚡',v:'JSON response to client: {field: {visible:true, mandatory:false, disabled:false}}'},
+    {t:'info',i:'ℹ',v:'Multiple actions per policy allowed — each action targets one variable'},
+    {t:'info',i:'ℹ',v:'Priority: if two policies conflict on same field, higher-order policy wins'},
+  ]
+},
+{
+  title:'3 · Client Script — onLoad Type',
+  desc:'onLoad runs once when form renders. Sets defaults, hides fields, applies read-only state.',
+  url:`${INST}/catalog_script_client.do?sys_id=027e1a630f831010`,
+  img:`${S}client-script-form.png`,
+  tables:[
+    {n:'catalog_script_client (onLoad)',b:'ref',rows:[
+      {f:'type',v:'onLoad',h:'hl-wrn'},
+      {f:'cat_item_option',v:'null — onLoad not bound to a field',h:''},
+      {f:'applies_to',v:'catalog_item',h:''},
+      {f:'script',v:'function onLoad(){\n  g_form.setReadonly("field",true);\n  g_form.setValue("status","active");\n}',h:'hl-wrn'},
+    ]},
+    {n:'g_form API (client-side)',b:'ref',rows:[
+      {f:'g_form.getValue(f)',v:'get current value',h:''},
+      {f:'g_form.setValue(f,v)',v:'set value',h:'hl-wrn'},
+      {f:'g_form.setMandatory(f,b)',v:'set required flag',h:'hl-wrn'},
+      {f:'g_form.setVisible(f,b)',v:'show/hide field',h:'hl-wrn'},
+      {f:'g_form.setReadonly(f,b)',v:'make read-only',h:'hl-wrn'},
+      {f:'g_form.setLabel(f,l)',v:'change field label',h:''},
+      {f:'g_form.showFieldMsg(f,m,t)',v:'show info/error message',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'NGCatalogClientScriptProcessor — loads scripts for NG portal rendering'},
+    {t:'event',i:'⚡',v:'onLoad: runs once on DOM ready — use for initial field setup'},
+    {t:'info',i:'ℹ',v:'Execution order: 1) UI policies evaluated 2) onLoad scripts fire'},
+    {t:'rhino',i:'🔷',v:'Client scripts = browser JavaScript — no server GlideRecord access'},
+    {t:'info',i:'ℹ',v:'Use GlideAjax or g_form.getReference() for server data lookups from client'},
+    {t:'info',i:'ℹ',v:'applies_to: catalog_item (ordering), req_item (RITM view), catalog_task'},
+  ]
+},
+{
+  title:'4 · Client Script — onChange + Server Chain',
+  desc:'onChange: bound to one variable. Fires → client updates → AJAX to server for policy+lookup.',
+  url:`${INST}/catalog_script_client.do?sys_id=027e1a630f831010`,
+  img:`${S}client-script-form.png`,
+  tables:[
+    {n:'onChange full chain',b:'ref',rows:[
+      {f:'1. user edits',v:'variable "department" value',h:''},
+      {f:'2. client scripts',v:'onChange scripts for "department" fire',h:'hl-wrn'},
+      {f:'3. g_form calls',v:'setValue, setMandatory, etc. take effect',h:'hl-wrn'},
+      {f:'4. AJAX: policies',v:'POST /api/now/sp/catalog/variables/policy',h:'hl-wrn'},
+      {f:'5. server eval',v:'CatalogUIPolicyEvaluator.evaluatePolicy()',h:'hl-wrn'},
+      {f:'6. AJAX: lookup',v:'POST /api/now/sp/catalog/data_lookup (if rule)',h:'hl-wrn'},
+      {f:'7. server fill',v:'CatalogDataLookup.evaluate() — fills fields',h:'hl-wrn'},
+      {f:'8. form updates',v:'visible/mandatory/values reflect server state',h:''},
+    ]},
+    {n:'onChange script signature',b:'ref',rows:[
+      {f:'function',v:'onChange(control, oldValue, newValue, isLoading)',h:'hl-wrn'},
+      {f:'control',v:'DOM element reference',h:''},
+      {f:'oldValue',v:'previous field value',h:''},
+      {f:'newValue',v:'current (new) field value',h:'hl-wrn'},
+      {f:'isLoading',v:'true on form load — guard always',h:'hl-wrn'},
+    ]},
+  ],
+  notes:[
+    {t:'event',i:'⚡',v:'onChange must guard: if(isLoading || newValue==oldValue) return;'},
+    {t:'event',i:'⚡',v:'Server AJAX calls fire AFTER all onChange scripts complete'},
+    {t:'java',i:'☕',v:'CartAjaxProcessorV2 / CommandProcessor handles policy eval AJAX'},
+    {t:'java',i:'☕',v:'CatalogUIPolicyFetcher — CATALOG_UI_POLICY_CACHE hit (no DB read)'},
+    {t:'java',i:'☕',v:'CatalogDataLookup processor — fresh DB query per trigger (not cached)'},
+    {t:'info',i:'ℹ',v:'glide.sc.variable_change_on_change_polled: system prop controls polling rate'},
+  ]
+},
+{
+  title:'5 · AppEngine Payload — Template Unloading',
+  desc:'CatalogTemplate unloaders tokenize variable IO: refs for cross-instance transport.',
+  url:`${INST}/sc_cat_item.do?sys_id=1e01f08ac0a801070187b08d81c0845c`,
+  img:`${S}classic-item-form.png`,
+  tables:[
+    {n:'Tokenization (IO: prefix)',b:'ref',rows:[
+      {f:'raw value',v:'"IO:1e09bd6dc0a80107" (variable sys_id)',h:'hl-wrn'},
+      {f:'pattern',v:'(IO:)[0-9A-Za-z]{32}',h:'hl-wrn'},
+      {f:'replaced with',v:'ScanVariable token (symbolic name)',h:'hl-new'},
+      {f:'purpose',v:'sys_ids differ between instances',h:''},
+    ]},
+    {n:'Unloader classes',b:'ref',rows:[
+      {f:'CatalogUIPolicyRecordUnloader',v:'table: catalog_ui_policy, field: catalog_conditions',h:'hl-wrn'},
+      {f:'CatalogUIPolicyActionRecordUnloader',v:'table: catalog_ui_policy_action, field: catalog_variable',h:'hl-wrn'},
+      {f:'CatalogScriptClientRecordUnloader',v:'table: catalog_script_client, field: cat_variable',h:'hl-wrn'},
+    ]},
+    {n:'On target instance (re-resolve)',b:'ref',rows:[
+      {f:'ScanVariable token',v:'looked up by symbolic name',h:''},
+      {f:'resolved to',v:'local sys_id for the variable',h:'hl-new'},
+      {f:'ensures',v:'policies/scripts reference correct variable',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'AbstractCatalogVariableRecordUnloader.stripIOPrefix() — regex replacement'},
+    {t:'java',i:'☕',v:'AppEngine template payload: record data serialized with tokens for transport'},
+    {t:'info',i:'ℹ',v:'Pattern: IO:{32-char-hex} → ScanVariable("{symbolic_name}")'},
+    {t:'info',i:'ℹ',v:'Applies to: UI policy conditions, policy actions, client script variable refs'},
+    {t:'warn',i:'⚠',v:'Without tokenization: sys_ids in catalog_conditions would be wrong on target instance'},
+  ]
+},
+{
+  title:'6 · Virtual Agent — Conversational Catalog',
+  desc:'CatalogConversationHelperJS evaluates whether an item supports full VA conversation.',
+  url:`${INST}/sp?id=sc_cat_item&sys_id=1e01f08ac0a801070187b08d81c0845c`,
+  img:`${S}portal-sample-item.png`,
+  tables:[
+    {n:'getNonConversationalReasons() checks',b:'ref',rows:[
+      {f:'1. pricing',v:'item has price > 0 → VA limited',h:'hl-wrn'},
+      {f:'2. MRVS',v:'has multi-row variable set → not supported in VA',h:'hl-wrn'},
+      {f:'3. adv qualifiers',v:'reference qualifier uses JS → limited',h:'hl-wrn'},
+      {f:'4. ref limit',v:'>N reference field results → limited',h:''},
+      {f:'5. client scripts',v:'complex client scripts → limited',h:'hl-wrn'},
+      {f:'6. scripted policies',v:'JS-based UI policies → limited',h:''},
+    ]},
+    {n:'ConversationObject fields',b:'ref',rows:[
+      {f:'fVariables',v:'List of question value maps',h:''},
+      {f:'fPoliciesConditionResult',v:'UI policy evaluation result',h:'hl-wrn'},
+      {f:'fDataLookupSetters',v:'data lookup auto-fill results',h:''},
+      {f:'fVASupport',v:'boolean — fully conversational?',h:'hl-wrn'},
+      {f:'fRecurringFrequencyDisplay',v:'recurring price display string',h:''},
+    ]},
+  ],
+  notes:[
+    {t:'java',i:'☕',v:'CatalogConversationHelperJS (1412 lines) — full VA catalog support'},
+    {t:'java',i:'☕',v:'jsFunction_getItem() — loads full item: variables, policies, data lookups'},
+    {t:'java',i:'☕',v:'jsFunction_setValue() — handles variable change + policy re-eval in VA'},
+    {t:'java',i:'☕',v:'jsFunction_submit() — validates + submits form from VA conversation'},
+    {t:'java',i:'☕',v:'ConversationObject: reflection-based SetterGetter pairs for dynamic serialization'},
+    {t:'info',i:'ℹ',v:'VA uses same backend stack — CatalogItem, CatalogUIPolicyEvaluator, Cart'},
+  ]
+},
+]},
+
+}; // end scenarios
+
+// ─── ENGINE ──────────────────────────────────────────────────────────────────
+let sc='classic',si=0,playing=false,auto=true,timer=null,speed=4000;
+
+function loadScenario(key){
+  sc=key;si=0;
+  document.querySelectorAll('.stabs button').forEach(b=>{
+    const map={classic:'Classic',builder:'Builder',variables:'Variable',producer:'Producer',policies:'UI Policies'};
+    b.classList.toggle('active',b.textContent.includes(map[key]||key));
+  });
+  stopPlay();renderAll();
+}
+
+function renderAll(){renderSidebar();renderStep();}
+
+function renderSidebar(){
+  const steps=scenarios[sc].steps;
+  document.getElementById('sidebar-scroll').innerHTML=steps.map((s,i)=>`
+    <div class="sitem${i===si?' active':i<si?' done':''}" onclick="goTo(${i})">
+      <div class="snum">${i<si?'✓':i+1}</div>
+      <div class="slabel">${s.title}</div>
+    </div>${i<steps.length-1?'<div class="scon"></div>':''}
+  `).join('');
+}
+
+function renderStep(){
+  const steps=scenarios[sc].steps;
+  const s=steps[si];
+  document.getElementById('prev-title').textContent=s.title;
+  document.getElementById('prev-desc').textContent=s.desc;
+  document.getElementById('urlbar').textContent=s.url;
+  document.getElementById('screen-img').src=s.img;
+
+  // data model
+  document.getElementById('dm-scroll').innerHTML=s.tables.map(t=>`
+    <div class="dbt">
+      <div class="dbth">
+        <span class="dbtn">${t.n}</span>
+        <span class="dbbadge b-${t.b}">${t.b.toUpperCase()}</span>
+      </div>
+      ${t.rows.map(r=>`<div class="dbr${r.h?' '+r.h:''}"><div class="dbf">${r.f}</div><div class="dbv">${r.v}</div></div>`).join('')}
+    </div>
+  `).join('');
+
+  // notes
+  document.getElementById('notes-body').innerHTML=s.notes.map(n=>`
+    <div class="chip ch-${n.t}"><span>${n.i}</span><span>${n.v}</span></div>
+  `).join('');
+
+  // controls
+  const tot=steps.length;
+  document.getElementById('ctr').textContent=`${si+1}/${tot}`;
+  document.getElementById('pfill').style.width=`${((si+1)/tot)*100}%`;
+  document.getElementById('btn-prev').disabled=si===0;
+  document.getElementById('btn-next').disabled=si===tot-1;
+  renderSidebar();
+}
+
+function goTo(i){si=i;renderAll();}
+function prev(){if(si>0){si--;renderAll();}}
+function next(){
+  const tot=scenarios[sc].steps.length;
+  if(si<tot-1){si++;renderAll();}else stopPlay();
+}
+function togglePlay(){playing?stopPlay():startPlay();}
+function startPlay(){
+  playing=true;
+  document.getElementById('btn-play').textContent='⏸ Pause';
+  timer=setInterval(()=>{if(auto)next();else stopPlay();},speed);
+}
+function stopPlay(){
+  playing=false;clearInterval(timer);
+  document.getElementById('btn-play').textContent='▶ Play';
+}
+function toggleAuto(){
+  auto=!auto;
+  document.getElementById('tog').classList.toggle('on',auto);
+}
+function updateSpeed(){
+  speed=parseInt(document.getElementById('speed').value);
+  if(playing){stopPlay();startPlay();}
+}
+function seek(e){
+  const tot=scenarios[sc].steps.length;
+  const pct=e.offsetX/e.currentTarget.offsetWidth;
+  si=Math.max(0,Math.min(tot-1,Math.floor(pct*tot)));
+  renderAll();
+}
+
+loadScenario('classic');
+</script>
+</body>
+</html>

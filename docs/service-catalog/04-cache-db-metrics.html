@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cache, DB Listeners & Metrics — Service Catalog | My Learnings</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-logo" href="../index.html">⚡ <span>My</span>Learnings</a>
+  <div class="topnav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Service Catalog</a>
+  </div>
+</nav>
+<div class="page-layout">
+  <aside class="page-sidebar">
+    <h3>Navigation</h3>
+    <div class="sidebar-cat">Service Catalog</div><a class="sidebar-link" href="index.html">🏠 Service Catalog Home</a><a class="sidebar-link" href="00-overview.html">📐 Module Overview</a><a class="sidebar-link" href="01-core-domain.html">🏗 Core Domain</a><a class="sidebar-link" href="02-valve-producer-scripts.html">⚙ Valve & Producers</a><a class="sidebar-link" href="03-variables-system.html">📋 Variables System</a><a class="sidebar-link current-page" href="04-cache-db-metrics.html">💾 Cache & Infra</a><a class="sidebar-link" href="05-processors-graphql-search.html">🔌 Processors & API</a><a class="sidebar-link" href="06-appengine-builder-atf-templates-scoped.html">🛠 Builder & Templates</a><a class="sidebar-link" href="interactive-guide.html">🎬 Interactive Guide ↗</a><div class="sidebar-sep"></div><a class="sidebar-link" href="../index.html">← All Categories</a>
+  </aside>
+  <div class="page-content">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">›</span>
+      <a href="index.html">Service Catalog</a><span class="breadcrumb-sep">›</span>
+      <span>Cache, DB Listeners & Metrics</span>
+    </div>
+    <h1>Cache, DB Listeners & Metrics</h1>
+    <div class="page-meta">
+      <span class="meta-tag">glide-servicecatalog</span>
+      <span class="meta-tag">TypeSafeCacheManager</span><span class="meta-tag">SCStaleCacheListener</span><span class="meta-tag">Metrics</span><span class="meta-tag">UI Policy</span>
+    </div>
+    <div class="md-body">
+<hr />
+<h2 id="1-caching-architecture-overview">1. Caching Architecture Overview</h2>
+<p>The caching system is <strong>multi-layered and domain/translation-aware</strong>. Every cached object can be invalidated by DB change events, scope changes, or translation updates.</p>
+<pre><code>ServiceCatalogCacheUtils (utilities + helpers)
+    ↓ uses
+TypeSafeCacheManager&lt;K, V&gt;  (per-entity cache)
+    ↓ stores
+IServiceCatalogCacheableItem (marker interface)
+    └── ServiceCatalogCacheableItemAdapter (base adapter)
+        └── ServiceCatalogI18NCacheableItemAdapter (translation-aware)
+</code></pre>
+<hr />
+<h2 id="2-cache-interfaces">2. Cache Interfaces</h2>
+<h3 id="iservicecatalogcacheableitem">IServiceCatalogCacheableItem</h3>
+<p>Marker interface for all serializable cached objects. All domain entities that are cached must implement this.</p>
+<h3 id="iservicecatalogi18ncacheableitem">IServiceCatalogI18NCacheableItem</h3>
+<p>Extends <code>IServiceCatalogCacheableItem</code>. Adds <code>getTableName()</code> for translation-aware cache operations.</p>
+<h3 id="icacheitemexpirationcontext">ICacheItemExpirationContext</h3>
+<p>Manages stale cache invalidation state:</p>
+<pre><code class="language-java">addStaleCacheItem(item)
+getCacheKey()
+getCacheName()
+getData()
+getStaleCacheItems()
+</code></pre>
+<h3 id="icachekeyprovider">ICacheKeyProvider</h3>
+<p>Provides cache keys for lookup:</p>
+<pre><code class="language-java">Iterator&lt;String&gt; getKeys()
+String getCacheName()
+</code></pre>
+<h3 id="icacheableitemexpirationevaluator">ICacheableItemExpirationEvaluator</h3>
+<p>Generic expiration policy:</p>
+<pre><code class="language-java">void expire(ICacheItemExpirationContext context)
+</code></pre>
+<hr />
+<h2 id="3-cache-implementations">3. Cache Implementations</h2>
+<h3 id="servicecatalogcacheableitemadapter">ServiceCatalogCacheableItemAdapter</h3>
+<p><strong>Base adapter</strong> implementing <code>IServiceCatalogCacheableItem</code>.</p>
+<p><strong>Key utility:</strong></p>
+<pre><code class="language-java">protected &lt;T&gt; T defaultIfNil(T value, T defaultValue)
+</code></pre>
+<h3 id="servicecatalogi18ncacheableitemadapter">ServiceCatalogI18NCacheableItemAdapter</h3>
+<p><strong>Extends:</strong> <code>ServiceCatalogCacheableItemAdapter</code></p>
+<p>Manages <code>ITranslations</code> (lazy-initialized) and provides:</p>
+<pre><code class="language-java">resolveFieldValue(fieldName)   // respects cacheV2 and cached flags
+resolveChoiceValue(choiceKey)  // looks up translated choice label
+</code></pre>
+<h3 id="cacheitemexpirationcontextimpl">CacheItemExpirationContextImpl</h3>
+<p>Stores: cache name, key, type, and <code>StaleCacheItem</code> list for context propagation during invalidation.</p>
+<hr />
+<h2 id="4-translation-engine">4. Translation Engine</h2>
+<h3 id="defaulttranslationprovider-450-lines">DefaultTranslationProvider (450+ lines)</h3>
+<p><strong>Purpose:</strong> Core translation engine. Resolves translated text from multiple sources with locale fallback.</p>
+<p><strong>Translation sources (in priority order):</strong>
+1. <code>sys_translated_text</code> — direct field translations
+2. <code>sys_translated</code> — translated field records
+3. Source table fields — base language values
+4. <code>sys_choice</code> — choice label translations</p>
+<p><strong>getChoiceTranslation() locale fallback chain:</strong></p>
+<pre><code>1. Requested locale (e.g., &quot;fr&quot;)
+2. Fallback language (e.g., &quot;en&quot;)
+3. Default system language
+</code></pre>
+<p><strong>Key internal structures:</strong>
+- Synchronized maps for thread-safe table hierarchy + translated elements
+- <code>getFieldTranslationsFromSourceTable()</code> — with domain handling
+- <code>getFieldTranslationsFromSysTranslated()</code> — for Translated Field type</p>
+<hr />
+<h2 id="5-servicecatalogcacheutils">5. ServiceCatalogCacheUtils</h2>
+<p><strong>Central cache utilities class.</strong></p>
+<h3 id="key-methods">Key Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>buildStaleCacheItemList(context)</code></td>
+<td>Evaluate and collect stale cache entries</td>
+</tr>
+<tr>
+<td><code>cachedString(key, supplier)</code></td>
+<td>String caching with optimization toggle</td>
+</tr>
+<tr>
+<td><code>createSysId2ObjectMap()</code></td>
+<td>Memory-optimized sys_id → object map</td>
+</tr>
+<tr>
+<td><code>createSysIdCopyOnWriteArrayList()</code></td>
+<td>Thread-safe list for sys_ids</td>
+</tr>
+<tr>
+<td><code>makeTranslatableObjectCacheKey(sysId, locale)</code></td>
+<td>Build cache key (V1: language-aware; V2: sys_id only)</td>
+</tr>
+<tr>
+<td><code>transactionCacheItem(key, supplier)</code></td>
+<td>Soft per-transaction cache</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cache-key-strategy">Cache Key Strategy</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Key Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V1 (legacy)</td>
+<td><code>{sysId}_{language}</code></td>
+</tr>
+<tr>
+<td>V2 (default, <code>isCacheApiV2Enabled()=true</code>)</td>
+<td><code>{sysId}</code> only</td>
+</tr>
+</tbody>
+</table>
+<p>V2 is simpler and avoids per-language cache misses. Translation is resolved at read time rather than baked into the key.</p>
+<hr />
+<h2 id="6-db-listeners-cache-invalidation">6. DB Listeners &amp; Cache Invalidation</h2>
+<h3 id="catalogdblistener">CatalogDBListener</h3>
+<p><strong>Purpose:</strong> Central dispatcher for all catalog-related DB change events. Uses <strong>Supplier pattern</strong> for lazy listener initialization.</p>
+<p><strong>Internal routing maps:</strong></p>
+<pre><code class="language-java">fCatalogInstanceListener:  table → List&lt;BiConsumer&lt;IDBAction, Boolean&gt;&gt;
+fCatalogHierarchyListener: table → List&lt;BiConsumer&lt;IDBAction, Boolean&gt;&gt;
+</code></pre>
+<p><strong>Registered listeners:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Listener</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>item_option_new</code></td>
+<td><code>VariableListenerConfigMeta</code></td>
+</tr>
+<tr>
+<td><code>item_option_new_set</code></td>
+<td><code>VariableSetListenerConfigMeta</code></td>
+</tr>
+<tr>
+<td><code>request_filter</code></td>
+<td><code>RequestFilterListener</code></td>
+</tr>
+<tr>
+<td><code>catalog_script_client</code></td>
+<td><code>DBUpdateEventGenerator</code></td>
+</tr>
+<tr>
+<td><code>catalog_ui_policy</code></td>
+<td><code>DBUpdateEventGenerator</code></td>
+</tr>
+<tr>
+<td><code>catalog_ui_policy_action</code></td>
+<td><code>DBUpdateEventGenerator</code></td>
+</tr>
+<tr>
+<td><code>question_choice</code></td>
+<td><code>DBUpdateEventGenerator</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Event types detected:</strong> <code>DBInsert</code>, <code>DBUpdate</code>, <code>DBDelete</code></p>
+<h3 id="icatalogdblistenermeta">ICatalogDBListenerMeta</h3>
+<p>Interface providing:</p>
+<pre><code class="language-java">List&lt;BiConsumer&lt;IDBAction, Boolean&gt;&gt; getListenerConfig()
+</code></pre>
+<h3 id="abstractcontextawarecataloglistener">AbstractContextAwareCatalogListener</h3>
+<p>Abstract base with lazy listener config initialization. Subclasses provide the specific listener logic.</p>
+<h3 id="scstalecachelistener">SCStaleCacheListener</h3>
+<p><strong>40+ table mappings → <code>StaleCacheFinder</code> implementations.</strong></p>
+<p><strong>Key finders:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Finder</th>
+<th>Tables Covered</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>StaleItemCacheFinder</code></td>
+<td><code>sc_cat_item</code>, catalog item hierarchy</td>
+</tr>
+<tr>
+<td><code>StaleCategoryCacheFinder</code></td>
+<td><code>sc_category</code>, M2M relationships</td>
+</tr>
+<tr>
+<td><code>StaleVariableSetCacheFinder</code></td>
+<td><code>item_option_new_set</code></td>
+</tr>
+<tr>
+<td><code>StaleCatalogM2MItemCacheFinder</code></td>
+<td><code>sc_cat_item_catalog_mtom</code></td>
+</tr>
+<tr>
+<td><code>StaleDynamicItemCacheFinder</code></td>
+<td>Dynamic content items</td>
+</tr>
+<tr>
+<td><code>StaleUserCriteriaCacheFinder</code></td>
+<td>User criteria changes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>FinderConfig lookup algorithm:</strong></p>
+<pre><code>1. Direct lookup in fFinderConfigMap
+   → found: return finder
+2. Check exclusion map
+   → excluded: return null (no invalidation needed)
+3. Hierarchy search (table inheritance chain)
+   → found: add to direct map, return finder
+4. Not found: add to exclusions map
+</code></pre>
+<h3 id="variablesetlistener">VariableSetListener</h3>
+<p><strong>Purpose:</strong> Handles <code>item_option_new_set</code> DB changes.</p>
+<p><strong>On insert/update:</strong>
+- Sets default title
+- Sets <code>internal_name</code> via <code>DBColumnNamer</code>
+- Sets <code>type</code> field</p>
+<p><strong>On delete:</strong>
+- Cleans up references in catalog template records
+- Filters out deleted variable set from JSON fields: <code>serializedData</code>, <code>variablesLayout</code>, <code>variables</code></p>
+<hr />
+<h2 id="7-cache-invalidation-user-criteria">7. Cache Invalidation: User Criteria</h2>
+<h3 id="catalogcriteriadependentstalecachefinder">CatalogCriteriaDependentStaleCacheFinder</h3>
+<p><strong>Implements:</strong> <code>IUserCriteriaDependentStaleCacheFinder</code></p>
+<pre><code class="language-java">getStaleCacheItems()
+  → uses UserItemsCacheableManager
+  → uses UserCategoriesCacheableManager
+</code></pre>
+<p>Invalidates user-specific item and category visibility caches when user criteria records change.</p>
+<h3 id="catalogm2mcachebase">CatalogM2MCacheBase</h3>
+<p><strong>Abstract M2M cache:</strong></p>
+<pre><code class="language-java">get(key)     // check cache or delegate to fetch()
+fetch(key)   // execute GlideRecord query
+abstract Supplier&lt;List&lt;String&gt;&gt; getCacheLoader()  // subclass provides data loader
+</code></pre>
+<hr />
+<h2 id="8-metrics-observability">8. Metrics &amp; Observability</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.metrics</code></p>
+<h3 id="metric-interfaces">Metric Interfaces</h3>
+<pre><code class="language-java">IMetricRegistry.group(name)   → IMetricGroup
+IMetricGroup.timer()          → IExecutionTimer
+IMetricGroup.counter()        → named counter
+IMetricGroup.getCounterMetrics()
+IMetricGroup.getTimerMetrics()
+
+IExecutionTimer.time(IExecutableSection&lt;T&gt;) → T
+IExecutableSection.execute()                → T  (functional interface)
+</code></pre>
+<h3 id="servicecatalogmetrics">ServiceCatalogMetrics</h3>
+<p><strong>Central convenience class for all catalog metrics.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cacheGroup()</code></td>
+<td>Metric group for <code>default.cache</code></td>
+</tr>
+<tr>
+<td><code>codeLocation(stackLocation, ids)</code></td>
+<td>Build metric names from stack trace</td>
+</tr>
+<tr>
+<td><code>incrementCounter(group, name)</code></td>
+<td>Conditional counter increment</td>
+</tr>
+<tr>
+<td><code>time(group, name, section)</code></td>
+<td>Wrap execution section with timing</td>
+</tr>
+<tr>
+<td><code>withCodeLocationIncrementCacheHit(...)</code></td>
+<td>Cache hit counter with code location</td>
+</tr>
+<tr>
+<td><code>withCodeLocationIncrementCachePut(...)</code></td>
+<td>Cache put counter with code location</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Guard:</strong> All operations check <code>ServiceCatalogToggles.isMetricsEnabled()</code> before recording.</p>
+<hr />
+<h2 id="9-feature-toggles">9. Feature Toggles</h2>
+<h3 id="servicecatalogtoggles">ServiceCatalogToggles</h3>
+<p><strong>Singleton, implements <code>IPropertyChangeListener</code></strong> — reacts to runtime property changes.</p>
+<table>
+<thead>
+<tr>
+<th>Toggle</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>isCacheApiV2Enabled()</code></td>
+<td><code>true</code></td>
+<td>V2 cache key strategy (sys_id only)</td>
+</tr>
+<tr>
+<td><code>isCatalogLargeSetOptimizationEnabled()</code></td>
+<td><code>false</code></td>
+<td>Lazy hydration for large item sets</td>
+</tr>
+<tr>
+<td><code>isMetricsEnabled()</code></td>
+<td><code>false</code></td>
+<td>Enable metric collection</td>
+</tr>
+<tr>
+<td><code>isMetricsXmlStatsEnabled()</code></td>
+<td>depends</td>
+<td>XML stats (requires metrics enabled)</td>
+</tr>
+<tr>
+<td><code>isOrderGuideImprovementsEnabled()</code></td>
+<td><code>true</code></td>
+<td>Order guide performance improvements</td>
+</tr>
+<tr>
+<td><code>isVariableDebuggingEnabled()</code></td>
+<td>session</td>
+<td>Variable debugging logs</td>
+</tr>
+<tr>
+<td><code>isVariableScriptingDebuggingEnabled()</code></td>
+<td>session</td>
+<td>Script invocation logging</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Registration:</strong> Constructor registers listeners for all toggle properties via <code>ServiceCatalogConfiguration.addPropertyChangeListener()</code>.</p>
+<h3 id="servicecatalogconfiguration">ServiceCatalogConfiguration</h3>
+<p><strong>Singleton:</strong></p>
+<pre><code class="language-java">getDefaultSystemLanguage()  // reads &quot;glide.sys.language&quot;
+addPropertyChangeListener(key, listener)
+</code></pre>
+<hr />
+<h2 id="10-component-registry">10. Component Registry</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.component</code></p>
+<h3 id="icomponentregistry-extends-iplugincomponentregistry">IComponentRegistry (extends IPluginComponentRegistry)</h3>
+<p>Marker interface.</p>
+<h3 id="componentregistry">ComponentRegistry</h3>
+<p><strong>Singleton</strong> with static <code>Map&lt;String, ICatalogComponent&gt;</code> keyed by interface name.</p>
+<p><strong>At construction, registers:</strong>
+- <code>VariablesComponent</code> → <code>IVariablesComponent.class.getName()</code></p>
+<p><strong>Lookup:</strong></p>
+<pre><code class="language-java">ComponentRegistry.find(IVariablesComponent.class, request)
+  → returns singleton VariablesComponent
+</code></pre>
+<h3 id="variablescomponent">VariablesComponent</h3>
+<p><strong>Implements:</strong> <code>IVariablesComponent</code>, <code>ICatalogVariablesComponent</code>, <code>ICatalogComponent</code></p>
+<p>Provides three sub-providers:</p>
+<table>
+<thead>
+<tr>
+<th>Provider Interface</th>
+<th>Implementation</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IVariableModelInstanceProvider</code></td>
+<td><code>VariableModelInstanceProvider</code></td>
+<td>Runtime node tree (TableVariableNode, etc.)</td>
+</tr>
+<tr>
+<td><code>IVariableModelViewProvider</code></td>
+<td><code>VariableModelViewProvider</code></td>
+<td>UI view objects</td>
+</tr>
+<tr>
+<td><code>IVariableNodePersistenceProvider</code></td>
+<td><code>VariableNodePersistenceProvider</code></td>
+<td>DB CRUD with query DSL</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-service-layer">11. Service Layer</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.service</code></p>
+<h3 id="core-interfaces">Core Interfaces</h3>
+<pre><code class="language-java">IService  // marker interface
+
+ServiceResponse&lt;T&gt; {
+  T fData
+  String fErrorCode
+  String fErrorText
+  int fStatusCode
+  String fStatusText
+}
+
+ServiceAdapter {
+  protected abstract ServiceResponse&lt;T&gt; process()
+}
+
+StatusCode // enum: HTTP-equivalent status codes (OK=200, CREATED=201, etc.)
+</code></pre>
+<h3 id="serviceexception">ServiceException</h3>
+<p>Custom exception: <code>getJSONResponse()</code> returns structured error JSON.</p>
+<hr />
+<h2 id="12-ui-policy-system">12. UI Policy System</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.ui_policy</code></p>
+<h3 id="cataloguipolicy">CatalogUIPolicy</h3>
+<p><strong>Extends:</strong> <code>UIPolicy</code></p>
+<p><strong>Key Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fSource</code> | Source record (catalog item, variable set) |
+| <code>fCatalogConditions</code> | Catalog-specific conditions |
+| <code>fAppliesToCatItem</code> | Applies to sc_cat_item context |
+| <code>fAppliesToReqItem</code> | Applies to sc_req_item context |
+| <code>fAppliesToScTask</code> | Applies to sc_task context |
+| <code>fAppliesToTarget</code> | Applies to producer target record |</p>
+<p><strong>Key Method:</strong></p>
+<pre><code class="language-java">getHighestOrderVariableInConditions()
+  // Parses fCatalogConditions QueryString
+  // Returns the variable with highest order number
+  // (used to determine which variable change triggers re-evaluation)
+</code></pre>
+<h3 id="cataloguipolicyaction">CatalogUIPolicyAction</h3>
+<p><strong>Extends:</strong> <code>UIPolicyAction</code></p>
+<p><strong>Key Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fVariable</code> | Field name this action controls |
+| <code>fOrder</code> | Display order |
+| <code>fPolicy</code> | Owning policy sys_id |
+| <code>fCacheable</code> | Cache eligibility |</p>
+<p><strong>Inner class:</strong> <code>CatalogUIPolicyActionTranslationService</code> — deferred translation of field messages.</p>
+<h3 id="cataloguipolicyevaluator">CatalogUIPolicyEvaluator</h3>
+<p><strong>Extends:</strong> <code>UIPolicyEvaluator</code></p>
+<p><strong>Key Method:</strong></p>
+<pre><code class="language-java">evaluatePolicy(questions, policies, targetRecord)
+  1. Build CatalogFormModel from questions list
+  2. For each policy:
+     a. Evaluate catalog conditions
+     b. If conditions met → apply actions (mandatory, visible, disabled)
+  3. Return populated field states
+</code></pre>
+<p><strong>Question filtering in <code>filterQuestions()</code>:</strong>
+- Excludes: <code>FormatterQuestion</code>, <code>UIPageQuestion</code>, <code>MacroQuestion</code>
+- Processes: standard form fields, checkbox containers</p>
+<h3 id="cataloguipolicyfetcher">CatalogUIPolicyFetcher</h3>
+<p><strong>Static cache:</strong> <code>CATALOG_UI_POLICY_CACHE</code><br />
+<strong>Cache:</strong> <code>TypeSafeCacheManager&lt;String, List&lt;CatalogUIPolicy&gt;&gt;</code></p>
+<p><strong>Cache key:</strong> <code>{sourceId}_{domain}_{language}</code> (V1) or <code>{sourceId}_{domain}</code> (V2)</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>getAllPolicies(source, request)</code> | All policies for source |
+| <code>getOnloadPolicies(source, request)</code> | Only on-load policies |
+| <code>queryCatalogUiPolicies(sourceId, request)</code> | DB query with domain context |
+| <code>queryAllActions(policyIds)</code> | Fetch actions ordered by ORDER field |
+| <code>filterPolicies(policies, targetType)</code> | Filter by record type (CAT_ITEM / REQ_ITEM / SC_TASK / target) |
+| <code>getVariable(action)</code> | Variable name (trims legacy over-length values) |</p>
+<hr />
+<h2 id="13-virtual-agent-support">13. Virtual Agent Support</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.virtual_agent</code></p>
+<h3 id="catalogconversationhelperjs-1412-lines">CatalogConversationHelperJS (1412 lines)</h3>
+<p><strong>Purpose:</strong> Enables Virtual Agent (VA) conversations to interact with catalog items.</p>
+<p><strong>Rhino-callable methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>getItem(itemId)</code> | Full item structure with variables, data lookups, UI policies |
+| <code>setValue(itemId, varName, value)</code> | Handle variable change with policy evaluation |
+| <code>submit(itemId, params)</code> | Submit form with validation |
+| <code>runChangePolicies(itemId, changedVar, params)</code> | Execute on-change policy evaluation |
+| <code>getNonConversationalReasons(itemId)</code> | Analyze why item may not support full VA conversation |</p>
+<p><strong><code>getNonConversationalReasons()</code> checks for:</strong>
+- Pricing implications
+- MRVS (multi-row variable sets)
+- Advanced reference qualifiers
+- Reference record limits exceeded
+- Client scripts present
+- Scripted UI policies</p>
+<h3 id="conversationobject">ConversationObject</h3>
+<p>Data holder with static <code>fMethodMap</code> binding field names to setter/getter pairs via reflection.</p>
+<p><strong>Key fields:</strong> <code>fSysId</code>, <code>fName</code>, <code>fDescription</code>, <code>fVariables</code>, <code>fPoliciesConditionResult</code>, <code>fDataLookupSetters</code>, <code>fDynamicValueVariableConfig</code>, <code>fCatalogs</code>, <code>fFormMessages</code>, <code>fRecurringFrequencyDisplay</code></p>
+<p><strong>Serialization:</strong> <code>parseResponse()</code> / <code>buildResponse()</code> use reflection-based dynamic serialization via <code>fMethodMap</code>.</p>
+<hr />
+<h2 id="14-cloning">14. Cloning</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.cloner</code></p>
+<h3 id="catalogclonerequest">CatalogCloneRequest</h3>
+<p><strong>Extends:</strong> <code>HierarchicalProgressWorker</code></p>
+<p><strong>Purpose:</strong> Deep-copy an existing request for one or more target users.</p>
+<p><strong>cloneRequest() flow:</strong></p>
+<pre><code>For each userId in fUserIds:
+  1. request.cloneForUser(userId)
+     a. Cart.backwards() — reverse-engineer request back to cart
+     b. Cart.checkoutCart() — re-submit cart for new user
+  2. Track progress via ExecutionTracker
+  3. Clear cart after each clone
+  4. Return List&lt;Request&gt; of successful clones
+  5. Return result URL via CatalogURLGenerator.getRequestListUrl()
+</code></pre>
+<p><strong>Error handling:</strong> <code>CartException</code> failures tracked per user; successful clones continue.</p>
+    </div>
+    <div class="doc-nav">
+      <a class="doc-nav-btn" href="03-variables-system.html"><div class="doc-nav-label">← Previous</div><div class="doc-nav-title">Variables System</div></a>
+      <a class="doc-nav-btn next" href="05-processors-graphql-search.html"><div class="doc-nav-label">Next →</div><div class="doc-nav-title">Processors, GraphQL & Scoped APIs</div></a>
+    </div>
+  </div>
+</div>
+<footer>
+  Built with ⚡ · <a href="../index.html">← All Categories</a> · <a href="index.html">Service Catalog</a>
+</footer>
+</body>
+</html>

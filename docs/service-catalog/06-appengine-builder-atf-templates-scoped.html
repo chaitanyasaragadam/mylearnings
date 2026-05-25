@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AppEngine, Builder, ATF & Templates — Service Catalog | My Learnings</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-logo" href="../index.html">⚡ <span>My</span>Learnings</a>
+  <div class="topnav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Service Catalog</a>
+  </div>
+</nav>
+<div class="page-layout">
+  <aside class="page-sidebar">
+    <h3>Navigation</h3>
+    <div class="sidebar-cat">Service Catalog</div><a class="sidebar-link" href="index.html">🏠 Service Catalog Home</a><a class="sidebar-link" href="00-overview.html">📐 Module Overview</a><a class="sidebar-link" href="01-core-domain.html">🏗 Core Domain</a><a class="sidebar-link" href="02-valve-producer-scripts.html">⚙ Valve & Producers</a><a class="sidebar-link" href="03-variables-system.html">📋 Variables System</a><a class="sidebar-link" href="04-cache-db-metrics.html">💾 Cache & Infra</a><a class="sidebar-link" href="05-processors-graphql-search.html">🔌 Processors & API</a><a class="sidebar-link current-page" href="06-appengine-builder-atf-templates-scoped.html">🛠 Builder & Templates</a><a class="sidebar-link" href="interactive-guide.html">🎬 Interactive Guide ↗</a><div class="sidebar-sep"></div><a class="sidebar-link" href="../index.html">← All Categories</a>
+  </aside>
+  <div class="page-content">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">›</span>
+      <a href="index.html">Service Catalog</a><span class="breadcrumb-sep">›</span>
+      <span>AppEngine, Builder, ATF & Templates</span>
+    </div>
+    <h1>AppEngine, Builder, ATF & Templates</h1>
+    <div class="page-meta">
+      <span class="meta-tag">glide-servicecatalog</span>
+      <span class="meta-tag">LCS Algorithm</span><span class="meta-tag">ExecutionPlan</span><span class="meta-tag">CatalogTemplate</span><span class="meta-tag">ServiceFulfillment</span>
+    </div>
+    <div class="md-body">
+<hr />
+<h2 id="1-appengine-template-unloading-system">1. AppEngine Template Unloading System</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.appengine.template.payload.unloader</code></p>
+<p><strong>Purpose:</strong> Serializes catalog metadata for cross-scope delivery (e.g., app engine template payloads). The key challenge is that variable sys_ids change between instances; the unloader <strong>tokenizes</strong> these references so they can be re-resolved after deployment.</p>
+<h3 id="tokenization-mechanism">Tokenization Mechanism</h3>
+<p>Variable references in template records use the format <code>IO:{32-char-hex-sys-id}</code>. The unloader replaces these with <code>ScanVariable</code> tokens (symbolic names) so the payload is portable across instances.</p>
+<p><strong>Regex pattern used:</strong> <code>(IO:)[0-9A-Za-z]{32}</code></p>
+<h3 id="abstractcatalogvariablerecordunloader">AbstractCatalogVariableRecordUnloader</h3>
+<p><strong>Abstract base</strong> for all record unloaders.</p>
+<p><strong>Key Method:</strong></p>
+<pre><code class="language-java">stripIOPrefix(value)
+  // Finds IO: prefixed sys_ids in field values
+  // Creates ScanVariable tokens for each reference
+  // Returns tokenized string safe for cross-instance delivery
+</code></pre>
+<h3 id="concrete-unloaders">Concrete Unloaders</h3>
+<table>
+<thead>
+<tr>
+<th>Unloader</th>
+<th>Table</th>
+<th>Field Tokenized</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CatalogUIPolicyRecordUnloader</code></td>
+<td><code>catalog_ui_policy</code></td>
+<td><code>catalog_conditions</code></td>
+</tr>
+<tr>
+<td><code>CatalogUIPolicyActionRecordUnloader</code></td>
+<td><code>catalog_ui_policy_action</code></td>
+<td><code>catalog_variable</code></td>
+</tr>
+<tr>
+<td><code>CatalogScriptClientRecordUnloader</code></td>
+<td><code>catalog_script_client</code></td>
+<td><code>cat_variable</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Payload structure:</strong></p>
+<pre><code>Record data
+  → IO: references detected
+  → Replaced with ScanVariable tokens
+  → JSON serialized for transport
+  → On target instance: tokens resolved back to local sys_ids
+</code></pre>
+<h3 id="unloader-helpers-unloaderhelpers">Unloader Helpers (<code>unloader/helpers/</code>)</h3>
+<p>Helper classes for specific field-type tokenization, field scanning, and reference resolution strategies.</p>
+<hr />
+<h2 id="2-catalog-builder-question-designer">2. Catalog Builder (Question Designer)</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.builder</code></p>
+<p><strong>Purpose:</strong> The Catalog Builder is the drag-and-drop UI tool for designing catalog item forms. Developers use it to add/remove/reorder questions, variable sets, and policies on a catalog item.</p>
+<h3 id="questiondesignerjs-entry-point">QuestionDesignerJS (Entry Point)</h3>
+<p><strong>Extends:</strong> <code>ScopedScriptableObject</code></p>
+<p><strong>Static Rhino methods:</strong></p>
+<pre><code class="language-javascript">QuestionDesignerJS.createResource(params)   // create question/container/variable_set
+QuestionDesignerJS.updateResource(params)   // update question/container/variable_set
+QuestionDesignerJS.deleteResource(params)   // delete question/container/variable_set
+QuestionDesignerJS.updateQuestionOrders(orders) // reorder questions
+</code></pre>
+<p><strong>Actions handled:</strong> <code>"container"</code>, <code>"question"</code>, <code>"question_set"</code></p>
+<p><strong>Session context:</strong> <code>CatalogUtil.setSessionProperties()</code> ensures correct scope before DB operations.</p>
+<h3 id="questiondesignerreorder-lcs-algorithm">QuestionDesignerReorder (LCS Algorithm)</h3>
+<p><strong>Purpose:</strong> Minimizes the number of order-field DB updates when questions are reordered. Uses <strong>Longest Common Subsequence (LCS)</strong>.</p>
+<p><strong>Key Data Structures:</strong></p>
+<pre><code>QuestionOrderList (DoublyLinkedList)
+  └── QuestionNode
+        └── QueueNode
+</code></pre>
+<p><strong>Algorithm:</strong></p>
+<pre><code>computeNewQuestionOrders(existingOrder, newOrder)
+  1. Run LCS to find common subsequence between old and new question order
+  2. Only update order values for questions NOT in the LCS
+  3. Allocate new order values in gaps between unchanged questions
+  4. Rebalance gaps if insufficient space between adjacent nodes
+
+updateQuestions(changedOrders)
+  → Updates item_option_new and io_set_item (variable sets)
+</code></pre>
+<p><strong>Result:</strong> Typically only 1-3 DB updates instead of updating all question order values.</p>
+<h3 id="dao-layer">DAO Layer</h3>
+<h4 id="questiondao">QuestionDAO</h4>
+<p>CRUD for <code>item_option_new</code> records:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>create(params)</code></td>
+<td>Insert new question record</td>
+</tr>
+<tr>
+<td><code>createContainer(params)</code></td>
+<td>Insert container_start + container_split + container_end (2-3 records)</td>
+</tr>
+<tr>
+<td><code>update(sysId, params)</code></td>
+<td>Update question fields</td>
+</tr>
+<tr>
+<td><code>delete(sysId)</code></td>
+<td>Delete with permission check</td>
+</tr>
+<tr>
+<td><code>bulkDeleteQuestions(ids)</code></td>
+<td>Delete multiple with error tracking</td>
+</tr>
+<tr>
+<td><code>transformAttributes(params, type)</code></td>
+<td>Filter allowed attributes by question type</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Container creation:</strong> A container generates up to 3 linked records:
+1. <code>container_start</code> — opening wrapper
+2. <code>container_split</code> (optional) — divider between columns
+3. <code>container_end</code> — closing wrapper</p>
+<h4 id="questionsetdao">QuestionSetDAO</h4>
+<p>CRUD for <code>io_set_item</code> (variable set ↔ catalog item M2M):</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>create(params)</code></td>
+<td>Link variable_set to sc_cat_item with order</td>
+</tr>
+<tr>
+<td><code>delete(sysId)</code></td>
+<td>Unlink variable set</td>
+</tr>
+</tbody>
+</table>
+<h4 id="policydao">PolicyDAO</h4>
+<p>CRUD for <code>catalog_ui_policy</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>create(params)</code></td>
+<td>Insert policy with permission check</td>
+</tr>
+<tr>
+<td><code>update(sysId, params)</code></td>
+<td>Update policy fields</td>
+</tr>
+<tr>
+<td><code>delete(sysId)</code></td>
+<td>Delete with <code>CatalogUtil.canWrite()</code> check</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Policy JSON output fields:</strong> ACTIVE, QUESTION_TEXT, TYPE, MANDATORY, LAYOUT, DISPLAY_TITLE, NAME, ATTRIBUTES, SYS_ID, HELP_TEXT, ORDER</p>
+<h4 id="policydesignerjs">PolicyDesignerJS</h4>
+<pre><code class="language-javascript">PolicyDesignerJS.deleteResource(params) // action=&quot;policy&quot;
+</code></pre>
+<h3 id="aquestiondesignerdao-abstract-base">AQuestionDesignerDAO (Abstract Base)</h3>
+<pre><code class="language-java">insert(gr)              // permission-checked insert
+getGr(sysId)            // load by sys_id
+delete(sysId)           // delete record
+applyAttributesToGr(gr, params)  // field-level ACL: only set writable fields
+buildOutput(gr)         // build JSON response
+</code></pre>
+<h3 id="builderexception">BuilderException</h3>
+<pre><code class="language-java">getJSONResponse()  // → {&quot;error_code&quot;: 400, &quot;error_msg&quot;: &quot;...&quot;}
+</code></pre>
+<hr />
+<h2 id="3-automated-testing-framework-atf">3. Automated Testing Framework (ATF)</h2>
+<p><strong>Package:</strong> <code>com.glide.automated_testing_framework.runner.step</code></p>
+<h3 id="replayrequestitemrunner">ReplayRequestItemRunner</h3>
+<p><strong>Extends:</strong> <code>AStepRunner</code><br />
+<strong>Implements:</strong> <code>ICatalogConstants</code></p>
+<p><strong>Purpose:</strong> ATF step that replays a previous catalog request item — orders the same item again for regression testing.</p>
+<p><strong>Step flow:</strong></p>
+<pre><code>1. Read original request_item sys_id from step input
+2. Create new Cart (sc_cart)
+3. cart.addToCart(catalogItemId)  ← adds item to new cart
+4. Copy variable values from original request_item:
+   a. Load questions via VariablePoolQuestionSet
+   b. For each question: get value from original → set on new cart_item
+5. RequestNew.copyCart()  ← submits cart, creates new request
+6. Verify new sc_req_item was created
+7. Set step output:
+   TABLE = &quot;sc_req_item&quot;
+   REQUEST_ITEM = new request_item sys_id
+</code></pre>
+<p><strong>Integration with catalog:</strong>
+- Uses <code>VariablePoolQuestionSet</code> for variable loading
+- Uses standard <code>Cart</code> / <code>RequestNew</code> flow — same path as live ordering
+- Validates catalog item still active and orderable</p>
+<hr />
+<h2 id="4-execution-plan-engine">4. Execution Plan Engine</h2>
+<p><strong>Package:</strong> <code>com.glide.execution_plan</code></p>
+<p><strong>Purpose:</strong> Models and calculates delivery timelines for catalog requests. Represents tasks as a directed acyclic graph (DAG) with dependency tracking.</p>
+<h3 id="tasktoken-core-node">TaskToken (Core Node)</h3>
+<p><strong>Implements:</strong> <code>Comparable</code> (ordered by path length offset)</p>
+<p><strong>Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fDeliveryTime</code> | Duration for this task |
+| <code>fName</code> | Task display name |
+| <code>fId</code> | Task sys_id |
+| <code>fOrder</code> | Explicit order value |
+| <code>fPredecessors</code> | Set of predecessor TaskToken sys_ids |
+| <code>fSuccessors</code> | Set of successor TaskToken sys_ids |
+| <code>fPathLength</code> | Computed GlideDuration (longest path to this task) |
+| <code>fType</code> | TYPE_NORMAL (0) or TYPE_APPROVAL (1) |
+| <code>fUponReject</code> | ON_REJECT_CANCEL (0) or ON_REJECT_GOTO (1) |
+| <code>fUponRejectGoto</code> | Target token sys_id for GOTO rejection |</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>shouldSkip()</code> | Evaluate Filter.checkRecord + condition_script |
+| <code>getPredecessorApprovalIds()</code> | Recursive stack traversal finding TYPE_APPROVAL ancestors with ON_REJECT_CANCEL |
+| <code>getDueDate(basis, calendar)</code> | basis + pathLength + calendar |
+| <code>getExpectedStart(basis, calendar)</code> | basis + pathLength - deliveryTime + calendar |</p>
+<h3 id="abstractexecutionplan">AbstractExecutionPlan</h3>
+<p><strong>Static cache:</strong> <code>PrivateCache "zzDeliveryPlanCacheyy"</code> (capacity 100)</p>
+<p><strong>Static factory:</strong></p>
+<pre><code class="language-java">AbstractExecutionPlan.get(planId)
+  1. Check cache
+  2. If miss: load via loader, populate cache
+  3. Return plan
+</code></pre>
+<p><strong>Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fPlanID</code> | Delivery plan sys_id |
+| <code>fCalendar</code> | GlideCalendar for working hours |
+| <code>fTaskTable</code> | Target task table |
+| <code>fStart</code> | START sentinel token |
+| <code>fTokenMap</code> | Map<String, TaskToken> |</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>calculatePathLengths()</code> | Recursive DFS: each token's path = max(predecessor paths) + self delivery time |
+| <code>getMaxPathLength()</code> | Maximum path = total plan duration (respects GlideCalendar working hours) |
+| <code>getTokenMap()</code> | Return all tokens |
+| <code>getSortedTokenList()</code> | Tokens sorted by Comparable (path length offset) |</p>
+<h3 id="executionplan">ExecutionPlan</h3>
+<p><strong>Extends:</strong> <code>AbstractExecutionPlan</code></p>
+<p><strong>Loading strategy determined at construction:</strong>
+- <code>AdvancedPlanLoader</code> — when explicit <code>sc_cat_item_dt_mtom</code> relationships exist
+- <code>BasicPlanLoader</code> — when tasks are ordered by <code>order</code> field only</p>
+<h3 id="plan-loaders">Plan Loaders</h3>
+<h4 id="basicplanloader-implicit-order">BasicPlanLoader (implicit order)</h4>
+<pre><code>Algorithm:
+1. calcSequence() — sort tasks by order field
+2. calcRudder() — group tasks into &quot;islands&quot; by order value
+   Example: orders [100, 100, 200, 300] → 3 islands
+   Island 1: [100, 100] (parallel)
+   Island 2: [200]
+   Island 3: [300]
+3. setTokens() — create sequential links between islands
+   Island 1 → Island 2 → Island 3
+</code></pre>
+<p>Tasks within the same island execute <strong>in parallel</strong>. Islands execute <strong>sequentially</strong>.</p>
+<h4 id="advancedplanloader-explicit-relationships">AdvancedPlanLoader (explicit relationships)</h4>
+<pre><code>1. Load all delivery tasks for plan
+2. Query sc_cat_item_dt_mtom for DT_CHILD / DT_PARENT relationships
+3. Build explicit predecessor/successor sets per token
+4. Add START token as predecessor if task has no parents
+</code></pre>
+<h4 id="abstractplanloader">AbstractPlanLoader</h4>
+<pre><code class="language-java">abstract void load(String planId)
+static final String DELIVERY_PLAN_FIELD = &quot;delivery_plan&quot;
+</code></pre>
+<h3 id="iexecutionplanconstants">IExecutionPlanConstants</h3>
+<p>Key constants:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PENDING</code></td>
+<td>-5</td>
+</tr>
+<tr>
+<td><code>OPEN</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>WORK_PROGRESS</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>CLOSED</code></td>
+<td>3</td>
+</tr>
+<tr>
+<td><code>CLOSED_INCOMPLETE</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>CLOSED_CANCELLED</code></td>
+<td>5</td>
+</tr>
+<tr>
+<td><code>CLOSED_SKIPPED</code></td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>DELIVERY_PLAN</code></td>
+<td><code>sc_cat_item_delivery_plan</code></td>
+</tr>
+<tr>
+<td><code>DELIVERY_TASK</code></td>
+<td><code>sc_cat_item_delivery_task</code></td>
+</tr>
+<tr>
+<td><code>SC_CAT_ITEM_DT_MTOM</code></td>
+<td><code>sc_cat_item_dt_mtom</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-migrations">Data Migrations</h3>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FixCatalog</code></td>
+<td>Converts order-based implicit relationships to explicit sc_cat_item_dt_mtom records</td>
+</tr>
+<tr>
+<td><code>FixCatalogPlans</code></td>
+<td>Repair catalog delivery plan data</td>
+</tr>
+<tr>
+<td><code>FixDeliveryPlans</code></td>
+<td>Repair delivery plan task relationships</td>
+</tr>
+<tr>
+<td><code>FixItemOptionsAgain</code></td>
+<td>Item options data repair</td>
+</tr>
+</tbody>
+</table>
+<p><code>FixCatalog.java</code> uses dual-cursor pattern + <code>gr.setWorkflow(false)</code> for bulk inserts.</p>
+<hr />
+<h2 id="5-catalog-template-engine">5. Catalog Template Engine</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.template</code></p>
+<p><strong>Purpose:</strong> Pre-defines variable values and UI property overrides (mandatory, readonly, restricted) for catalog items. Templates allow creating standardized request forms without modifying the base item.</p>
+<h3 id="catalogtemplate-immutable-lombok-builder">CatalogTemplate (Immutable, Lombok Builder)</h3>
+<p><strong>Table:</strong> <code>sc_template</code></p>
+<p><strong>Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fId</code> | Template sys_id |
+| <code>fName</code> | Template name |
+| <code>fShortDescription</code> | Description |
+| <code>fAvailableFor</code> | Set<String> user criteria sys_ids |
+| <code>fUseTemplateScope</code> | Use template's app scope |
+| <code>fProducer</code> | Associated catalog item sys_id |
+| <code>fAllowEditUnlistedVariables</code> | Whether non-template variables are editable |
+| <code>fTemplateDetails</code> | Lazy-loaded List<CatalogTemplateDetail> |</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>getTemplate(sysId)</code> | Static factory |
+| <code>getTemplate(gr)</code> | Static factory from GlideRecord |
+| <code>canUse(userId)</code> | Evaluate UserCriteria via <code>CSAUserCriteriaLoader</code>; check entitlement override role |
+| <code>save()</code> | Persist template + cascade to CatalogTemplateDetail.save() |
+| <code>getTemplateDetails()</code> | Lazy load from DB |</p>
+<h3 id="catalogtemplatedetail-immutable-lombok-builder">CatalogTemplateDetail (Immutable, Lombok Builder)</h3>
+<p><strong>Table:</strong> <code>sc_template_detail</code></p>
+<p><strong>Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fTemplate</code> | Parent template sys_id |
+| <code>fAppliesToSet</code> | true = variable set; false = individual question |
+| <code>fSet</code> | Variable set ID (if appliesToSet=true) |
+| <code>fQuestionId</code> | Question sys_id (if appliesToSet=false) |
+| <code>fValue</code> | Pre-filled value |
+| <code>fMandatory</code> | Override mandatory flag |
+| <code>fReadonly</code> | Override readonly flag |
+| <code>fVisible</code> | Override visible flag |
+| <code>fRestricted</code> | Override restricted flag |</p>
+<p><strong>Constraint:</strong> <code>readonly=true</code> forces <code>mandatory=false</code> and <code>restricted=false</code> (you can't require user input on a readonly field).</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>save()</code> | Update or insert, using APPLIES_TO_SET query to find existing detail |
+| <code>getTemplateDetails(templateId)</code> | Load all details for a template |
+| <code>getEntity()</code> | Returns set or questionId per fAppliesToSet |</p>
+<h3 id="catalogtemplatemanager">CatalogTemplateManager</h3>
+<p><strong>Static utility class</strong> for template CRUD, UI wizard integration, and field management.</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>fetch(templateId, request)</code> | Load template with user context |
+| <code>save(requestMap)</code> | Persist template from wizard form submission |
+| <code>duplicate(templateId)</code> | Deep-copy template + details |
+| <code>getTemplateValuesMap(templateId)</code> | Return Map<questionId, value> |
+| <code>getTemplateUIProperties(templateId)</code> | Return Map<questionId, {mandatory, readonly, restricted}> |
+| <code>hasTemplateManagerRole()</code> | Check user has template manager role |
+| <code>getDetailsStep()</code> | Build SCWizardStep for template Details |
+| <code>getOwnerOverrideStep()</code> | Build SCWizardStep for owner/availability |</p>
+<p><strong>Synthetic question IDs for metadata:</strong>
+- <code>name</code>, <code>short_description</code>, <code>available_for</code>, <code>editable</code>, <code>mandatory</code>, <code>restricted</code>, <code>use_scope</code></p>
+<h3 id="catalogtemplatejs">CatalogTemplateJS</h3>
+<p><strong>Rhino API:</strong></p>
+<pre><code class="language-javascript">var tmpl = new sn_sc.CatalogTemplate(sysId);
+tmpl.canUse()
+tmpl.getProducer()
+tmpl.duplicate()
+</code></pre>
+<h3 id="icatalogtemplateconstants">ICatalogTemplateConstants</h3>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CATALOG_TEMPLATE</code></td>
+<td><code>sc_template</code></td>
+</tr>
+<tr>
+<td><code>CATALOG_TEMPLATE_DETAILS</code></td>
+<td><code>sc_template_detail</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-service-fulfillment">6. Service Fulfillment</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.scoped.api</code></p>
+<h3 id="servicefulfillmentjs-servicefulfillmentstep">ServiceFulfillmentJS / ServiceFulfillmentStep</h3>
+<p><strong>Purpose:</strong> Manage service fulfillment steps — discrete units of work that execute as part of a catalog request fulfillment.</p>
+<p><strong>ServiceFulfillmentStep methods:</strong></p>
+<pre><code class="language-java">deleteStep(stepId)
+  // Validates via stepGr.canDelete()
+
+submitStepRecordProducer(params)
+  // Creates/updates sc_service_fulfillment_stage
+  // Submits record producer with RollbackRecorder / RollbackExecutor
+  // Returns JSON: { RESULT, STAGE_ID, STEP_LABEL }
+</code></pre>
+<p><strong>Transaction safety:</strong> Uses <code>RollbackRecorder</code> + <code>RollbackExecutor</code> to undo changes if submission fails.</p>
+<hr />
+<h2 id="7-domain-support">7. Domain Support</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.domain</code></p>
+<p><strong>Purpose:</strong> Handles multi-tenant (domain-separated) catalog operations.</p>
+<p><strong>Key Functionality:</strong>
+- Domain conflict detection in carts (items must be from same domain)
+- Domain-aware cache keys (cache entries are domain-scoped)
+- Domain-specific user criteria evaluation
+- Cross-domain item visibility rules</p>
+<p><strong>Integration point:</strong> <code>CatalogUtil.getDomain()</code> + <code>DomainSupport.isMultiDomain()</code> used throughout.</p>
+<hr />
+<h2 id="8-exceptions">8. Exceptions</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.exceptions</code></p>
+<table>
+<thead>
+<tr>
+<th>Exception Class</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CartException</code></td>
+<td>Cart operation failures (add, checkout, domain conflict)</td>
+</tr>
+<tr>
+<td><code>TargetVariableMapperException</code></td>
+<td>Variable mapping failure; <code>getJSONResponse()</code> for client</td>
+</tr>
+<tr>
+<td><code>BuilderException</code></td>
+<td>Catalog builder operation failure</td>
+</tr>
+<tr>
+<td><code>ServiceException</code></td>
+<td>Service layer generic exception</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-catalog-item-versioning">9. Catalog Item Versioning</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.catalog_item.versioning</code></p>
+<h3 id="catalogitempublishoperation">CatalogItemPublishOperation</h3>
+<p><strong>Purpose:</strong> Manages publishing workflow for catalog items. Handles draft → active version transitions.</p>
+<p><strong>Key Operations:</strong>
+- Create new version of a catalog item
+- Promote draft to published state
+- Rollback to previous version
+- Compare versions</p>
+<p><strong>Test coverage:</strong> <code>CatalogItemPublishOperationTest</code> validates versioning and publishing logic.</p>
+<hr />
+<h2 id="10-cart-validators">10. Cart Validators</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.cart.validators</code></p>
+<p><strong>Purpose:</strong> Pluggable validation rules run before cart checkout.</p>
+<p><strong>Validators include:</strong>
+- User criteria check: Can user still order each item?
+- Domain check: Are all items in the same domain?
+- Requested-for validation: Is the requested_for user set and valid?
+- Quantity validation: Are quantities within allowed limits?
+- Active check: Are all items still active?</p>
+<p><strong>Pattern:</strong> Each validator implements a common interface; <code>Cart.validateCartItems()</code> runs all validators and aggregates errors.</p>
+<hr />
+<h2 id="11-overall-module-relationships">11. Overall Module Relationships</h2>
+<pre><code>Catalog Builder (QuestionDesignerJS)
+    ↓ creates/reorders
+item_option_new (Questions)
+item_option_new_set (Variable Sets)
+catalog_ui_policy (Policies)
+    ↓ loaded by
+CatalogItem.getVariables()
+CatalogUIPolicyFetcher.getAllPolicies()
+    ↓ evaluated at runtime
+CatalogUIPolicyEvaluator.evaluatePolicy()
+    ↓ form rendered
+CartItem / RequestItem (variable values stored)
+    ↓ at checkout
+ProducerValve (Script chain)
+    ↓ record created
+ITSM Target (incident, change, task, etc.)
+    ↓
+ExecutionPlan
+    ↓ TaskToken DAG
+DeliveryTask records (sc_cat_item_delivery_task)
+    ↓
+Request fulfilled
+    ↓
+ATF: ReplayRequestItemRunner (regression test)
+</code></pre>
+<hr />
+<h2 id="12-serialization-utilities">12. Serialization Utilities</h2>
+<h3 id="serializationutils">SerializationUtils</h3>
+<p><strong>Static methods:</strong></p>
+<pre><code class="language-java">writeJson(object)
+  // Jackson ObjectMapper with:
+  // - INDENT_OUTPUT
+  // - FAIL_ON_EMPTY_BEANS=false
+  // - WRITE_NULL_MAP_VALUES=false
+  // - WRITE_ENUMS_USING_TO_STRING=true
+  // - SerializationInclusion.NON_NULL + NON_EMPTY
+
+writeXml(jsonString)
+  // Converts JSON to XML via org.json.XML
+</code></pre>
+    </div>
+    <div class="doc-nav">
+      <a class="doc-nav-btn" href="05-processors-graphql-search.html"><div class="doc-nav-label">← Previous</div><div class="doc-nav-title">Processors, GraphQL & Scoped APIs</div></a>
+      <a class="doc-nav-btn next" href="index.html"><div class="doc-nav-label">Back to →</div><div class="doc-nav-title">Service Catalog</div></a>
+    </div>
+  </div>
+</div>
+<footer>
+  Built with ⚡ · <a href="../index.html">← All Categories</a> · <a href="index.html">Service Catalog</a>
+</footer>
+</body>
+</html>

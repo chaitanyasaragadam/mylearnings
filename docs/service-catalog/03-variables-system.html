@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Variables System — Service Catalog | My Learnings</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-logo" href="../index.html">⚡ <span>My</span>Learnings</a>
+  <div class="topnav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Service Catalog</a>
+  </div>
+</nav>
+<div class="page-layout">
+  <aside class="page-sidebar">
+    <h3>Navigation</h3>
+    <div class="sidebar-cat">Service Catalog</div><a class="sidebar-link" href="index.html">🏠 Service Catalog Home</a><a class="sidebar-link" href="00-overview.html">📐 Module Overview</a><a class="sidebar-link" href="01-core-domain.html">🏗 Core Domain</a><a class="sidebar-link" href="02-valve-producer-scripts.html">⚙ Valve & Producers</a><a class="sidebar-link current-page" href="03-variables-system.html">📋 Variables System</a><a class="sidebar-link" href="04-cache-db-metrics.html">💾 Cache & Infra</a><a class="sidebar-link" href="05-processors-graphql-search.html">🔌 Processors & API</a><a class="sidebar-link" href="06-appengine-builder-atf-templates-scoped.html">🛠 Builder & Templates</a><a class="sidebar-link" href="interactive-guide.html">🎬 Interactive Guide ↗</a><div class="sidebar-sep"></div><a class="sidebar-link" href="../index.html">← All Categories</a>
+  </aside>
+  <div class="page-content">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">›</span>
+      <a href="index.html">Service Catalog</a><span class="breadcrumb-sep">›</span>
+      <span>Variables System</span>
+    </div>
+    <h1>Variables System</h1>
+    <div class="page-meta">
+      <span class="meta-tag">glide-servicecatalog</span>
+      <span class="meta-tag">Runtime Models</span><span class="meta-tag">Persistence</span><span class="meta-tag">Views</span><span class="meta-tag">Rhino Bridge</span>
+    </div>
+    <div class="md-body">
+<hr />
+<h2 id="1-architecture-overview">1. Architecture Overview</h2>
+<p>The variable system is a <strong>three-layer hierarchical document model</strong> that handles both single-value fields and multi-row table-like variable sets.</p>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│  Presentation Layer                                  │
+│  TableVariableViewImpl / TableVariableRowViewImpl    │
+│  TableVariableCellView / TableVariableJsonModel      │
+└───────────────────┬─────────────────────────────────┘
+                    │ reads
+┌───────────────────▼─────────────────────────────────┐
+│  Runtime Layer                                       │
+│  TableVariableNode / TableVariableRowNode            │
+│  TableVariableCellNode / VariableNodeScriptingModel  │
+└───────────────────┬─────────────────────────────────┘
+                    │ reads/writes
+┌───────────────────▼─────────────────────────────────┐
+│  Persistence Layer                                   │
+│  VariableNodeDatabaseModel                           │
+│  Table: sc_multi_row_question_answer                 │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="2-variable-set-types">2. Variable Set Types</h2>
+<h3 id="variablesettype-enum">VariableSetType Enum</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Class</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ONE_TO_ONE</code></td>
+<td><code>SingleRowVariableSet</code></td>
+<td>Single row of fields — standard form fields</td>
+</tr>
+<tr>
+<td><code>ONE_TO_MANY</code></td>
+<td><code>TableVariableSet</code></td>
+<td>Multi-row table — each row stores independent values</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Factory method:</strong> <code>VariableSetType.get(type)</code> returns the appropriate <code>AbstractVariableSet</code> implementation.</p>
+<hr />
+<h2 id="3-persistence-layer">3. Persistence Layer</h2>
+<h3 id="variablenodedatabasemodel">VariableNodeDatabaseModel</h3>
+<p><strong>Purpose:</strong> In-memory document model for all multi-row variable data. Bridges between the application layer and <code>sc_multi_row_question_answer</code> DB table.</p>
+<p><strong>Table: <code>sc_multi_row_question_answer</code></strong></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>node_owner_id</code></td>
+<td>Source record sys_id (sc_req_item, sc_task)</td>
+</tr>
+<tr>
+<td><code>node_owner_table</code></td>
+<td>Source table name</td>
+</tr>
+<tr>
+<td><code>node_parent_id</code></td>
+<td>Parent node sys_id (for hierarchy)</td>
+</tr>
+<tr>
+<td><code>node_question_id</code></td>
+<td>Question definition sys_id</td>
+</tr>
+<tr>
+<td><code>node_type</code></td>
+<td>"table", "tr" (row), "td" (cell)</td>
+</tr>
+<tr>
+<td><code>node_variable_set_id</code></td>
+<td>Variable set definition sys_id</td>
+</tr>
+<tr>
+<td><code>node_value</code></td>
+<td>Serialized value</td>
+</tr>
+<tr>
+<td><code>node_index</code></td>
+<td><code>System.nanoTime()</code> — row ordering</td>
+</tr>
+</tbody>
+</table>
+<h3 id="loading-process">Loading Process</h3>
+<pre><code class="language-java">VariableNodeDatabaseModel.getDocumentRoot(variableSetId, ownerId, ownerTable)
+  1. Query sc_multi_row_question_answer filtered by variable set + owner
+  2. Build in-memory tree: root → row nodes (tr) → cell nodes (td)
+  3. Map question IDs per variable set via HashMap for rapid lookup
+  4. Create IVariableNodeContext with nodeMap + query cache
+</code></pre>
+<h3 id="saving-process">Saving Process</h3>
+<pre><code class="language-java">VariableNodeDatabaseModel.save()
+  1. Iterate nodeMap for modified nodes (marked via markDirty())
+  2. New nodes (temp UUID prefix):
+     → INSERT to sc_multi_row_question_answer
+  3. Existing nodes:
+     → UPDATE value + display_value fields
+  4. Deleted nodes:
+     → DELETE by sys_id
+  5. getQuestionReportingMapping()
+     → establish references to sc_item_option / question_answer source records
+</code></pre>
+<h3 id="query-system-visitor-pattern">Query System (Visitor Pattern)</h3>
+<pre><code>IQuery
+  ├── EqualsQuery(field, value)     → single equality condition
+  ├── AndQuery(List&lt;IQuery&gt;)        → all conditions must match
+  └── OrQuery(List&lt;IQuery&gt;)         → any condition matches
+</code></pre>
+<p><strong>Query cache:</strong> <code>fQueryResultCache</code> keyed by <code>cacheKey()</code> string. Cleared by <code>markDirty()</code> on any modification.</p>
+<p><strong>Database translation:</strong> <code>QueryConditionBuilder extends BaseQueryVisitor&lt;IQueryCondition&gt;</code>
+- <code>EqualsQuery</code> → <code>addCondition(field, "=", value)</code>
+- <code>AndQuery</code> → chained <code>addCondition()</code>
+- <code>OrQuery</code> → <code>addOrCondition()</code></p>
+<hr />
+<h2 id="4-runtime-layer">4. Runtime Layer</h2>
+<h3 id="node-hierarchy">Node Hierarchy</h3>
+<pre><code>ITableVariableNode (root — &quot;table&quot;)
+    └── ITableVariableRowNode (row — &quot;tr&quot;)
+              └── ITableVariableCellNode (cell — &quot;td&quot;)
+</code></pre>
+<h3 id="tablevariablenode">TableVariableNode</h3>
+<p><strong>Purpose:</strong> Root node for a variable set instance.</p>
+<p><strong>Key Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fAttributes</code> | HashMap<String,String> — variable set metadata (max_rows, layout, type, roles) |
+| <code>fQuestionSysIds</code> | LinkedHashMap<String,String> — ordered question sys_id → definition ID |</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>addRow()</code> | Create new row; index = <code>System.nanoTime()</code> |
+| <code>deleteRow(rowId)</code> | Soft-delete row node |
+| <code>getMaxAllowedRows()</code> | min(system property <code>glide.sc.multirow_set.rows.size</code>, <code>max_rows</code> attribute) — returns -1 if unbounded |
+| <code>getRows()</code> | Return ordered list of row nodes |</p>
+<h3 id="tablevariablerownode">TableVariableRowNode</h3>
+<p><strong>Purpose:</strong> Represents one row in a multi-row variable set.</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>getCell(questionName)</code> | Return cell node by question name |
+| <code>deleteRow()</code> | Mark row as deleted (soft delete) |
+| <code>getIndex()</code> | Return nanotime ordering index |</p>
+<h3 id="tablevariablecellnode">TableVariableCellNode</h3>
+<p><strong>Purpose:</strong> Leaf node representing one field value in a row.</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>getCellValue()</code> | Return raw persisted value from node |
+| <code>getCellDisplayValue()</code> | Compute display value via Question (handles derived fields, reference labels) |
+| <code>isHideOnGrid()</code> | Delegates to <code>Question.isHideOnGrid()</code> |</p>
+<h3 id="variablenodescriptingmodel">VariableNodeScriptingModel</h3>
+<p><strong>Extends:</strong> <code>GlideElementScriptingModel</code><br />
+<strong>Implements:</strong> <code>IGlideElementWiringCallback</code></p>
+<p><strong>Purpose:</strong> Bridges the runtime node model to the Rhino JavaScript environment.</p>
+<p><strong>jsFunction_ methods (callable from catalog scripts):</strong></p>
+<pre><code class="language-javascript">variableNode.getRows()
+variableNode.addRow()
+variableNode.deleteRow(rowId)
+variableNode.getCellValue(rowId, questionName)
+variableNode.setCellValue(rowId, questionName, value)
+</code></pre>
+<p><strong>commit() hook:</strong> Fires when a script writes to the variable (via <code>gr.insert/update/delete</code>). Routes to <code>save()</code> for non-DELETE operations.</p>
+<hr />
+<h2 id="5-view-layer">5. View Layer</h2>
+<h3 id="view-construction-pipeline">View Construction Pipeline</h3>
+<pre><code>VariableSetContainer
+    ↓ resolveModel()
+ITableVariableNode (loaded from VariableNodeDatabaseModel)
+    ↓ getTableVariableView()
+TableVariableViewImpl
+    ├── TableVariableRowViewImpl (per row)
+    │       └── TableVariableCellView (per cell)
+    └── ... (all rows)
+</code></pre>
+<h3 id="tablevariableviewimpl">TableVariableViewImpl</h3>
+<p><strong>Constructor:</strong></p>
+<pre><code class="language-java">TableVariableViewImpl(VariableSetContainer container, String sourceTable, String sourceId)
+  1. Resolve ITableVariableNode via IVariableModelInstanceProvider
+  2. Iterate rows → build TableVariableRowViewImpl for each
+</code></pre>
+<h3 id="tablevariablerowviewimpl">TableVariableRowViewImpl</h3>
+<p><strong>Constructor:</strong></p>
+<pre><code class="language-java">TableVariableRowViewImpl(List&lt;String&gt; questionIds, ITableVariableRowNode rowNode)
+  1. Map each questionId → TableVariableCellView via row.getCell(question.getName())
+  2. Store question metadata: name, label, order
+</code></pre>
+<h3 id="tablevariablecellview">TableVariableCellView</h3>
+<p><strong>Purpose:</strong> Single-cell view wrapping <code>ITableVariableCellNode</code> + <code>Question</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getValue()</code></td>
+<td>Returns raw persisted value</td>
+</tr>
+<tr>
+<td><code>getDisplayValue()</code></td>
+<td>Evaluates via Question; caches on first access</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Special type handling:</strong>
+| Type | Behavior |
+|------|----------|
+| DURATION | Converts via <code>GlideDuration().setValue(value)</code> |
+| DATE / DATE_TIME | Uses display value only (no parsing) |
+| Others | Raw persisted value |</p>
+<h3 id="tablevariablejsonmodel">TableVariableJsonModel</h3>
+<p><strong>Purpose:</strong> Serializes all rows/cells to JSON for API/client consumption.</p>
+<p><strong>Output structure:</strong></p>
+<pre><code class="language-json">[
+  {
+    &quot;questionId1&quot;: { &quot;value&quot;: &quot;...&quot;, &quot;displayValue&quot;: &quot;...&quot; },
+    &quot;questionId2&quot;: { &quot;value&quot;: &quot;...&quot;, &quot;displayValue&quot;: &quot;...&quot; }
+  },
+  ...
+]
+</code></pre>
+<p><strong>Type-specific JSON serialization:</strong>
+- DATE/DATE_TIME → <code>displayValue</code> for both <code>value</code> and <code>displayValue</code> fields
+- DURATION → convert via <code>GlideDuration.getValue()</code>
+- Others → raw persisted value</p>
+<hr />
+<h2 id="6-variable-set-implementations">6. Variable Set Implementations</h2>
+<h3 id="abstractvariableset">AbstractVariableSet</h3>
+<p><strong>Base class for all variable set types.</strong></p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>load()</code> | Initialize and populate questions |
+| <code>getOnChange()</code> | Return on-change JS hook string |
+| <code>getQuestionValue(q)</code> | Read from <code>fRowData</code> JSONObject by question ID/name |
+| <code>updateQuestion(q)</code> | Apply row data to question with type-safe conversion |
+| <code>getRefResolverRecord()</code> | Create transient sc_cart_item for reference qualifier evaluation |</p>
+<h3 id="singlerowvariableset-one_to_one">SingleRowVariableSet (ONE_TO_ONE)</h3>
+<ul>
+<li>Queries <code>item_option_new</code> for variable definitions</li>
+<li>Wraps questions in <code>VariableSetContainer</code></li>
+<li>Questions rendered as standard form fields</li>
+<li>No multi-row persistence overhead</li>
+</ul>
+<h3 id="tablevariableset-one_to_many">TableVariableSet (ONE_TO_MANY)</h3>
+<p><strong>Key Additional Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fRowData</code> | JSONObject of current row's values |
+| <code>fFetchQuestionsFromModel</code> | Whether to load questions from node model |</p>
+<p><strong>Key Additional Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>setRowData(jsonData)</code> | Set current row context for question value resolution |
+| <code>setSequence(varIds)</code> | Override question display order |
+| <code>setFetchQuestionsFromModel(bool)</code> | Control question source |</p>
+<p><strong>On-change hook template:</strong></p>
+<pre><code class="language-javascript">if (typeof(variableOnChange) == 'function') variableOnChange('{questionName}')
+</code></pre>
+<p><strong>Type conversions in updateQuestion():</strong>
+| Type | Conversion |
+|------|-----------|
+| DATE / DATE_TIME | <code>q.setDisplayValue(value)</code> — no parsing |
+| DURATION | <code>new GlideDuration().setValue(value)</code> → <code>q.setValue(duration.getValue())</code> |
+| Others | <code>q.setValue(value)</code> |</p>
+<hr />
+<h2 id="7-scripting-infrastructure">7. Scripting Infrastructure</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.scripting.rhino</code></p>
+<h3 id="irhinoscriptingenablement-interface">IRhinoScriptingEnablement (Interface)</h3>
+<p>Minimal contract for Rhino property access on Java objects:</p>
+<pre><code class="language-java">Class[] getPublicScriptableInterfaces()
+Object jsGet(int index)     // obj[0]
+Object jsGet(String name)   // obj.name
+Object jsGet()              // used as default value
+void jsSet(int index, Object value)
+void jsSet(String name, Object value)
+void jsSet(Object value)
+</code></pre>
+<h3 id="glideelementscriptingmodel">GlideElementScriptingModel</h3>
+<p><strong>Extends:</strong> <code>GlideElementGlideObject</code><br />
+<strong>Implements:</strong> <code>IRhinoScriptingEnablement</code>, <code>IScriptingHelp</code>, <code>IGlideElement</code>, <code>IJsonDataModel</code></p>
+<p><strong>Purpose:</strong> Core Rhino bridge — makes Java objects accessible from JavaScript with natural property/method syntax.</p>
+<p><strong>Method invocation flow:</strong></p>
+<pre><code>JavaScript: obj.propertyName
+    ↓
+Rhino calls: get(String name, Scriptable start)
+    ↓
+Check: is property in fMappedNames?
+    ↓
+Call jsGet(String name)
+    ↓
+Find matching method by parameter count (reflection)
+    ↓
+Invoke via reflection
+    ↓
+Wrap result: NativeArray for arrays, else direct
+    ↓
+Return to Rhino
+</code></pre>
+<p><strong>Annotations processed at construction:</strong>
+| Annotation | Purpose |
+|-----------|---------|
+| <code>@DefaultJavaScriptGetter</code> | Mark method as default Rhino getter |
+| <code>@DefaultJavaScriptSetter</code> | Mark method as default Rhino setter |</p>
+<p><strong>Special handling:</strong>
+- <code>toString()</code> — prevents NativeObject type-coercion errors
+- Array returns — wrapped in <code>NativeArray</code> for JavaScript iteration
+- Method logging — when <code>ServiceCatalogToggles.isVariableScriptingDebuggingEnabled()</code></p>
+<h3 id="iglideelementwiringcallback-interface">IGlideElementWiringCallback (Interface)</h3>
+<p>Minimal decoupling layer between scripting model and underlying field implementation:</p>
+<pre><code class="language-java">void configureElementDescriptor(ElementDescriptor descriptor)
+String stringValue()        // → getValue()
+String scriptVariableName() // → getName()
+boolean hasChanges()        // → changes()
+void commit(String op)      // → notifyRecordOperation()
+IVariable variable()        // → IVariable for compatibility
+</code></pre>
+<hr />
+<h2 id="8-component-registry-for-variables">8. Component Registry for Variables</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.component</code></p>
+<h3 id="variablescomponent">VariablesComponent</h3>
+<p><strong>Implements:</strong> <code>IVariablesComponent</code>, <code>ICatalogVariablesComponent</code>, <code>ICatalogComponent</code></p>
+<p>Provides three providers registered into <code>ComponentRegistry</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VariableModelInstanceProvider</code></td>
+<td>In-memory runtime node models (TableVariableNode, etc.)</td>
+</tr>
+<tr>
+<td><code>VariableModelViewProvider</code></td>
+<td>UI rendering layer (view classes)</td>
+</tr>
+<tr>
+<td><code>VariableNodePersistenceProvider</code></td>
+<td>DB persistence with QueryVisitor</td>
+</tr>
+</tbody>
+</table>
+<h3 id="componentregistry">ComponentRegistry</h3>
+<p><strong>Singleton</strong> with static map of <code>interface name → component instance</code>.</p>
+<pre><code class="language-java">ComponentRegistry.find(IVariablesComponent.class, request)
+    → returns VariablesComponent singleton
+</code></pre>
+<hr />
+<h2 id="9-question-types-and-special-handling">9. Question Types and Special Handling</h2>
+<h3 id="reference-lookup-variables">Reference / Lookup Variables</h3>
+<ul>
+<li><code>LookupSelectQuestion</code> requires reference context for resolving <strong>reference qualifiers</strong></li>
+<li><code>AbstractVariableSet.getRefResolverRecord()</code> creates a transient <code>sc_cart_item</code> record</li>
+<li>Stores initial question values to provide context for qualifier evaluation</li>
+<li><code>LookupSelectQuestion.setReferenceContext()</code> called during <code>load()</code></li>
+</ul>
+<h3 id="hidden-grid-columns">Hidden Grid Columns</h3>
+<ul>
+<li>Questions with <code>hideOnGrid=true</code> excluded from table column rendering</li>
+<li>Still participate in cell data storage and scripting access</li>
+<li><code>ITableVariableCellNode.isHideOnGrid()</code> → <code>Question.isHideOnGrid()</code></li>
+</ul>
+<h3 id="list-collector">List Collector</h3>
+<ul>
+<li>Returns <code>DISPLAY_VALUE_LIST</code> as a separate field in API responses</li>
+<li>Serialized as comma-separated display values</li>
+</ul>
+<h3 id="masked-variables">Masked Variables</h3>
+<ul>
+<li><code>VariablePoolQuestionSetJS</code> returns <code>DECRYPTED_VALUE</code> as a separate API field</li>
+<li>Raw encrypted value stored in <code>VALUE</code></li>
+</ul>
+<hr />
+<h2 id="10-multi-row-variable-set-max-row-enforcement">10. Multi-Row Variable Set: Max Row Enforcement</h2>
+<pre><code class="language-java">TableVariableNode.getMaxAllowedRows()
+  systemPropLimit = getProperty(&quot;glide.sc.multirow_set.rows.size&quot;)
+  attrLimit = fAttributes.get(&quot;max_rows&quot;)
+  return min(systemPropLimit, attrLimit)
+  // returns -1 if no limit (unbounded)
+</code></pre>
+<p>Enforced at row <strong>addition time</strong>, not at persistence time. UI prevents adding rows beyond limit.</p>
+<hr />
+<h2 id="11-key-relationships">11. Key Relationships</h2>
+<pre><code>CatalogItem
+  └──[M2M sc_item_option_mtom]──→ ItemOptionNewSet (variable set definition)
+                                          │
+                                  TableVariableSet (runtime)
+                                          │
+                                  VariableNodeDatabaseModel (in-memory)
+                                          │
+                                  sc_multi_row_question_answer (DB)
+                                          │
+                              ┌───────────┴────────────┐
+                              │                        │
+                    TableVariableViewImpl    VariableNodeScriptingModel
+                    (UI rendering)           (Rhino access)
+</code></pre>
+<hr />
+<h2 id="12-debugging-support">12. Debugging Support</h2>
+<p><strong>Package:</strong> <code>com.glide.catalog.variables.debug</code></p>
+<ul>
+<li><code>ServiceCatalogToggles.isVariableDebuggingEnabled()</code> — session-level toggle</li>
+<li><code>ServiceCatalogToggles.isVariableScriptingDebuggingEnabled()</code> — logs method invocations in <code>GlideElementScriptingModel</code></li>
+<li>Variable metrics tracked in <code>com.glide.catalog.variables.metrics</code></li>
+</ul>
+    </div>
+    <div class="doc-nav">
+      <a class="doc-nav-btn" href="02-valve-producer-scripts.html"><div class="doc-nav-label">← Previous</div><div class="doc-nav-title">Valve Pipeline & Producers</div></a>
+      <a class="doc-nav-btn next" href="04-cache-db-metrics.html"><div class="doc-nav-label">Next →</div><div class="doc-nav-title">Cache, DB Listeners & Metrics</div></a>
+    </div>
+  </div>
+</div>
+<footer>
+  Built with ⚡ · <a href="../index.html">← All Categories</a> · <a href="index.html">Service Catalog</a>
+</footer>
+</body>
+</html>

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Valve Pipeline & Producers — Service Catalog | My Learnings</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-logo" href="../index.html">⚡ <span>My</span>Learnings</a>
+  <div class="topnav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Service Catalog</a>
+  </div>
+</nav>
+<div class="page-layout">
+  <aside class="page-sidebar">
+    <h3>Navigation</h3>
+    <div class="sidebar-cat">Service Catalog</div><a class="sidebar-link" href="index.html">🏠 Service Catalog Home</a><a class="sidebar-link" href="00-overview.html">📐 Module Overview</a><a class="sidebar-link" href="01-core-domain.html">🏗 Core Domain</a><a class="sidebar-link current-page" href="02-valve-producer-scripts.html">⚙ Valve & Producers</a><a class="sidebar-link" href="03-variables-system.html">📋 Variables System</a><a class="sidebar-link" href="04-cache-db-metrics.html">💾 Cache & Infra</a><a class="sidebar-link" href="05-processors-graphql-search.html">🔌 Processors & API</a><a class="sidebar-link" href="06-appengine-builder-atf-templates-scoped.html">🛠 Builder & Templates</a><a class="sidebar-link" href="interactive-guide.html">🎬 Interactive Guide ↗</a><div class="sidebar-sep"></div><a class="sidebar-link" href="../index.html">← All Categories</a>
+  </aside>
+  <div class="page-content">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">›</span>
+      <a href="index.html">Service Catalog</a><span class="breadcrumb-sep">›</span>
+      <span>Valve Pipeline & Producers</span>
+    </div>
+    <h1>Valve Pipeline & Producers</h1>
+    <div class="page-meta">
+      <span class="meta-tag">glide-servicecatalog</span>
+      <span class="meta-tag">ProducerValve</span><span class="meta-tag">CompositeProducer</span><span class="meta-tag">Script Evaluators</span><span class="meta-tag">Wizard</span>
+    </div>
+    <div class="md-body">
+<hr />
+<h2 id="1-valve-architecture-overview">1. Valve Architecture Overview</h2>
+<p>The <strong>Valve pattern</strong> (Chain of Responsibility) is the core request-processing architecture. When a user submits a catalog item, the HTTP request flows through a <code>ValveProcessor</code> that dispatches to the appropriate valve chain.</p>
+<pre><code>HTTP Request
+    ↓
+ValveProcessor
+    ↓
+ACatalogValve.init(request, response)
+    ↓
+ACatalogValve.before()  ← valve-specific logic
+    ↓ (depends on item type)
+  CartValve
+  ProducerValve        ← record producers
+  CompositeProducerValve ← multi-record producers
+  ScriptCatalogValve   ← script execution
+</code></pre>
+<hr />
+<h2 id="2-acatalogvalve-abstract-base">2. ACatalogValve (Abstract Base)</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.valve</code><br />
+<strong>Extends:</strong> Servlet-based HTTP request handler</p>
+<p><strong>Contract:</strong></p>
+<pre><code class="language-java">void init(HttpServletRequest req, HttpServletResponse resp)
+void init(HttpServletRequest req, HttpServletResponse resp, Object context)
+abstract void before()   // subclasses implement processing logic
+</code></pre>
+<p>All valves extend this class and implement <code>before()</code>.</p>
+<hr />
+<h2 id="3-producervalve">3. ProducerValve</h2>
+<p><strong>File:</strong> <code>ProducerValve.java</code> (1211 lines)<br />
+<strong>Extends:</strong> <code>ACatalogValve</code></p>
+<p><strong>Purpose:</strong> Orchestrates creation/update of a target ITSM record (incident, change, task, etc.) from a catalog item of type <code>RECORD_PRODUCER</code>.</p>
+<h3 id="key-fields">Key Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fRedirect</code></td>
+<td>Post-production redirect URL</td>
+</tr>
+<tr>
+<td><code>fPortalRedirect</code></td>
+<td>Portal-specific redirect</td>
+</tr>
+<tr>
+<td><code>fTableName</code></td>
+<td>Target table (e.g., <code>incident</code>)</td>
+</tr>
+<tr>
+<td><code>fProducedRecordId</code></td>
+<td>sys_id of created/updated record</td>
+</tr>
+<tr>
+<td><code>fTargetRecord</code></td>
+<td>GlideRecord for edit mode</td>
+</tr>
+<tr>
+<td><code>fHttpMapper</code></td>
+<td>HTTP parameter → variable mapper</td>
+</tr>
+<tr>
+<td><code>fEdit</code></td>
+<td>Edit mode flag (update existing vs. create new)</td>
+</tr>
+<tr>
+<td><code>fSequence</code></td>
+<td>Order guide sequencing metadata</td>
+</tr>
+<tr>
+<td><code>fCartItem</code></td>
+<td>Cart/request item being produced</td>
+</tr>
+</tbody>
+</table>
+<h3 id="5-step-production-pipeline">5-Step Production Pipeline</h3>
+<pre><code>Step 1 — newrecord
+  Create GlideRecord for target table
+
+Step 2 — apply template
+  CatalogTemplateManager.apply(template, targetRecord)
+
+Step 3 — merge variables
+  If edit mode: ProducerTargetVariableMapper extracts from target record
+  If new: HTTP parameters mapped to variables
+
+Step 4 — run user script chain
+  SaveScriptEvaluator
+    → PreScriptEvaluator
+    → MacroSaveScriptEvaluator
+    → database insert/update
+    → PostScriptEvaluator
+    → MacroPostScriptEvaluator
+
+Step 5 — log produced record
+  sc_item_produced_record updated with target record sys_id
+</code></pre>
+<h3 id="key-methods">Key Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>before()</code></td>
+<td>Entry point, delegates to <code>produceItem()</code></td>
+</tr>
+<tr>
+<td><code>produceItem(boolean)</code></td>
+<td>Full production with optional cart handling</td>
+</tr>
+<tr>
+<td><code>produceItem(Map&lt;String,String&gt;)</code></td>
+<td>Production with explicit parameter map</td>
+</tr>
+<tr>
+<td><code>applyTemplate()</code></td>
+<td>Apply CatalogTemplate values</td>
+</tr>
+<tr>
+<td><code>evaluateScript()</code></td>
+<td>Run script evaluator chain</td>
+</tr>
+<tr>
+<td><code>getTargetRecord()</code></td>
+<td>Retrieve existing record for edit mode</td>
+</tr>
+<tr>
+<td><code>getProducedRecordId()</code></td>
+<td>Return sys_id of produced record</td>
+</tr>
+<tr>
+<td><code>produceItemReturnTargetRecord()</code></td>
+<td>Used by OrderGuideSequenceFulfillment</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-compositeproducervalve">4. CompositeProducerValve</h2>
+<p><strong>File:</strong> <code>CompositeProducerValve.java</code> (300 lines)<br />
+<strong>Extends:</strong> <code>ProducerValve</code></p>
+<p><strong>Purpose:</strong> Handles catalog items that produce <strong>multiple target records</strong> simultaneously (e.g., create an incident AND a change together). Adds rollback/transaction safety.</p>
+<h3 id="additional-fields">Additional Fields</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fRollbackContext</code></td>
+<td>Transaction rollback manager</td>
+</tr>
+<tr>
+<td><code>fRollbackRecorder</code></td>
+<td>Logs changes made for rollback</td>
+</tr>
+<tr>
+<td><code>fProducerSetMap</code></td>
+<td>Maps producer sets to generated records</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-methods_1">Key Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>before()</code></td>
+<td>Override: sets up composite context, then calls <code>super.before()</code></td>
+</tr>
+<tr>
+<td><code>generateProducerSetTargetRecords()</code></td>
+<td>Create records for each ProducerSet configuration</td>
+</tr>
+<tr>
+<td><code>insertOrUpdateRecords()</code></td>
+<td>Persist all records to DB</td>
+</tr>
+<tr>
+<td><code>deleteRemovedTargetRecords()</code></td>
+<td>Remove records deleted through UI</td>
+</tr>
+</tbody>
+</table>
+<h3 id="composite-flow">Composite Flow</h3>
+<pre><code>1. Parse JSON arrays from request (multi-row variable sets)
+2. Create RollbackRecorder
+3. For each ProducerSet:
+   a. ONE_TO_ONE → create single target record
+   b. Multi-row → parse JSON array → create one record per row
+4. Call parent ProducerValve.before()
+5. On failure → RollbackContext.rollback() removes all created records
+</code></pre>
+<hr />
+<h2 id="5-cartvalve">5. CartValve</h2>
+<p><strong>Extends:</strong> <code>ACatalogValve</code><br />
+<strong>Purpose:</strong> Pre/post hooks for cart operations (add, update, remove, checkout). Executes business rules around cart state changes.</p>
+<hr />
+<h2 id="6-scriptcatalogvalve">6. ScriptCatalogValve</h2>
+<p><strong>Extends:</strong> <code>ACatalogValve</code><br />
+<strong>Purpose:</strong> Executes custom Rhino scripts at valve checkpoints via <code>GlideScopedEvaluator</code>.</p>
+<hr />
+<h2 id="7-script-evaluator-chain">7. Script Evaluator Chain</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.valve.script_evaluators</code></p>
+<h3 id="recordproducerscriptevaluator-abstract-base">RecordProducerScriptEvaluator (Abstract Base)</h3>
+<pre><code class="language-java">abstract boolean doEvaluate()       // subclass-specific logic
+abstract boolean shouldReturnError() // whether to propagate exceptions
+boolean evaluate()                   // executes doEvaluate(), catches exceptions
+void putAdditionalProps()            // add macro/question context to Rhino scope
+</code></pre>
+<p><strong>Rhino context setup:</strong>
+- <code>fGlideScopedEvaluator</code> — wraps target record and script record as Rhino globals
+- <code>fTargetRecord</code> — the record being produced
+- <code>fScriptRecord</code> — the catalog item / question record containing the script</p>
+<h3 id="evaluator-instances">Evaluator Instances</h3>
+<table>
+<thead>
+<tr>
+<th>Evaluator</th>
+<th>Script Field</th>
+<th>When Executed</th>
+<th>Propagates Error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SaveScriptEvaluator</code></td>
+<td><code>SAVE_SCRIPT</code></td>
+<td>Before DB insert</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>PreScriptEvaluator</code></td>
+<td><code>SCRIPT</code> (pre-insertion)</td>
+<td>Before DB insert</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>MacroSaveScriptEvaluator</code></td>
+<td><code>SAVE_SCRIPT</code> on question</td>
+<td>Before DB insert</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>PostScriptEvaluator</code></td>
+<td><code>POST_INSERTION_SCRIPT</code></td>
+<td>After DB insert</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>MacroPostScriptEvaluator</code></td>
+<td><code>POST_INSERTION_SCRIPT</code> on question</td>
+<td>After DB insert</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>MacroPreScriptEvaluator</code></td>
+<td><code>SCRIPT</code> on question</td>
+<td>Before insert</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>MacroReadScriptEvaluator</code></td>
+<td><code>READ_SCRIPT</code> on question</td>
+<td>During edit-mode load</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Macro vs. non-macro:</strong> Macro evaluators include the question record in the Rhino scope via <code>putAdditionalProps()</code>.</p>
+<h3 id="scriptoutputparser">ScriptOutputParser</h3>
+<p>Converts Rhino <code>NativeObject</code> / <code>NativeArray</code> return values to <code>JSONObject</code> / <code>JSONArray</code> for client consumption:</p>
+<pre><code class="language-java">parseScriptOutput(Object rhinoResult)
+  → NativeObject → JSONObject (recursive)
+  → NativeArray  → JSONArray  (recursive)
+  → primitive    → direct value
+</code></pre>
+<hr />
+<h2 id="8-producer-variable-mapping">8. Producer Variable Mapping</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.producer.variables</code></p>
+<h3 id="producertargetvariablemapper">ProducerTargetVariableMapper</h3>
+<p><strong>Purpose:</strong> In edit-mode, populates variable form fields from an existing target record.</p>
+<p><strong>Builder pattern:</strong></p>
+<pre><code class="language-java">ProducerTargetVariableMapper.builder()
+    .producerId(id)
+    .targetRecordId(targetId)
+    .prefix(&quot;item_option_&quot;)
+    .prettyName(displayName)
+    .ignoreScope(false)
+    .build()
+    .getMap()  // returns Map&lt;fieldName, value&gt;
+</code></pre>
+<p><strong>Extraction logic:</strong>
+1. Load questions from CatalogItem
+2. For each question, fetch value from target GlideRecord
+3. Respect <code>canRead()</code> ACL check — skip if no read access
+4. For macro/question types: run <code>MacroReadScriptEvaluator</code> for computed values
+5. Return populated map</p>
+<h3 id="compositeproducertargetvariablemapper">CompositeProducerTargetVariableMapper</h3>
+<p><strong>Extends:</strong> <code>ProducerTargetVariableMapper</code></p>
+<p><strong>Handles:</strong> Multi-row ProducerSets — produces <code>JSONArray</code> for multi-row sets, single value for ONE_TO_ONE.</p>
+<h3 id="producertargetmanagerjs">ProducerTargetManagerJS</h3>
+<p><strong>Purpose:</strong> Exposes variable mapping to server-side Rhino scripts.</p>
+<pre><code class="language-javascript">// callable from catalog scripts:
+ProducerTargetManagerJS.getVariableMapFromTargetRecord(producerId, targetRecordId, params)
+</code></pre>
+<hr />
+<h2 id="9-orderguide-sequencing">9. OrderGuide Sequencing</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.order_guide_sequencing</code></p>
+<h3 id="orderguidesequencing">OrderGuideSequencing</h3>
+<p><strong>Purpose:</strong> Integrates with <strong>Process/Activity Designer (PAD)</strong> to create a workflow process that sequences order guide items as parallel activities.</p>
+<p><strong>Key Methods:</strong>
+| Method | Purpose |
+|--------|---------|
+| <code>shouldProcessImmediately()</code> | Check if item is in active PAD activities (for mixed carts) |
+| <code>generateSequence()</code> | Create PAD process + trigger + activities |
+| <code>generateSequenceWithRollback()</code> | Wrap generation in RollbackContext |</p>
+<p><strong>PAD integration flow:</strong></p>
+<pre><code>1. Check if sequencing enabled on order guide
+2. Create Process Definition (PAD) record
+3. Create trigger:
+   condition = &quot;approval=approved
+               ^order_guide={guideId}
+               ^order_guide.sequencing_processISNOTEMPTY
+               ^order_guide.sequencing_process={processId}&quot;
+4. Create lane (workflow lane)
+5. For each included item in guide → create Activity
+6. Return process sys_id
+</code></pre>
+<p><strong>Filtering:</strong> Only processes items with <code>approval=approved</code> — unapproved items wait.</p>
+<h3 id="orderguidesequencingjs">OrderGuideSequencingJS</h3>
+<p><strong>Extends:</strong> <code>ScopedScriptableObject</code><br />
+<strong>Purpose:</strong> Rhino wrapper callable from catalog scripts.</p>
+<pre><code class="language-javascript">var seq = new OrderGuideSequencingJS(orderGuideId);
+seq.generateSequence();
+</code></pre>
+<h3 id="orderguidesequencefulfillment">OrderGuideSequenceFulfillment</h3>
+<p><strong>Purpose:</strong> Executes an individual sequenced order guide item when PAD triggers it.</p>
+<p><strong>Flow:</strong></p>
+<pre><code>1. Create staging cart: &quot;staging_{orderGuideId}_{requestId}&quot;
+2. Fetch cart item from staging cart
+3. Switch session user to cart owner (for RP script context)
+4. ProducerValve.produceItemReturnTargetRecord()
+5. Delete staging cart item
+6. Return target record
+</code></pre>
+<hr />
+<h2 id="10-wizard-framework">10. Wizard Framework</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.wizard</code></p>
+<h3 id="architecture">Architecture</h3>
+<pre><code>SCWizard (immutable, cached)
+    ├── SCWizardStep[]
+    │       ├── SCWizardSection[]
+    │       │       └── SCWizardQuestion[]
+    │       └── SCWizardActionMapping[]
+    └── producer (CatalogItem sys_id)
+
+SCWizardInstance (runtime, wraps SCWizard)
+    ├── mode: NORMAL | TEMPLATE
+    ├── editMode: boolean
+    ├── SCWizardStepInstance[] (computed, includes synthetic steps)
+    ├── scripts: Map&lt;ON_LOAD|ON_CHANGE|ON_SUBMIT, scripts&gt;
+    └── policies: List&lt;CatalogUIPolicy&gt;
+
+WizardProcessor (request handler)
+    ├── fetch() → load wizard metadata + populated data
+    └── submit() → save template or delegate to ProducerValve
+</code></pre>
+<h3 id="scwizard">SCWizard</h3>
+<p><strong>Immutable, translation-aware, cached in <code>WIZARD_CACHE</code>.</strong></p>
+<p><strong>Key Fields:</strong>
+| Field | Purpose |
+|-------|---------|
+| <code>fId</code> | Wizard sys_id |
+| <code>fName</code> | Translated name |
+| <code>fType</code> | Wizard type |
+| <code>fProducer</code> | Associated CatalogItem (producer) sys_id |
+| <code>fLayout</code> | INLINE or TABBED |
+| <code>fShowReviewStep</code> | Whether to display review/submit step |
+| <code>fSteps</code> | Immutable List<SCWizardStep> |
+| <code>fCacheable</code> | Cache eligibility flag |</p>
+<p><strong>Hierarchy loading:</strong></p>
+<pre><code>SCWizard.createWizardRecord(gr)
+  → getSteps(wizardId)
+      → for each step: load sections
+          → for each section: load questions
+              → for each question: load action-mappings
+</code></pre>
+<h3 id="scwizardinstance">SCWizardInstance</h3>
+<p><strong>Runtime decorator over SCWizard.</strong> Adds:
+- Mode-specific step computation (TEMPLATE mode adds Details + OwnerOverride steps)
+- Lazy-loaded client scripts (ON_LOAD, ON_CHANGE, ON_SUBMIT)
+- Lazy-loaded UI policies</p>
+<p><strong>TEMPLATE mode synthetic steps:</strong>
+1. <strong>Details step</strong> — wizard name, short_description, available_for, scope
+2. <strong>Wizard steps</strong> (filtered: exclude <code>hide_on_template</code> steps)
+3. <strong>OwnerOverride step</strong> — manage template ownership/availability
+4. <strong>Review step</strong> (if <code>showReviewStep=true</code>)</p>
+<h3 id="wizardprocessor">WizardProcessor</h3>
+<p><strong>Purpose:</strong> Handles fetch and submit requests for wizards.</p>
+<p><strong>Fetch flow:</strong></p>
+<pre><code>fetch(requestMap)
+  1. Validate wizard exists and user canView()
+  2. Determine target record (new vs. existing sys_id)
+  3. Determine mode (TEMPLATE vs. NORMAL)
+  4. TEMPLATE mode:
+     a. Load template questions
+     b. Apply template values to questions
+     c. Apply template UI properties (mandatory/readonly/restricted)
+  5. NORMAL mode:
+     a. Load target record (edit) or create temp record (new)
+     b. Populate from target record (ProducerTargetVariableMapper)
+     c. Apply template values/UI properties
+     d. Mark target record fields readonly if user lacks write ACL
+  6. Return wizard as JSON with target record data
+</code></pre>
+<p><strong>Submit flow:</strong></p>
+<pre><code>submit(requestMap)
+  If TEMPLATE mode → CatalogTemplateManager.save()
+  If NORMAL mode   → ProducerValve.produceItem()
+</code></pre>
+<p><strong>Scope resolution:</strong> <code>target record scope → parent target scope (chained wizard) → current app scope</code></p>
+<h3 id="catalogwizardmanager">CatalogWizardManager</h3>
+<p><strong>Static utilities + <code>WIZARD_CACHE</code>:</strong>
+- <code>getWizardMeta(wizardId)</code> — retrieve/cache SCWizard (TypeSafeCacheManager, capacity 300)
+- <code>getWizardInstance(wizard, templateMode, editMode)</code> — create SCWizardInstance
+- <code>applyQuestionValues(questions, valueMap)</code> — bulk populate question values
+- <code>applyQuestionTemplateValues(questions, template)</code> — apply CatalogTemplate overrides
+- <code>applyQuestionUIProperties(questions, template)</code> — apply mandatory/readonly/restricted flags
+- <code>applyMappedFieldAccess(questions, targetRecord)</code> — mark readonly if target field not writable</p>
+<p><strong>Cache invalidation:</strong> On changes to <code>SC_WIZARD_*</code> and <code>SC_VARIABLE_ACTION_CONFIG_WIZARD_QUESTION_MAPPING</code> tables.</p>
+<h3 id="catalogwizardhandlerjs">CatalogWizardHandlerJS</h3>
+<p><strong>Extends:</strong> <code>ScopedScriptableObject</code><br />
+<strong>Purpose:</strong> Exposes wizard operations to server-side Rhino scripts.</p>
+<pre><code class="language-javascript">CatalogWizardHandlerJS.fetch(requestParams)
+CatalogWizardHandlerJS.submit(requestParams)
+CatalogWizardHandlerJS.canAccessTarget(requestParams)
+CatalogWizardHandlerJS.getOwnerOverridesQuestionsAssociatedToWizard(wizardId)
+</code></pre>
+<hr />
+<h2 id="11-script-utilities">11. Script Utilities</h2>
+<p><strong>Package:</strong> <code>com.glideapp.servicecatalog.script</code></p>
+<h3 id="cartbatcher">CartBatcher</h3>
+<p><strong>Extends:</strong> <code>GlideScriptableObject</code> (Rhino)</p>
+<p><strong>Purpose:</strong> Groups cart/request items by delivery frequency for batch ordering display.</p>
+<pre><code class="language-javascript">// Rhino-callable:
+CartBatcher.getFrequencyList(cartId)        // [&quot;monthly&quot;, &quot;yearly&quot;]
+CartBatcher.getFrequencyItems(cartId, freq) // item sys_ids for frequency
+CartBatcher.getFrequencyLabel(freq)         // translated label
+CartBatcher.getFrequencyListAndRenderCols() // frequencies + OG-grouped items
+</code></pre>
+<h3 id="catalogcms">CatalogCMS</h3>
+<p><strong>Rhino-callable checks for CMS context:</strong></p>
+<pre><code class="language-javascript">CatalogCMS.isCMSSite()                    // is request in CMS block context
+CatalogCMS.canViewBreadcrumbCrossSite()   // category cross-site ACL
+</code></pre>
+<h3 id="pagefinder">PageFinder</h3>
+<p><strong>URL navigation utilities:</strong></p>
+<pre><code class="language-javascript">PageFinder.getSearchPage()  // search page URL
+PageFinder.getHomePage()    // home page redirect URL
+</code></pre>
+<p>Delegates to <code>CatalogURLGenerator</code>.</p>
+<hr />
+<h2 id="summary-script-execution-flow-record-producer">Summary: Script Execution Flow (Record Producer)</h2>
+<pre><code>User submits catalog item form
+       ↓
+ValveProcessor.dispatch(request)
+       ↓
+ProducerValve.before()
+       ↓
+  1. Create target GlideRecord (table from catalog item config)
+  2. Apply CatalogTemplate (if any)
+  3. Map variables from HTTP params (or target record in edit mode)
+  4. Script chain:
+       SaveScriptEvaluator.evaluate()
+         → if save_option == SAVE_IN_DESTINATION: run SAVE_SCRIPT
+       PreScriptEvaluator.evaluate()
+         → run SCRIPT (pre-insertion)
+       MacroSaveScriptEvaluator (for each macro question)
+       ---- GlideRecord.insert() / update() ----
+       PostScriptEvaluator.evaluate()
+         → run POST_INSERTION_SCRIPT
+       MacroPostScriptEvaluator (for each macro question)
+  5. Log to sc_item_produced_record
+  6. Redirect to configured URL
+</code></pre>
+<p>All Rhino scripts receive the target GlideRecord and the catalog item's script record as globals in their scope.</p>
+    </div>
+    <div class="doc-nav">
+      <a class="doc-nav-btn" href="01-core-domain.html"><div class="doc-nav-label">← Previous</div><div class="doc-nav-title">Core Domain</div></a>
+      <a class="doc-nav-btn next" href="03-variables-system.html"><div class="doc-nav-label">Next →</div><div class="doc-nav-title">Variables System</div></a>
+    </div>
+  </div>
+</div>
+<footer>
+  Built with ⚡ · <a href="../index.html">← All Categories</a> · <a href="index.html">Service Catalog</a>
+</footer>
+</body>
+</html>

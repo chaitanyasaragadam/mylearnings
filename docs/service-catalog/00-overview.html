@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module Overview & Architecture — Service Catalog | My Learnings</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<nav class="topnav">
+  <a class="topnav-logo" href="../index.html">⚡ <span>My</span>Learnings</a>
+  <div class="topnav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Service Catalog</a>
+  </div>
+</nav>
+<div class="page-layout">
+  <aside class="page-sidebar">
+    <h3>Navigation</h3>
+    <div class="sidebar-cat">Service Catalog</div><a class="sidebar-link" href="index.html">🏠 Service Catalog Home</a><a class="sidebar-link current-page" href="00-overview.html">📐 Module Overview</a><a class="sidebar-link" href="01-core-domain.html">🏗 Core Domain</a><a class="sidebar-link" href="02-valve-producer-scripts.html">⚙ Valve & Producers</a><a class="sidebar-link" href="03-variables-system.html">📋 Variables System</a><a class="sidebar-link" href="04-cache-db-metrics.html">💾 Cache & Infra</a><a class="sidebar-link" href="05-processors-graphql-search.html">🔌 Processors & API</a><a class="sidebar-link" href="06-appengine-builder-atf-templates-scoped.html">🛠 Builder & Templates</a><a class="sidebar-link" href="interactive-guide.html">🎬 Interactive Guide ↗</a><div class="sidebar-sep"></div><a class="sidebar-link" href="../index.html">← All Categories</a>
+  </aside>
+  <div class="page-content">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="breadcrumb-sep">›</span>
+      <a href="index.html">Service Catalog</a><span class="breadcrumb-sep">›</span>
+      <span>Module Overview & Architecture</span>
+    </div>
+    <h1>Module Overview & Architecture</h1>
+    <div class="page-meta">
+      <span class="meta-tag">glide-servicecatalog</span>
+      <span class="meta-tag">Architecture</span><span class="meta-tag">Design Patterns</span><span class="meta-tag">Plugin System</span><span class="meta-tag">Order Flow</span>
+    </div>
+    <div class="md-body">
+<h2 id="what-this-module-is">What This Module Is</h2>
+<p><code>glide-servicecatalog</code> is the core ServiceNow Service Catalog platform. It handles everything from catalog/category browsing through item ordering, cart management, request fulfillment, record production, variable management, and delivery planning. It is an enterprise-grade, multi-tenant Java module with ~551 Java source files.</p>
+<hr />
+<h2 id="directory-structure">Directory Structure</h2>
+<pre><code>src/main/java/
+├── com/glide/
+│   ├── automated_testing_framework/runner/step/   ← ATF step runners
+│   ├── catalog/
+│   │   ├── cache/api, cache/impl                  ← Caching layer
+│   │   ├── cloner/                                ← Request cloning
+│   │   ├── component/
+│   │   │   ├── api, impl                          ← Component contracts + registry
+│   │   │   ├── registry/api, domain, impl         ← Plugin component registry
+│   │   │   └── variables/                         ← Variables component system
+│   │   │       ├── api, impl                      ← Variable set contracts
+│   │   │       ├── models/, models/api, models/table  ← Data models
+│   │   │       ├── query/api, domain               ← Query DSL (Visitor pattern)
+│   │   │       └── runtime/                       ← Runtime execution layer
+│   │   │           ├── models/, models/impl, models/table
+│   │   │           ├── persistence/api, impl       ← DB read/write
+│   │   │           ├── scripting/impl              ← Rhino bridge
+│   │   │           └── views/impl, table/impl      ← UI projection layer
+│   │   ├── configuration/                         ← Feature toggles
+│   │   ├── db/                                    ← DB listeners + cache invalidation
+│   │   ├── metrics/api, impl                      ← Observability
+│   │   ├── processor/command/api, domain, impl    ← Command processor framework
+│   │   ├── scripting/rhino/annotations, api, impl ← Rhino scripting infrastructure
+│   │   ├── service/api, domain, impl              ← Service layer
+│   │   ├── stream/api, impl                       ← Data streaming
+│   │   ├── ui_policy/                             ← UI policy evaluation
+│   │   ├── utils/                                 ← Shared utilities
+│   │   ├── variables/debug, metrics               ← Variable debugging + metrics
+│   │   └── virtual_agent/                         ← VA conversation support
+│   ├── data_lookup/catalog/graphql, script        ← Data lookup integration
+│   ├── execution_plan/                            ← Delivery plan engine
+│   ├── fixes/                                     ← Data migration scripts
+│   ├── processors/                                ← Servlet processors
+│   └── ui/ng/catalog/sc/model, util               ← NG UI layer
+│
+└── com/glideapp/
+    ├── catalog/graphql/schema                     ← GraphQL schema definitions
+    └── servicecatalog/                            ← Primary domain layer
+        ├── (root)                                 ← Catalog, Category, CatalogItem,
+        │                                             Cart, CartRecord, CartItem,
+        │                                             Request, RequestItem, OrderGuide
+        ├── aisearch/                              ← AI search indexing
+        ├── appengine/template/payload/unloader/   ← Template serialization
+        ├── builder/                               ← Catalog Builder (Question Designer)
+        ├── cart/validators/                       ← Cart validation rules
+        ├── catalog_item/versioning/               ← Item versioning/publishing
+        ├── domain/                                ← Multi-tenant domain support
+        ├── exceptions/                            ← Custom exception types
+        ├── globalsearch/                          ← Global search config
+        ├── order_guide_sequencing/                ← PAD sequencing integration
+        ├── pricing/                               ← Price calculation engine
+        ├── producer/variables/                    ← Target variable mapping
+        ├── questionset/view/, view/api            ← Question set views
+        ├── scoped/api                             ← Scoped JavaScript APIs
+        ├── script/                                ← CMS, navigation scripts
+        ├── standard_ticket/                       ← Standard ticket config
+        ├── tags/                                  ← Catalog tagging
+        ├── template/                              ← Catalog template engine
+        ├── valve/script_evaluators/               ← Valve + script evaluator chain
+        ├── variable_set/view/                     ← Variable set view layer
+        ├── variables/runtime/models/table/impl    ← Runtime table variable models
+        └── wizard/                                ← Wizard framework
+</code></pre>
+<hr />
+<h2 id="module-composition-two-root-packages">Module Composition: Two Root Packages</h2>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>com.glideapp.servicecatalog</code></td>
+<td><strong>Domain layer</strong> — catalog entities, business rules, cart/checkout, order guides, pricing</td>
+</tr>
+<tr>
+<td><code>com.glide.catalog</code></td>
+<td><strong>Framework layer</strong> — caching infrastructure, scripting engine, variables runtime, component registry, UI policies</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="core-domain-model-hierarchy">Core Domain Model Hierarchy</h2>
+<pre><code>CatalogRecord (abstract base — wraps GlideRecord)
+    ├── Catalog                  ← Top-level catalog container
+    ├── Category                 ← Hierarchical item organizer
+    └── CatalogItemImpl (abstract)
+            ├── CatalogItem      ← The primary offering (2664 lines)
+            ├── CartItem         ← Item placed in shopping cart
+            └── RequestItem      ← Line item in a submitted request
+</code></pre>
+<p><strong>Unifying interface:</strong> <code>ICatalogItem</code> — shared contract across CatalogItem, CartItem, RequestItem:
+- <code>getCatalogItem()</code>, <code>getPrice()</code>, <code>getQuantity()</code>, <code>getOrderGuideRule()</code></p>
+<p><strong>Constants contract:</strong> <code>ICatalogConstants</code> (777 lines) — all table names, field names, system property keys</p>
+<hr />
+<h2 id="end-to-end-order-flow">End-to-End Order Flow</h2>
+<pre><code>1. Browse
+   Catalog → Category.getItems() → CatalogItem list
+
+2. Item Selection
+   CatalogItem.canOrder() → load variables (Questions)
+   → evaluate UI policies → show form
+
+3. Cart
+   Cart.addToCart(itemId) → CartItem created
+   → variables captured via Questions
+   → OrderGuide sequences additional items (if applicable)
+
+4. Checkout
+   CartValve → ProducerValve pipeline
+   → Template applied (if any)
+   → Script chain: SaveScript → PreScript → DB insert → PostScript
+   → sc_item_produced_record logged
+
+5. Request Created
+   Request + RequestItem records
+   → recalculatePrice() + recalculateRecurringCost()
+   → DeliveryPlan attached (BasicPlanLoader / AdvancedPlanLoader)
+   → TaskToken graph computed for delivery scheduling
+</code></pre>
+<hr />
+<h2 id="key-design-patterns">Key Design Patterns</h2>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Valve / Chain of Responsibility</strong></td>
+<td><code>ValveProcessor</code> → Valves</td>
+<td>HTTP request processing pipeline</td>
+</tr>
+<tr>
+<td><strong>Singleton</strong></td>
+<td><code>CatalogUtil</code>, <code>CatalogSearch</code></td>
+<td>Thread-safe global utilities</td>
+</tr>
+<tr>
+<td><strong>Strategy</strong></td>
+<td><code>PriceGenerator</code>, <code>IAnswerGenerator</code>, <code>VariableSetType</code></td>
+<td>Pluggable algorithms</td>
+</tr>
+<tr>
+<td><strong>Factory</strong></td>
+<td><code>CatalogObjectCreator</code>, <code>CatalogUtil</code></td>
+<td>Object creation abstraction</td>
+</tr>
+<tr>
+<td><strong>Observer</strong></td>
+<td><code>CatalogUpdateEventGenerator</code> + DB listeners</td>
+<td>Event-driven cache invalidation</td>
+</tr>
+<tr>
+<td><strong>Composite</strong></td>
+<td><code>CompositeProducerValve</code></td>
+<td>Multi-record production as one unit</td>
+</tr>
+<tr>
+<td><strong>Decorator</strong></td>
+<td><code>CatalogItemImpl</code> wrapping GlideRecord</td>
+<td>Add behavior without modifying base</td>
+</tr>
+<tr>
+<td><strong>Template Method</strong></td>
+<td><code>CatalogTemplate</code>, <code>RenderCatalog</code></td>
+<td>Customizable rendering steps</td>
+</tr>
+<tr>
+<td><strong>Visitor</strong></td>
+<td>Query DSL (<code>IQuery</code>, <code>IQueryVisitor</code>)</td>
+<td>Multi-row variable set queries</td>
+</tr>
+<tr>
+<td><strong>Builder</strong></td>
+<td><code>CatalogTemplate</code>, <code>ProducerTargetVariableMapper.Builder</code></td>
+<td>Fluent construction</td>
+</tr>
+<tr>
+<td><strong>Repository / Cache</strong></td>
+<td><code>ServiceCatalogCacheUtils</code>, <code>CatalogUtil</code></td>
+<td>Domain-aware data access</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="plugin-architecture">Plugin Architecture</h2>
+<p>10+ feature plugins registered in <code>src/main/plugins/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Plugin Key</th>
+<th>Feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>servicecatalog.platform</code></td>
+<td>Core platform</td>
+</tr>
+<tr>
+<td><code>servicecatalog.catalog_builder</code></td>
+<td>Catalog Builder UI (Question Designer)</td>
+</tr>
+<tr>
+<td><code>servicecatalog.wizard</code></td>
+<td>Wizard item type + template support</td>
+</tr>
+<tr>
+<td><code>servicecatalog.analytics</code></td>
+<td>Analytics integration</td>
+</tr>
+<tr>
+<td><code>servicecatalog.cms</code></td>
+<td>CMS (Content Management System) integration</td>
+</tr>
+<tr>
+<td><code>servicecatalog.order_guide_sequencing</code></td>
+<td>PAD-based guide sequencing</td>
+</tr>
+<tr>
+<td><code>servicecatalog.mobile.*</code></td>
+<td>Mobile catalog support</td>
+</tr>
+<tr>
+<td><code>glide.execution_plan</code></td>
+<td>Delivery/execution plan engine</td>
+</tr>
+<tr>
+<td><code>servicecatalog.atf.test</code></td>
+<td>Automated Testing Framework step</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="build-system">Build System</h2>
+<ul>
+<li><strong>Build tool:</strong> Gradle with SNC conventions</li>
+<li><strong>Node.js:</strong> v16.20.2 / npm 8.19.3 — compiles SASS → CSS</li>
+<li><strong>Test frameworks:</strong> JUnit 4 + Mockito + PowerMock (Java); Mocha + Chai + NYC coverage (JS)</li>
+<li><strong>CI output:</strong> xunit-report.xml, NYC HTML coverage reports</li>
+</ul>
+<hr />
+<h2 id="documentation-index">Documentation Index</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Subsystem</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="01-core-domain.md">01-core-domain.md</a></td>
+<td>Catalog, Category, CatalogItem, Cart, Request, OrderGuide, Pricing</td>
+</tr>
+<tr>
+<td><a href="02-valve-producer-scripts.md">02-valve-producer-scripts.md</a></td>
+<td>Valve pipeline, Producers, Script Evaluators, Wizard, OG Sequencing</td>
+</tr>
+<tr>
+<td><a href="03-variables-system.md">03-variables-system.md</a></td>
+<td>Variables runtime, persistence, views, scripting bridge</td>
+</tr>
+<tr>
+<td><a href="04-cache-db-metrics.md">04-cache-db-metrics.md</a></td>
+<td>Cache, DB listeners, Metrics, Component Registry, UI Policy, Services</td>
+</tr>
+<tr>
+<td><a href="05-processors-graphql-search.md">05-processors-graphql-search.md</a></td>
+<td>Processors, Streams, UI/NG, GraphQL, DataLookup, Global/AI Search</td>
+</tr>
+<tr>
+<td><a href="06-appengine-builder-atf-templates-scoped.md">06-appengine-builder-atf-templates-scoped.md</a></td>
+<td>AppEngine, Builder, ATF, Execution Plan, Templates, Scoped APIs</td>
+</tr>
+</tbody>
+</table>
+    </div>
+    <div class="doc-nav">
+      <a class="doc-nav-btn" href="index.html"><div class="doc-nav-label">← Back to</div><div class="doc-nav-title">Service Catalog</div></a>
+      <a class="doc-nav-btn next" href="index.html"><div class="doc-nav-label">Back to →</div><div class="doc-nav-title">Service Catalog</div></a>
+    </div>
+  </div>
+</div>
+<footer>
+  Built with ⚡ · <a href="../index.html">← All Categories</a> · <a href="index.html">Service Catalog</a>
+</footer>
+</body>
+</html>
