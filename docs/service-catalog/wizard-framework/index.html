@@ -45,16 +45,15 @@
     .cards {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
     .card {padding:22px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.06)}
     .card p {color:var(--muted)}
-    .object-table,.timeline-table {width:100%;border-collapse:collapse;overflow:hidden;border-radius:18px;background:var(--paper);color:var(--ink)}
-    .object-table th,.object-table td,.timeline-table th,.timeline-table td {padding:13px 14px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
-    .object-table th,.timeline-table th {background:#eaf2ff;font-weight:900}
-    .object-table tr:last-child td,.timeline-table tr:last-child td {border-bottom:0}
+    .object-table {width:100%;border-collapse:collapse;overflow:hidden;border-radius:18px;background:var(--paper);color:var(--ink)}
+    .object-table th,.object-table td {padding:13px 14px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
+    .object-table th {background:#eaf2ff;font-weight:900}
+    .object-table tr:last-child td {border-bottom:0}
     .gallery {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
     .shot-card {background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:22px;overflow:hidden}
     .shot-card img {width:100%;display:block}
     .shot-body {padding:16px}
     .time {display:inline-block;color:var(--accent);font-weight:900;font-size:.82rem;margin-bottom:6px}
-    .downloads {display:flex;gap:12px;flex-wrap:wrap;padding:24px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.07)}
     .note {border-left:4px solid var(--warn);padding:14px 18px;background:rgba(253,230,138,.11);border-radius:12px;color:#fff7cc}
     .two-col {display:grid;grid-template-columns:1fr 1fr;gap:18px}
     .checklist {columns:2;column-gap:32px}
@@ -82,7 +81,6 @@
     <div class="stat"><strong>56:40</strong><span>video duration</span></div>
     <div class="stat"><strong>22</strong><span>selected screenshots</span></div>
     <div class="stat"><strong>6</strong><span>learning modules</span></div>
-    <div class="stat"><strong>58</strong><span>timeline entries</span></div>
   </div>
 </header>
 <main>
@@ -298,71 +296,6 @@
   <img src="assets/screenshots/22_final_event_handler.jpg" alt="Final action handler mapping">
   <div class="shot-body"><span class="time">56:00</span><h3>Final action handler mapping</h3><p>UI Builder page with mapped View Referrer action and top action buttons rendered in the wizard header.</p></div>
 </article></div>
-
-  
-  <div class="downloads">
-  </div>
-  <table class="timeline-table">
-    <thead><tr><th>Time</th><th>What happens</th></tr></thead>
-    <tbody><tr><td>00:00</td><td>Opening/blank transition before the demo content is visible.</td></tr>
-<tr><td>01:00</td><td>Initial slide sequence introduces the wizard framework around a catalog item creation experience.</td></tr>
-<tr><td>02:00</td><td>The annotated Create Catalog Item screen explains the main UX concepts: wizard step navigator, wizard step label, wizard section, wizard question, wizard actions, and feedback panel.</td></tr>
-<tr><td>03:00</td><td>The presenter continues explaining the wizard anatomy and how steps and questions are arranged for a guided catalog item flow.</td></tr>
-<tr><td>04:00</td><td>ServiceNow classic UI opens the Composite Record Producer record named Open Bank Account. The form shows table name, active state, save options, description area, and producer configuration tabs.</td></tr>
-<tr><td>05:00</td><td>The producer form remains in focus while the setup around description and related producer configuration is discussed.</td></tr>
-<tr><td>06:00</td><td>A Producer Set named Create Bank Account is shown. It is mapped to the Bank Account table with parent reference field Customer, and variables such as branch_code, account_type, and address are visible.</td></tr>
-<tr><td>07:00</td><td>The demo navigates through related producer set records and confirms the variables attached to the Create Bank Account setup.</td></tr>
-<tr><td>08:00</td><td>The Composite Record Producer record is revisited, showing the Open Bank Account producer and its descriptive configuration.</td></tr>
-<tr><td>09:00</td><td>The presenter transitions toward wizard setup after reviewing the producer and producer set dependencies.</td></tr>
-<tr><td>10:00</td><td>The Catalog Wizard record named Open Bank Account is shown. It links to the Open Bank Account composite record producer, uses a stacked layout, has a feedback panel, and lists wizard steps.</td></tr>
-<tr><td>11:00</td><td>Wizard step records under the Open Bank Account wizard are reviewed: User Details, Account Details, and Referrer Details.</td></tr>
-<tr><td>12:00</td><td>The Catalog Wizard record shows title binding using variables such as first_name and last_name, plus a Review and Submit label and review-step configuration.</td></tr>
-<tr><td>13:00</td><td>The wizard configuration continues with attention on how title, layout, save, and review behavior shape the final runtime page.</td></tr>
-<tr><td>14:00</td><td>A Catalog Wizard Section record named Name is opened. It is configured as a Card with width 100%, belongs to the User Details step, and contains questions First Name and Last Name.</td></tr>
-<tr><td>15:00</td><td>Additional wizard section/question relationships are discussed before moving to template concepts.</td></tr>
-<tr><td>16:00</td><td>Catalog Templates slide explains that templates can prefill variables, enforce UI properties on questions, restrict values, and be applied to existing wizards. Tables sc_template and sc_template_detail are shown.</td></tr>
-<tr><td>17:00</td><td>The presentation transitions from template theory into how the wizard appears in UI Builder.</td></tr>
-<tr><td>18:00</td><td>UI Builder opens the Open Bank Account experience. The Catalog Wizard component renders the wizard with left navigation, User Details step, Name and Details cards, and a Continue button.</td></tr>
-<tr><td>19:00</td><td>The component is selected in UI Builder and the surrounding page/container layout is inspected.</td></tr>
-<tr><td>20:00</td><td>The Catalog Wizard component properties panel is shown. It includes Select wizard, Wizard mode, Field space, sys_id of record, Select template, Make template mandatory, and button properties.</td></tr>
-<tr><td>21:00</td><td>The runtime/preview is used to check the wizard appearance after selecting component properties.</td></tr>
-<tr><td>22:00</td><td>The runtime Open Bank Account wizard shows the Account Details step with Account Type radio buttons and Branch Details fields. Continue to Referrer Details and Back buttons are visible.</td></tr>
-<tr><td>23:00</td><td>The demo reviews how values appear as read-only or populated depending on prior selections and template settings.</td></tr>
-<tr><td>24:00</td><td>Mandatory override modal appears. Available options include Country and Email Address, while First Name is selected as mandatory. Save selections is available.</td></tr>
-<tr><td>25:00</td><td>The presenter transitions from runtime/template behavior to source code and implementation internals.</td></tr>
-<tr><td>26:00</td><td>A Git repository named dev/sn-catalog-wizard is shown with folders such as .bin, .github, drivers, example, src, setup, README, and JavaScript/SCSS language statistics.</td></tr>
-<tr><td>27:00</td><td>The repository structure is used to explain where the catalog wizard component and support code live.</td></tr>
-<tr><td>28:00</td><td>VS Code opens the sn-catalog-wizard connected component. Public properties include loading, isSuccess, wizard data/object, schema fields, errorMessage, and other component inputs.</td></tr>
-<tr><td>29:00</td><td>The component code continues, showing how the frontend stores wizard data and state used while rendering.</td></tr>
-<tr><td>30:00</td><td>VS Code highlights wizardData and dataFetching properties. The comments describe that wizard data is required to render steps and sections, and dataFetching controls data fetch mode.</td></tr>
-<tr><td>31:00</td><td>UI Builder preview is revisited while the implementation details are correlated with visible component properties.</td></tr>
-<tr><td>32:00</td><td>The UI Builder page shows a selected Catalog Wizard component. A demo template is selected and the rendered form shows First Name filled as Test with other fields greyed or pending.</td></tr>
-<tr><td>33:00</td><td>The presenter checks how template selection and component properties influence the rendered wizard.</td></tr>
-<tr><td>34:00</td><td>Eclipse/Java IDE is opened to inspect backend classes and GraphQL/service catalog related handlers.</td></tr>
-<tr><td>35:00</td><td>Backend resolver and handler code are examined to explain how frontend actions reach the service catalog wizard server layer.</td></tr>
-<tr><td>36:00</td><td>CatalogWizardHandlerJus.java is shown. Methods call CatalogWizardProcessor for submit, save, and can-access-target checks and return JSON responses.</td></tr>
-<tr><td>37:00</td><td>The presenter moves back to frontend code to connect server behavior with UI submit and action flows.</td></tr>
-<tr><td>38:00</td><td>submitHandlers.js is shown. It handles save clicks, submit wizard validation, dirty form state, action payloads, and submitting state.</td></tr>
-<tr><td>39:00</td><td>The submit handler and related action handler files are reviewed to show how footer/header action events are dispatched.</td></tr>
-<tr><td>40:00</td><td>view.js for the wizard component shows modal/footer click handlers and labels for return, continue, cancel, and home behavior.</td></tr>
-<tr><td>41:00</td><td>The presenter reviews how UI text, modal choices, and footer click events are wired in the frontend component.</td></tr>
-<tr><td>42:00</td><td>Wizard step view code is shown. It renders stacked steps, selected-step styling, hidden fragments, and click handlers for step navigation.</td></tr>
-<tr><td>43:00</td><td>The code walkthrough continues through view and style files that control the left step navigator and component layout.</td></tr>
-<tr><td>44:00</td><td>interceptors.js is shown. The template submit interceptor creates effects against a template submit URL and maps successful/failed save/submit action types.</td></tr>
-<tr><td>45:00</td><td>The implementation walkthrough transitions back toward plugin/package information and configuration records.</td></tr>
-<tr><td>46:00</td><td>Plugin and package details slide shows Service Catalog Wizard plugin ID com.glideapp.servicecatalog.catalog_wizard and template plugin/package identifiers including com.glideapp.servicecatalog.template.</td></tr>
-<tr><td>47:00</td><td>The demo returns to ServiceNow configuration for declarative actions connected to the wizard.</td></tr>
-<tr><td>48:00</td><td>Action Assignment populate_referrer is opened. It is implemented as a Client Script and uses g_form.getReference(&quot;referrer&quot;) to set email, department, and location fields.</td></tr>
-<tr><td>49:00</td><td>The action configuration is reviewed to show conditions and related action-model fields.</td></tr>
-<tr><td>50:00</td><td>The Catalog Wizard record shows Wizard Action Configurations for Populate Referrer Details and View Referrer Details, both visible and not hidden.</td></tr>
-<tr><td>51:00</td><td>The presenter tests the runtime behavior of custom action buttons on the Open Bank Account wizard.</td></tr>
-<tr><td>52:00</td><td>The runtime Referrer Details step is shown. The user enters Allyson Gillispie as referrer, and the page contains details fields for Referrer Location, Referrer Email, and Referrer Department with action buttons at the top.</td></tr>
-<tr><td>53:00</td><td>The populated referrer/action behavior is checked against the field layout and custom buttons.</td></tr>
-<tr><td>54:00</td><td>UI Builder Events panel is opened. It shows page event mappings, handled events, and an event named VIEW REFERRER ready for handler mapping.</td></tr>
-<tr><td>55:00</td><td>The event mapping configuration is inspected to connect the wizard event with the correct action handler.</td></tr>
-<tr><td>56:00</td><td>Final UI Builder view shows the action buttons Populate Referrer Details and View Referrer Details in the wizard header, with the VIEW REFERRER event mapped to execute a client script.</td></tr>
-<tr><td>56:40</td><td>Recording ends shortly after the final UI Builder action/event mapping review.</td></tr></tbody>
-  </table>
 </main>
 <footer>Service Catalog learning module.</footer>
 </body>
