@@ -11,11 +11,7 @@
     <div>
       <div class="kicker">Service Catalog Learning Pack</div>
       <h1>Seismic<br>UI Framework</h1>
-      <p>This website converts the uploaded demo into a structured learning guide. It explains the framework concepts first, then walks through the Service Catalog screens and code-inspection flow shown in the recording.</p>
       <div class="actions">
-        <a class="btn primary" href="complete_transcript.md" download>Download transcript MD</a>
-        <a class="btn" href="complete_transcript.txt" download>Download transcript TXT</a>
-        <a class="btn" href="#timeline">Jump to transcript timeline</a>
       </div>
     </div>
     <div class="hero-card">
@@ -37,8 +33,6 @@
 <a href="#service-catalog-demo">9. Service Catalog demo flow</a>
 <a href="#code-review">10. Code review section</a>
       <a href="#quick-reference">Quick reference</a>
-      <a href="#timeline">Timeline transcript</a>
-      <a href="#downloads">Downloads</a>
     </aside>
 
     <main>
@@ -280,57 +274,9 @@ actionHandlers: {
 </section>
 
 
-      <section class="chapter" id="timeline">
-        <h2>Timeline transcript</h2>
-        <p class="summary">Time-coded visual/learning transcript from the recording. This is not a verbatim audio transcript.</p>
-        <div class="timeline"><div class="titem"><div class="time">00:00</div><div>The recording starts on a blank/transition screen before the presentation begins.</div></div>
-<div class="titem"><div class="time">02:00</div><div>Title slide introduces the topic: Seismic, the UI Framework on Next Experience.</div></div>
-<div class="titem"><div class="time">04:00</div><div>Introduction slide explains Seismic as a ServiceNow JavaScript framework built on Web Components standards. The stated aim is to create web components, compose interfaces using web components, and integrate with the ServiceNow platform.</div></div>
-<div class="titem"><div class="time">06:00</div><div>The introduction remains on screen while the presenter frames the topic as a framework-level foundation for ServiceNow UI development.</div></div>
-<div class="titem"><div class="time">08:00</div><div>The introduction slide continues, reinforcing the three major learning goals: component creation, UI composition, and platform integration.</div></div>
-<div class="titem"><div class="time">10:00</div><div>Web Components slide defines web components as reusable custom elements with encapsulated functionality. Three core ideas are highlighted: lifecycle callbacks, Shadow DOM encapsulation, and slots for inserting custom markup.</div></div>
-<div class="titem"><div class="time">12:00</div><div>Seismic Component slide explains that each UI Framework component is created with createCustomElement from core. It is called with two arguments: tag name and options configuration.</div></div>
-<div class="titem"><div class="time">14:00</div><div>Component Properties slide lists the main option keys: view, properties, actions, actionHandlers, renderer, transformState, setInitialState, and behaviors.</div></div>
-<div class="titem"><div class="time">16:00</div><div>The component properties slide remains visible while the demo emphasizes what each option is responsible for: rendering, inputs, action contracts, action effects, rendering engine, state shaping, initial state and behavior registration.</div></div>
-<div class="titem"><div class="time">18:00</div><div>View slide explains that the framework renders the returned value of the view function. The function is called with state and helpers. Helpers include dispatch, updateState and updateProperties.</div></div>
-<div class="titem"><div class="time">20:00</div><div>Properties slide explains property passing. It covers default values, schema validation, required warnings, reflected HTML attributes, and computed property values.</div></div>
-<div class="titem"><div class="time">22:00</div><div>Properties slide continues with code showing property definitions such as firstName, lastName, and a computed name property.</div></div>
-<div class="titem"><div class="time">24:00</div><div>Properties slide/code remains on screen, reinforcing the connection between declared component properties and rendered output.</div></div>
-<div class="titem"><div class="time">26:00</div><div>State slide explains that state controls how the component renders and behaves. setInitialState defines defaults, updateState immutably overrides state values, and updateState supports operations over JSON paths.</div></div>
-<div class="titem"><div class="time">28:00</div><div>State diagram shows the flow from property value and defaults into state.properties, computed properties and computed state, then through transformState into view(state).</div></div>
-<div class="titem"><div class="time">30:00</div><div>Actions slide defines actions as the notification mechanism for components or applications. dispatch accepts action type, payload, metadata and error flag. Actions bubble upward and are not automatically visible to siblings or children.</div></div>
-<div class="titem"><div class="time">32:00</div><div>Action Handlers slide explains that handlers respond to dispatched actions. A handler can be a function or object and may include effect, interceptors, modifier options and stopPropagation.</div></div>
-<div class="titem"><div class="time">34:00</div><div>Action handler code stays visible, showing sample action keys and handler registration.</div></div>
-<div class="titem"><div class="time">36:00</div><div>Lifecycle Actions table lists emitted component lifecycle events including COMPONENT_CONNECTED, COMPONENT_BOOTSTRAPPED, COMPONENT_DOM_READY, COMPONENT_DOM_TREE_READY, COMPONENT_PROPERTY_CHANGED, COMPONENT_RENDER_REQUESTED, COMPONENT_RENDERED, COMPONENT_TREE_RENDERED, COMPONENT_DISCONNECTED and COMPONENT_ERROR_THROWN.</div></div>
-<div class="titem"><div class="time">38:00</div><div>Lifecycle table remains visible as the presenter completes the framework concept section.</div></div>
-<div class="titem"><div class="time">40:00</div><div>The recording switches into a browser. Documentation titled UI Framework on Next Experience / Seismic is opened, giving a reference page for the framework.</div></div>
-<div class="titem"><div class="time">42:00</div><div>Documentation moves to Config API / components, connecting the earlier slide concepts to formal API reference material.</div></div>
-<div class="titem"><div class="time">44:00</div><div>The demo moves into a local development environment and repository context, preparing to inspect Seismic component source code.</div></div>
-<div class="titem"><div class="time">46:00</div><div>VS Code is visible. The source tree and code editor are used to locate component implementation files and framework usage.</div></div>
-<div class="titem"><div class="time">48:00</div><div>The demo opens the ServiceNow Create Question wizard. It shows question type, subtype, question label, tabbed sections and live preview.</div></div>
-<div class="titem"><div class="time">50:00</div><div>Catalog Builder is shown for the Standard Laptop item. The Fulfillment step displays fulfillment method, process engine, selected flow and task steps.</div></div>
-<div class="titem"><div class="time">52:00</div><div>Catalog Builder Questions step is shown. The demo displays question groups and a test question inserted into the catalog item.</div></div>
-<div class="titem"><div class="time">54:00</div><div>A database/table viewer is opened on sc_cat_item records. Catalog item rows and columns such as category, catalogs, short_description and description are visible.</div></div>
-<div class="titem"><div class="time">56:00</div><div>ServiceNow application navigation and record screens are used to connect the builder UI back to classic catalog records.</div></div>
-<div class="titem"><div class="time">58:00</div><div>Composite Record Producer record page appears with script area, image/icon sections, and related lists such as Variables, Variable Sets, Catalog UI Policies and Catalog Client Scripts.</div></div>
-<div class="titem"><div class="time">01:00:00</div><div>The demo returns to code and implementation inspection, likely tracing how UI pages and records map to Seismic components.</div></div>
-<div class="titem"><div class="time">01:02:00</div><div>A ServiceNow catalog record/editing page is shown, continuing the comparison between UI Builder/Catalog Builder and classic records.</div></div>
-<div class="titem"><div class="time">01:04:00</div><div>VS Code source inspection resumes, focusing on implementation files for Service Catalog Seismic components.</div></div>
-<div class="titem"><div class="time">01:06:00</div><div>The code review continues, showing component source and configuration patterns.</div></div>
-<div class="titem"><div class="time">01:08:00</div><div>More implementation code is reviewed, including component options and supporting logic.</div></div>
-<div class="titem"><div class="time">01:10:00</div><div>Final code inspection continues near the end of the recording.</div></div>
-<div class="titem"><div class="time">01:12:26</div><div>Recording ends.</div></div></div>
-      </section>
+      
 
-      <section class="footer" id="downloads">
-        <h2>Downloads</h2>
-        <p>Use the transcript files for offline study or to paste into notes/knowledge base pages.</p>
-        <div class="actions">
-          <a class="btn primary" href="complete_transcript.md" download>Download Markdown transcript</a>
-          <a class="btn" href="complete_transcript.txt" download>Download TXT transcript</a>
-          <a class="btn" href="manifest.json" download>Download manifest JSON</a>
-        </div>
-      </section>
+      
     </main>
   </div>
 </body>
