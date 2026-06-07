@@ -1,0 +1,167 @@
+# Service Catalog — Table Variable / MRVS Demo Transcript
+
+**Source file:** `7.2 Service Catalog - Table Variable-20211028_123928.mp4`  
+**Duration:** approximately 63 minutes  
+**Transcript type:** full time-coded visual/learning transcript generated from the screen recording.
+
+Note: a verbatim spoken-audio transcript could not be generated in this environment because no local speech-to-text engine/model is available. This transcript preserves the complete instructional flow visible in the demo: slide text, ServiceNow navigation, records opened, tables inspected, and the implementation artifacts shown on screen.
+
+
+## 00:00–01:00 — Recording setup
+
+- Initial black/blank portion of the recording.
+- The demo is a ServiceNow session about Table Variable / Multi Row Variable Set.
+
+## 01:00–03:50 — Opening: Table Variable
+
+- Title slide shown: “Table Variable”.
+- The topic is ServiceNow table variables, also known as Multi Row Variable Sets.
+
+## 03:50–05:00 — Definition of Table Variable / MRVS
+
+- Slide title: “What is table variable (MRVS)”.
+- A table variable is a way to capture data in a grid format when ordering/submitting an item.
+- It is also termed as Multi Row Variable Set (MRVS).
+- Existing Variable Set functionality is extended to support a table variable.
+
+## 05:00–06:20 — Open ServiceNow catalog item
+
+- The presenter opens a ServiceNow local instance.
+- The catalog item used first is “Standard Laptop”.
+- The demo navigates to the catalog item record and scrolls to related lists.
+
+## 06:20–07:20 — Open Variable Sets related list
+
+- On the Standard Laptop catalog item, the presenter selects the “Variable Sets” related list.
+- The list initially has no MRVS record visible for the item.
+- The presenter clicks “New” to create or associate a variable set.
+
+## 07:20–08:45 — Create MRVS variable set
+
+- Variable Set record shown with title “MRVS”.
+- Internal name is set to “mrvs”.
+- Order is set to 100.
+- Type is “Multi Row”.
+- Application is “Global”.
+- Layout is set to “1 Column Wide”.
+- The layout dropdown shows choices such as “1 Column Wide”, “2 Columns Wide, alternating sides”, and “2 Columns Wide, one side, then the other”.
+
+## 08:45–10:20 — Create variables inside MRVS
+
+- The presenter creates child variables inside the MRVS.
+- The first variable is a Single Line Text variable with Question/Name “var1”.
+- The second variable is created similarly as “var2”.
+- Both variables appear under the MRVS Variables related list.
+
+## 10:20–13:30 — Verify variable set and catalog item relationship
+
+- The Variable Sets list shows the new MRVS record.
+- The Catalog Variable Sets relationship list confirms that “Standard Laptop” is associated with “MRVS” with order 100.
+- The demo also shows another variable set association, “common_comments”, with order 400.
+
+## 13:30–15:20 — Verify variables list
+
+- The Variables list is filtered for var1.
+- The var1 record is shown as Single Line Text.
+- The Variable set column points back to MRVS.
+
+## 15:20–16:00 — Try the catalog item in portal/classic UI
+
+- The Standard Laptop catalog item is opened in an order form.
+- The MRVS section appears as a small grid named “MRVS”.
+- The presenter clicks Add and an Add Row modal opens.
+- The modal displays fields var1 and var2; values are entered and the row is added.
+
+## 16:00–17:00 — Incidental pause / unrelated window
+
+- An Outlook window briefly appears showing build email. This is not part of the MRVS teaching content.
+- The ServiceNow demo resumes after this interruption.
+
+## 17:00–19:30 — Second example: Corporate Mobile Devices - Bulk Orders
+
+- The presenter opens the “Corporate Mobile Devices - Bulk Orders” catalog item.
+- The item is a more realistic example of MRVS, named “Mobile Devices Set”.
+- The order form contains Department, Business Justification, and a Mobile Devices Set grid.
+- The grid columns include Device Type, Storage, Color, and Quantity.
+
+## 19:30–21:00 — Inspect submitted option records
+
+- The presenter navigates to backend records after interacting with the catalog item.
+- An option record is opened showing Value, Order, Cart item, Sc cat item option, and Question.
+- The Question field example shown is “Quantity”.
+
+## 21:00–25:00 — Inspect Multi Row Question Answers
+
+- The Multi Row Question Answers list is opened.
+- Columns shown include Question, Parent ID, Parent table name, Question Answer, Row index, SC Item Option, Value, and Multi Row Set.
+- Example question rows include Storage, Quantity, Device Type, and Color.
+- Example values include 64GB, 128GB, black, galaxy8, and numeric quantities.
+- The Row index groups multiple question answers into one MRVS row.
+- Parent table names include sc_cart_item during cart/order flow and sc_req_item after submission.
+
+## 25:00–31:30 — Submit and review requested item data
+
+- The demo moves between portal/order status/requested item views.
+- The Mobile Devices Set grid persists the entered rows.
+- The presenter shows that the grid values can appear both during ordering and on request/requested item records.
+
+## 31:30–39:50 — Platform architecture
+
+- Slide title: “Table Variable in Platform”.
+- The table variable data is maintained in cache: window.tableVariableCache.
+- Template files mentioned: question_table.xml, question_table_variable_template.xml, question_table_variable_row.xml.
+- APIs are backed by TableVariableService.js and TableVariable.js.
+- The presenter switches between browser developer tools and source files to show where these platform pieces are implemented.
+
+## 39:50–49:00 — Service Portal architecture
+
+- Slide title: “Table Variable in Portal”.
+- Template files mentioned: sp_form_field.xml and sp_element_sc_multi_row.xml.
+- Widget mentioned: sc-multi-row-active-row.
+- Directive mentioned: spScMultiRowElement.js.
+- The code walkthrough shows functions such as refreshMultiRowDisplayValue(), clearAllValue(), clearValue(), and createRow().
+- These functions manage refreshing the grid display value, deleting rows, and opening/creating the active row modal.
+
+## 49:00–56:30 — Workspace rendering demo
+
+- The presenter opens a Workspace requested item record.
+- Example record: request for mobile devices for your department.
+- The Variables section expands in Workspace.
+- The Mobile Devices Set grid is displayed with rows such as Apple iPhone 8, 64GB, Black, and Quantity values.
+- Browser developer tools / Seismic inspection are used to locate workspace components.
+
+## 56:30–60:20 — Workspace architecture
+
+- Slide title: “Table Variable in Workspace”.
+- Component mentioned: sn-catalog-form-multi-row-variable, inside sn-catalog-form.
+- GraphQL variables fragment mentioned: AppCatalog_MultiRowVariableSetType.
+- QuestionElementType.buildMultiRowVariableSetType() is mentioned as part of building the multi-row variable set type.
+- Widget call mentioned: sc-multi-row-active-row.
+
+## 60:20–63:04 — Wrap-up
+
+- The demo ends after showing the Workspace implementation slide.
+- The learning path concludes with the three rendering contexts: Platform, Portal, and Workspace.
+
+---
+
+## Key terms captured from the demo
+
+- **Table Variable / MRVS:** A grid-style variable set for collecting repeating rows of structured input.
+- **Variable Set:** A reusable container for variables. In this demo, the important type is `Multi Row`.
+- **Variables:** The columns/questions inside the MRVS, such as `var1`, `var2`, `Device Type`, `Storage`, `Color`, and `Quantity`.
+- **Catalog Variable Sets:** The relationship that attaches a variable set to a catalog item.
+- **Multi Row Question Answers:** The backend answer rows that persist individual cell values, grouped by row index.
+- **Platform rendering:** Uses cache, XML templates, and JavaScript services.
+- **Portal rendering:** Uses portal templates, a widget, and an Angular directive.
+- **Workspace rendering:** Uses a workspace component, GraphQL type construction, and a widget call.
+
+## End-to-end flow captured
+
+1. Define what a table variable is.
+2. Create a Multi Row Variable Set.
+3. Add child variables as columns.
+4. Attach the variable set to a catalog item.
+5. Test it in the ordering UI.
+6. Inspect saved answer records.
+7. Review implementation for Platform, Portal, and Workspace.

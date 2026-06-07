@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Service Catalog Data Model Learning Guide</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <nav class="topnav">
+      <div class="brand">Service Catalog Learning</div>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#model">Data model</a>
+      <a href="#walkthrough">Walkthrough</a>
+      <a href="#storage">Storage</a>
+      <a href="#cache">Caching</a>
+      <a href="#transcript">Transcript</a>
+    </nav>
+    <section class="hero-inner">
+      <div>
+        <p class="eyebrow">Demo converted into a learning website</p>
+        <h1>Service Catalog Data Model</h1>
+        <p class="subtitle">A structured guide to the ServiceNow catalog data model: catalog items, variables, cart items, requested items, record producers, multi-row variable answers, UI policies, and cache internals.</p>
+        <div class="hero-actions">
+          <a class="button" href="#roadmap">Start learning</a>
+          <a class="button ghost" href="complete_transcript.md" download>Download transcript</a>
+        </div>
+      </div>
+      <figure class="hero-shot">
+<img class="" src="assets/screenshots/01_service_catalog_home.jpg" alt="Service Catalog homepage screenshot" loading="lazy" />
+<figcaption>Start from the requester view, then trace the same data into platform tables.</figcaption>
+      </figure>
+    </section>
+  </header>
+  <main>
+
+    <section id="roadmap" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Learning path</p>
+        <h2>Learn it in this order</h2>
+        <p>The clean mental model is: <strong>catalog definition → cart capture → request execution → answer storage → fulfillment → cache refresh</strong>.</p>
+      </div>
+      <div class="path">
+
+        <article class="path-card">
+          <img class="" src="assets/screenshots/01_service_catalog_home.jpg" alt="Catalog surface" loading="lazy" />
+          <div>
+            <span class="pill">Step 1</span>
+            <h3>Catalog surface</h3>
+            <p>Start with what the requester sees: catalog homepage, categories, top requests, cart, and item detail pages.</p>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <img class="" src="assets/screenshots/02_catalog_item_model_diagram.jpg" alt="Item definition model" loading="lazy" />
+          <div>
+            <span class="pill">Step 2</span>
+            <h3>Item definition model</h3>
+            <p>Move behind the UI to `sc_cat_item` and its related/extended tables: normal items, record producers, order guides, content items, and wizards.</p>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <img class="" src="assets/screenshots/05_options_table.jpg" alt="Variables and answers" loading="lazy" />
+          <div>
+            <span class="pill">Step 3</span>
+            <h3>Variables and answers</h3>
+            <p>Understand the split between variable definitions and submitted answer rows.</p>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <img class="" src="assets/screenshots/06_ritm_variables.jpg" alt="Request lifecycle" loading="lazy" />
+          <div>
+            <span class="pill">Step 4</span>
+            <h3>Request lifecycle</h3>
+            <p>Follow the submitted order into request, requested item, and catalog task records.</p>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <img class="" src="assets/screenshots/08_record_producer_order.jpg" alt="Record producers" loading="lazy" />
+          <div>
+            <span class="pill">Step 5</span>
+            <h3>Record producers</h3>
+            <p>See how catalog inputs can create a non-catalog target record, such as Incident.</p>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <img class="" src="assets/screenshots/13_multi_row_answers.jpg" alt="MRVS/table variables" loading="lazy" />
+          <div>
+            <span class="pill">Step 6</span>
+            <h3>MRVS/table variables</h3>
+            <p>Read multi-row answers as row-index grouped cells rather than a single field.</p>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <img class="" src="assets/screenshots/18_catalog_ui_policies.jpg" alt="Behavior and policy" loading="lazy" />
+          <div>
+            <span class="pill">Step 7</span>
+            <h3>Behavior and policy</h3>
+            <p>Locate where catalog UI behavior is configured through UI policies and related actions.</p>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <img class="" src="assets/screenshots/23_cache_flushes.jpg" alt="Caching internals" loading="lazy" />
+          <div>
+            <span class="pill">Step 8</span>
+            <h3>Caching internals</h3>
+            <p>Connect catalog configuration changes to cache flushes and source-level cache classes.</p>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section id="model" class="section alt">
+      <div class="section-head">
+        <p class="eyebrow">Core model</p>
+        <h2>The catalog model as a flow</h2>
+        <p>Do not start by memorizing tables. Start with the lifecycle: define an item, collect variables, submit an order, store answers, create work, then render the result back to the user or fulfiller.</p>
+      </div>
+      <div class="flow-grid">
+        <div class="flow-node"><span>1</span><h3>Catalog</h3><p><code>sc_catalog</code><br><code>sc_category</code></p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span>2</span><h3>Item</h3><p><code>sc_cat_item</code><br>item / producer / guide</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span>3</span><h3>Questions</h3><p><code>item_option_new</code><br>variable sets</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span>4</span><h3>Cart</h3><p><code>sc_cart_item</code><br><code>sc_item_option</code></p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span>5</span><h3>Request</h3><p><code>sc_request</code><br><code>sc_req_item</code></p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span>6</span><h3>Work</h3><p><code>sc_task</code><br>target record</p></div>
+      </div>
+      <div class="two-col top-gap">
+        <figure class="card-figure">
+<img class="" src="assets/screenshots/02_catalog_item_model_diagram.jpg" alt="Catalog item table hierarchy" loading="lazy" />
+<figcaption>Catalog Item sits in the center; multiple item types and relationship tables connect to it.</figcaption></figure>
+        <figure class="card-figure">
+<img class="" src="assets/screenshots/03_variable_model_diagram.jpg" alt="Variable table relationships" loading="lazy" />
+<figcaption>Variables are related to catalog items and variable sets; submitted answers are stored separately.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="tables" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Cheat sheet</p>
+        <h2>Tables you should recognize</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Table / area</th><th>Role</th><th>How to remember it</th></tr></thead>
+          <tbody>
+<tr><td>`sc_catalog`</td><td>Catalog container</td><td>Holds catalogs such as Service Catalog; categories and items belong under it.</td></tr>
+<tr><td>`sc_category`</td><td>Category hierarchy</td><td>Groups catalog items; can have a parent category such as Hardware → Tablets.</td></tr>
+<tr><td>`sc_cat_item`</td><td>Base catalog item</td><td>Central item table. Normal items, content items, record producers, order guides, and wizard items are connected to this model.</td></tr>
+<tr><td>`sc_cat_item_category` / related category M2M</td><td>Item-category link</td><td>Connects catalog items to categories so they appear in the right catalog location.</td></tr>
+<tr><td>`item_option_new`</td><td>Variable definition</td><td>Defines catalog questions/variables: type, question text, name, order, catalog item, variable set, reference, default, and visibility rules.</td></tr>
+<tr><td>Variable set tables</td><td>Variable grouping</td><td>Reusable sets of variables; multi-row variable sets become table-like inputs.</td></tr>
+<tr><td>`sc_cart_item`</td><td>Pre-checkout cart row</td><td>Represents an item in the shopping cart before checkout.</td></tr>
+<tr><td>`sc_item_option`</td><td>Submitted answer value</td><td>Stores each variable answer row, including question reference, value, order, and catalog option metadata.</td></tr>
+<tr><td>`sc_item_option_mtom`</td><td>RITM-to-option join</td><td>Links requested items to the answer option rows.</td></tr>
+<tr><td>`sc_request`</td><td>Request container</td><td>The overall order/request that can contain one or more requested items.</td></tr>
+<tr><td>`sc_req_item`</td><td>Requested item / RITM</td><td>The ordered item instance with lifecycle fields such as stage, state, quantity, and item reference.</td></tr>
+<tr><td>`sc_task`</td><td>Fulfillment task</td><td>Work record created to fulfill the requested item.</td></tr>
+<tr><td>`question_answer`</td><td>Record producer answers</td><td>Stores answers captured by record producers against the produced target record/table.</td></tr>
+<tr><td>`item_produced_record`</td><td>Producer-output mapping</td><td>Maps the record producer to the target record/task it created.</td></tr>
+<tr><td>`sc_multi_row_question_answer`</td><td>MRVS/table-variable storage</td><td>Stores each cell of a multi-row variable set; rows are reconstructed using `row_index`.</td></tr>
+<tr><td>`catalog_ui_policy` / actions</td><td>Catalog form behavior</td><td>Controls visibility, mandatory, readonly, and dynamic behavior of variables.</td></tr>
+<tr><td>`sys_cache_flush` + catalog caches</td><td>Cache invalidation</td><td>Shows catalog/cache entries invalidated when item/category/configuration data changes.</td></tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="walkthrough" class="section alt">
+      <div class="section-head">
+        <p class="eyebrow">Demo walkthrough</p>
+        <h2>What the demo is teaching at each stage</h2>
+      </div>
+      <div class="lesson-grid">
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/04_catalog_items_list.jpg" alt="Open catalog item records" loading="lazy" />
+          <div class="lesson-body"><h3>Open catalog item records</h3><p>The Catalog Items list proves that the catalog homepage is backed by item records. The demo filters and opens records such as Standard Laptop.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/05_options_table.jpg" alt="Inspect option rows" loading="lazy" />
+          <div class="lesson-body"><h3>Inspect option rows</h3><p>Each variable answer becomes an option row. This is why variable data is not just another column directly on the RITM.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/06_ritm_variables.jpg" alt="Open the RITM" loading="lazy" />
+          <div class="lesson-body"><h3>Open the RITM</h3><p>The requested item renders stored variables in a human-friendly Variables section while preserving item/request lifecycle fields.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/08_record_producer_order.jpg" alt="Compare record producers" loading="lazy" />
+          <div class="lesson-body"><h3>Compare record producers</h3><p>A record producer collects variables like a catalog item, but it creates a target task/record such as Incident.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/10_question_answer_dictionary.jpg" alt="Read question_answer" loading="lazy" />
+          <div class="lesson-body"><h3>Read question_answer</h3><p>For record producers, variable answers are stored against the produced table and sys_id through Question Answer.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/11_item_produced_records.jpg" alt="Map producer to target" loading="lazy" />
+          <div class="lesson-body"><h3>Map producer to target</h3><p>Item Produced Records links the producer to the record it created.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/13_multi_row_answers.jpg" alt="Read MRVS rows" loading="lazy" />
+          <div class="lesson-body"><h3>Read MRVS rows</h3><p>Multi-row variable set values are not stored as one JSON blob in the demo; each cell appears as a row grouped by row index.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/16_cart_item_table.jpg" alt="Trace cart and request" loading="lazy" />
+          <div class="lesson-body"><h3>Trace cart and request</h3><p>Cart item rows and option rows are visible before/around checkout, while request/RITM/task records carry the execution flow.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/18_catalog_ui_policies.jpg" alt="Inspect UI behavior" loading="lazy" />
+          <div class="lesson-body"><h3>Inspect UI behavior</h3><p>Catalog UI Policies are where dynamic variable behavior is configured.</p></div>
+        </article>
+
+        <article class="lesson-card">
+          <img class="" src="assets/screenshots/19_sc_task_from_ritm.jpg" alt="Follow fulfillment" loading="lazy" />
+          <div class="lesson-body"><h3>Follow fulfillment</h3><p>Catalog Task shows how the requested item becomes work for a fulfillment team.</p></div>
+        </article>
+
+      </div>
+    </section>
+
+    <section id="storage" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Storage patterns</p>
+        <h2>Where the values go</h2>
+      </div>
+      <div class="cards three">
+        <article class="info-card"><h3>Normal catalog item</h3><p><code>sc_cat_item</code> defines the item. <code>item_option_new</code> defines variables. During ordering, <code>sc_cart_item</code> and <code>sc_item_option</code> hold item/answer data. After checkout, the request is represented by <code>sc_request</code> and <code>sc_req_item</code>.</p></article>
+        <article class="info-card"><h3>Record producer</h3><p>The user fills a catalog-like form, but the output is a target task/table record. The demo shows Create Incident, the Incident Variable Editor, <code>question_answer</code>, and <code>item_produced_record</code>.</p></article>
+        <article class="info-card"><h3>Multi-row variable set</h3><p>The visible grid is reconstructed from rows in <code>sc_multi_row_question_answer</code>. Same <code>row_index</code> means the cells belong to the same logical table row.</p></article>
+      </div>
+      <div class="two-col top-gap">
+        <figure class="card-figure">
+<img class="" src="assets/screenshots/20_mrvs_order_form.jpg" alt="MRVS order form" loading="lazy" />
+<figcaption>End-user MRVS/table-variable grid.</figcaption></figure>
+        <figure class="card-figure">
+<img class="" src="assets/screenshots/17_bulk_order_options.jpg" alt="Options table for bulk order" loading="lazy" />
+<figcaption>Submitted values exposed as rows in platform tables.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="cache" class="section alt">
+      <div class="section-head">
+        <p class="eyebrow">Advanced internals</p>
+        <h2>Why the demo goes into code and cache</h2>
+        <p>Catalog rendering depends on category, item, criteria, question, UI policy, and variable metadata. The code/cache portion explains why changing catalog configuration often triggers catalog cache invalidation.</p>
+      </div>
+      <div class="cards three">
+        <article class="info-card"><h3>Catalog/category cache</h3><p>Category membership and item visibility are cached so the catalog homepage loads quickly.</p></article>
+        <article class="info-card"><h3>Question cache</h3><p>Question, choice, and regex metadata are cached because every catalog item render needs variable definitions.</p></article>
+        <article class="info-card"><h3>Stale cache listeners</h3><p>When certain tables update, the listener/finder logic determines which cached catalog data should expire.</p></article>
+      </div>
+      <div class="two-col top-gap">
+        <figure class="card-figure">
+<img class="" src="assets/screenshots/24_catalog_constants_code.jpg" alt="Catalog constants source code" loading="lazy" />
+<figcaption>Constants reveal important catalog table and cache names.</figcaption></figure>
+        <figure class="card-figure">
+<img class="" src="assets/screenshots/29_question_cache_code.jpg" alt="Question cache and variable type map source code" loading="lazy" />
+<figcaption>Question metadata and variable types are cache-backed.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="builder" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Configuration views</p>
+        <h2>Category and builder views</h2>
+        <p>The demo also shows category membership and the guided Catalog Item Builder/Wizard path.</p>
+      </div>
+      <div class="two-col">
+        <figure class="card-figure">
+<img class="" src="assets/screenshots/27_category_item_relation.jpg" alt="Category form with catalog items relationship" loading="lazy" />
+<figcaption>Category record: catalog, parent, images/icons, and item availability relationships.</figcaption></figure>
+        <figure class="card-figure">
+<img class="" src="assets/screenshots/30_catalog_wizard_steps.jpg" alt="Catalog wizard steps" loading="lazy" />
+<figcaption>Catalog Item Builder/Wizard structures creation into Details, Location, Questions, Settings, Access, and Fulfillment.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="practice" class="section alt">
+      <div class="section-head">
+        <p class="eyebrow">Practice</p>
+        <h2>Self-check questions</h2>
+      </div>
+      <div class="cards three">
+        <article class="info-card"><h3>Question 1</h3><p>A user submits Standard Laptop with two software checkboxes. Which tables would you inspect to find the item, RITM, and answers?</p><p class="answer"><strong>Answer:</strong> <code>sc_cat_item</code>, <code>sc_req_item</code>, <code>sc_item_option</code>, and usually <code>sc_item_option_mtom</code>.</p></article>
+        <article class="info-card"><h3>Question 2</h3><p>A record producer creates an Incident. Why might the answers not be on <code>sc_req_item</code>?</p><p class="answer"><strong>Answer:</strong> Record producers create target records; answers can be traced through <code>question_answer</code> and <code>item_produced_record</code>.</p></article>
+        <article class="info-card"><h3>Question 3</h3><p>In MRVS, why do several records have the same row index?</p><p class="answer"><strong>Answer:</strong> Each record is one cell; same row index groups cells into one logical table row.</p></article>
+      </div>
+    </section>
+
+    <section id="transcript" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Downloads</p>
+        <h2>Complete transcript and source screenshots</h2>
+        <p>The transcript is time-coded from the full demo timeline and includes the key screen transitions, table inspections, and learning points.</p>
+      </div>
+      <div class="download-panel">
+        <a class="button" href="complete_transcript.md" download>Download Markdown transcript</a>
+        <a class="button ghost" href="complete_transcript.txt" download>Download TXT transcript</a>
+        <a class="button ghost" href="assets/screenshots/00_contact_sheet_60s.jpg" download>Download screenshot contact sheet</a>
+      </div>
+      <details class="transcript-preview">
+        <summary>Preview the transcript timeline</summary>
+        <div class="timeline">
+<article><time>00:00–00:20</time><p>Opening screen shows the presenter name, then the demo machine and browser are brought into view.</p></article>
+<article><time>00:20–01:30</time><p>The demo opens a ServiceNow instance and lands in Service Catalog. The first visible model is the user-facing catalog: category cards such as Services, Hardware, Software, Office, Desktops, Mobiles, and a right-side cart/top-request area.</p></article>
+<article><time>01:30–02:30</time><p>The presenter moves from the catalog homepage into platform/admin navigation and opens Catalog Items. This shifts the focus from the end-user view to the configuration/data-model view.</p></article>
+<article><time>02:30–03:10</time><p>The Catalog Items list is shown. It contains item records such as Service Category Request, Access, Standard Laptop, Apple iPad 3, Cisco Jabber, Samsung Galaxy, Adobe Acrobat Pro, Paper and Supplies, and others. Columns include name, short description, active, roles, catalogs, category, price, type, and updated.</p></article>
+<article><time>02:50–04:20</time><p>A generic hierarchy view for Catalog Item is opened. It shows that catalog items are central records and that multiple tables either extend or reference this model. The demo scrolls around related tables such as content items, product/catalog items, record producers, order guides, wizard launchers, variables, catalog variable sets, available-for relationships, connected content, related catalog items, and catalog UI policy actions.</p></article>
+<article><time>04:30–05:00</time><p>The Standard Laptop catalog item order page is opened. The page shows an item picture and product description for an X1 Carbon, plus variables such as “Request this for?”, Optional Software, Adobe Acrobat, Adobe Photoshop, and Additional software requirements.</p></article>
+<article><time>05:00–06:00</time><p>The Options table is opened for the Standard Laptop cart item. It shows one row per variable answer, with columns such as Cart item, Question, Order, SC cat item option, and Value. The demo highlights that selected/unselected checkboxes and text answers are stored as option records.</p></article>
+<article><time>06:00–07:00</time><p>A Requested Item record is opened. The RITM shows the catalog item, request, stage, quantity, and a Variables section. This demonstrates how catalog variable answers are rendered back on the requested item after submission.</p></article>
+<article><time>07:00–08:00</time><p>The hierarchy/data model for Options is inspected. The demo uses ServiceNow table hierarchy tools to understand how the option records relate back to questions and other catalog entities.</p></article>
+<article><time>08:00–09:00</time><p>The presenter inspects item/cart option values, showing that the actual stored values are separate rows instead of flat fields on the requested item form.</p></article>
+<article><time>09:00–10:00</time><p>A Record Producer named Create Incident is opened from the catalog. The end-user form asks for Urgency and More information, then submits to create an Incident record.</p></article>
+<article><time>10:00–11:00</time><p>The Incident form layout is configured to expose the Incident Variable Editor. This shows how record-producer answers can be rendered on the target task/incident form even though the target table is not a catalog request table.</p></article>
+<article><time>11:00–12:00</time><p>The Question Answer table dictionary is opened. Columns include Order, Question, Class, Created by, Created, Sys ID, Updates, Updated by, Updated, Table name, Table sys ID, and Value. This is the key table for record-producer answer storage.</p></article>
+<article><time>12:00–13:00</time><p>The Item Produced Records list is inspected. It maps a producer to the produced task record and task type, for example Create Incident creating an Incident, or other producers creating Change Requests.</p></article>
+<article><time>13:00–14:00</time><p>The demo returns to the Service Catalog and then back to internal tables to continue tracing the submitted values.</p></article>
+<article><time>14:00–15:00</time><p>The Options list columns are personalized. Selected columns include Cart item, Question, Order, SC cat item option, and Value. This helps inspect catalog variable storage without unrelated columns.</p></article>
+<article><time>15:00–16:00</time><p>The Multi Row Question Answers table is opened. Rows are grouped by row index. Each row represents one cell in a multi-row variable set: Question, parent requested item, parent table name, row index, related SC item option, value, and multi-row set.</p></article>
+<article><time>16:00–17:00</time><p>The presenter searches catalog items and moves between record-producer/package/content-item examples to compare how normal items, record producers, and special catalog item types are represented.</p></article>
+<article><time>17:00–18:00</time><p>More Multi Row Question Answer rows are shown. Multiple rows share the same row index, forming one logical row in the table variable. Values such as color, quantity, storage, and device type appear as separate records.</p></article>
+<article><time>18:00–19:00</time><p>The Cart Item table is inspected for a Corporate Mobile Devices bulk-order item. A single cart-item record points to the catalog item and quantity before checkout.</p></article>
+<article><time>19:00–20:00</time><p>The Options table is inspected for the bulk-order flow. Values such as Storage, Quantity, Business Justification, Department, Device Type, and Color appear as separate option rows.</p></article>
+<article><time>20:00–21:00</time><p>Catalog UI Policies are opened. The list shows short descriptions, linked catalog item or variable set, conditions, reverse-if-false, on-load, inherit, updated, and order. This shows where catalog form behavior is configured.</p></article>
+<article><time>21:00–22:00</time><p>A Catalog Task record is opened from a requested item. The task has request item linkage, state, priority, approval, description/work notes, and related tabs. This demonstrates the fulfillment side of the request model.</p></article>
+<article><time>22:00–23:00</time><p>The Corporate Mobile Devices bulk-order form is opened. It shows normal variables such as Department and Business Justification plus a Mobile Devices Set table with columns Device Type, Storage, Color, and Quantity.</p></article>
+<article><time>23:00–24:00</time><p>An Access requested item is opened to compare another catalog item/request flow and its related catalog tasks.</p></article>
+<article><time>24:00–25:00</time><p>A variable creation form is shown. The variable is of type Requested For, assigned to the Standard Laptop catalog item, with question text, name, tooltip, and other configuration tabs.</p></article>
+<article><time>25:00–26:00</time><p>A Request record is shown with its Requested Items related list. The request acts as the container; requested item records carry item-specific lifecycle and variable data.</p></article>
+<article><time>26:00–27:00</time><p>The Standard Laptop catalog item form is opened. The item has fields like name, catalog, category, state, owner, short description, rich-text description, pricing, process engine, picture, portal settings, and buttons such as Try it and Edit in Catalog Builder.</p></article>
+<article><time>27:00–28:00</time><p>Cache Flush records are inspected. The demo shows that catalog changes produce cache-related entries and that catalog item/category rendering is cache-aware.</p></article>
+<article><time>28:00–29:00</time><p>The cache flush list remains visible, highlighting multiple cache names and keys related to catalog and category entries.</p></article>
+<article><time>29:00–30:00</time><p>The presenter switches to source code. Finder/cache configuration code is shown for catalog relationships, mapping tables such as categories, catalog items, criteria, groups, locations, and M2M relationship tables to cache finders.</p></article>
+<article><time>30:00–31:00</time><p>The demo returns briefly to the Standard Laptop order page and then back to code, keeping the connection between runtime catalog UI and platform internals.</p></article>
+<article><time>31:00–32:00</time><p>Stale category cache code is inspected. The code handles category cache invalidation and parent-category expiration when catalog/category relationships change.</p></article>
+<article><time>32:00–33:00</time><p>Catalog constants are shown in code. Constants include catalog item, catalog variable, variable set, catalog UI policy, catalog data lookup, catalog policy action, catalog caches, category caches, no-order/no-cart settings, and script event names.</p></article>
+<article><time>33:00–34:00</time><p>Cache Inspector is opened. Entries such as category cache and item-category cache appear, showing hashed keys/sub-names that represent cached catalog data.</p></article>
+<article><time>34:00–35:00</time><p>Cache Inspector is filtered for catalog-related entries, including catalog client scripts, catalog data lookup cache, and category cache names.</p></article>
+<article><time>35:00–36:00</time><p>The demo returns to the Service Catalog home page with cart state visible, reinforcing the user-facing result of the underlying data model.</p></article>
+<article><time>36:00–37:00</time><p>Cache Inspector is shown again, this time at a broader private-cache list level.</p></article>
+<article><time>37:00–38:00</time><p>The Service Catalog home page appears again with the shopping cart state and top requests.</p></article>
+<article><time>38:00–39:00</time><p>A Category form for Office is opened. It shows catalog, active state, parent, description, image/icon, and related tabs such as Catalog Items, Categories, Available for, and Not Available for.</p></article>
+<article><time>39:00–40:00</time><p>Catalog Java code is shown. The presenter points at logic that associates items to a catalog using catalog-item/category relationships and the sc_catalogs field.</p></article>
+<article><time>40:00–41:00</time><p>The screen is split between code and the ServiceNow catalog item form, connecting the code-level catalog relationship with the visible item configuration.</p></article>
+<article><time>41:00–42:00</time><p>Code navigation opens catalog/category cache classes, including category cart-item cache and related catalog Java classes.</p></article>
+<article><time>42:00–43:00</time><p>Catalog item code is inspected, showing variables, client-script checks, run-scripts handling, and catalog constants.</p></article>
+<article><time>43:00–44:00</time><p>User item cache manager code is shown. It builds cache keys using item id, mobile flag, and user id/domain separation data.</p></article>
+<article><time>44:00–45:00</time><p>SCStaleCacheListener code is shown. It looks up finder configuration based on table name and uses direct, excluded, or table-hierarchy lookup to decide cache invalidation behavior.</p></article>
+<article><time>45:00–46:00</time><p>The Category list is filtered to show a category such as Tablets with parent Hardware. This demonstrates category hierarchy and item placement.</p></article>
+<article><time>46:00–47:00</time><p>A browser new tab appears briefly; this portion is not materially instructional for the service catalog data model.</p></article>
+<article><time>47:00–48:00</time><p>Question.java is opened. Code shows private caches for Question, Question Choice, Question Regex, and a variable type map.</p></article>
+<article><time>48:00–49:00</time><p>Cache finder configuration is revisited, including relationships involving catalog item/category, variable/item-option tables, user criteria, and group/location criteria.</p></article>
+<article><time>49:00–50:00</time><p>Question cache registration is highlighted, including Question, Question Choice, and Question Regex cache pairs.</p></article>
+<article><time>50:00–51:00</time><p>The variable type map is shown. Numeric type values map to question/variable types such as yes/no, multi-line text, multiple choice, select box, single-line text, reference, date, date-time, label, macro, UI page, lookup select box, list collector, and containers.</p></article>
+<article><time>51:00–51:17</time><p>The demo ends on a Catalog Wizard / Catalog Item Builder configuration screen. The wizard has steps such as Details, Location, Questions, Settings, Access, and Fulfillment, showing a guided way to create catalog items.</p></article>
+
+        </div>
+      </details>
+    </section>
+  </main>
+  <footer>
+    <p>Generated from the uploaded Service Catalog Data Model demo. Screenshots are extracted from the video for learning/reference.</p>
+  </footer>
+</body>
+</html>

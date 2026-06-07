@@ -132,6 +132,33 @@ footer a:hover{color:var(--acc)}
 ::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--bdr)}
 
+/* ── SECTION SPACING VARIANTS ── */
+.section-no-bottom{padding-bottom:0}
+.section-tight-top{padding-top:24px;padding-bottom:0}
+
+/* ── FEATURED VARIANT (blue accent) ── */
+.featured-alt{border-color:var(--acc2)}
+.featured-alt .featured-label{color:var(--acc2)}
+.featured-alt .featured-cta{background:var(--acc2)}
+.featured-alt .fpill{border-color:var(--acc2);color:var(--acc2);background:rgba(0,102,204,.1)}
+
+/* ── HERO CODE PILL ── */
+.hero-code{background:#1f2937;padding:2px 8px;border-radius:4px;font-size:14px}
+
+/* ── COMING SOON CARD ── */
+.cat-card-disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+/* ── QUICK REF GRID ── */
+.qref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.qref-card{background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:16px}
+.qref-title{font-size:11px;font-weight:700;font-family:monospace;margin-bottom:10px}
+.qref-title-blue{color:var(--acc)}
+.qref-title-green{color:var(--acc2)}
+.qref-title-orange{color:var(--acc5)}
+.qref-list{font-size:12px;display:flex;flex-direction:column;gap:5px;color:var(--txt2)}
+.qref-mono{font-family:monospace;gap:4px}
+.qref-highlight{background:rgba(63,185,80,.1);border:1px solid var(--acc2);border-radius:3px;padding:3px 6px;color:var(--acc2);font-weight:700}
+
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   .hero h1{font-size:28px}

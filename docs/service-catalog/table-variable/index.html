@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Service Catalog Table Variable / MRVS Learning Guide</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <nav class="topnav">
+      <div class="brand">Service Catalog Learning</div>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#configure">Configure</a>
+      <a href="#storage">Storage</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#transcript">Transcript</a>
+    </nav>
+    <section class="hero-inner">
+      <div>
+        <p class="eyebrow">Demo converted into a learning website</p>
+        <h1>Table Variable / Multi Row Variable Set</h1>
+        <p class="subtitle">
+          Learn how ServiceNow MRVS works end to end: what it is, how to configure it,
+          how users add rows, where values are stored, and how it renders across Platform,
+          Portal, and Workspace.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="#roadmap">Start learning</a>
+          <a class="button ghost" href="complete_transcript.md" download>Download transcript</a>
+        </div>
+      </div>
+      <figure class="hero-shot">
+        <img src="assets/screenshots/01_title.jpg" alt="Opening Table Variable title slide" />
+        <figcaption>Demo topic: Table Variable</figcaption>
+      </figure>
+    </section>
+  </header>
+
+  <main>
+    <section id="roadmap" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Learning path</p>
+        <h2>Learn it in this order</h2>
+        <p>The easiest mental model is: <strong>MRVS = variable set as a table</strong>. Child variables become columns, each added row becomes a grouped set of answers.</p>
+      </div>
+      <div class="path">
+        
+        <article class="path-card">
+          <img src="assets/screenshots/02_definition.jpg" alt="Understand what MRVS solves screenshot" />
+          <div>
+            <span class="pill">Concept</span>
+            <h3>Understand what MRVS solves</h3>
+            <p>A table variable captures repeated structured input in a grid while ordering/submitting an item.</p>
+          </div>
+        </article>
+        <article class="path-card">
+          <img src="assets/screenshots/04_mrvs_variable_set_form.jpg" alt="Create the Multi Row Variable Set screenshot" />
+          <div>
+            <span class="pill">Build</span>
+            <h3>Create the Multi Row Variable Set</h3>
+            <p>Create a Variable Set with Type = Multi Row, give it an internal name, order, and layout.</p>
+          </div>
+        </article>
+        <article class="path-card">
+          <img src="assets/screenshots/05_mrvs_variables.jpg" alt="Add variables inside the set screenshot" />
+          <div>
+            <span class="pill">Columns</span>
+            <h3>Add variables inside the set</h3>
+            <p>Each child variable becomes a column/question in the grid.</p>
+          </div>
+        </article>
+        <article class="path-card">
+          <img src="assets/screenshots/06_catalog_variable_set_association.jpg" alt="Link it to a catalog item screenshot" />
+          <div>
+            <span class="pill">Attach</span>
+            <h3>Link it to a catalog item</h3>
+            <p>The Catalog Variable Sets relationship makes the MRVS appear on the item.</p>
+          </div>
+        </article>
+        <article class="path-card">
+          <img src="assets/screenshots/07_portal_add_row.jpg" alt="Add rows as an end user screenshot" />
+          <div>
+            <span class="pill">Test</span>
+            <h3>Add rows as an end user</h3>
+            <p>The ordering UI opens an Add Row dialog where each column is entered for one row.</p>
+          </div>
+        </article>
+        <article class="path-card">
+          <img src="assets/screenshots/09_answer_table.jpg" alt="Inspect saved answers screenshot" />
+          <div>
+            <span class="pill">Persist</span>
+            <h3>Inspect saved answers</h3>
+            <p>ServiceNow stores each cell as a question answer, grouped by row index and parent record.</p>
+          </div>
+        </article>
+        <article class="path-card">
+          <img src="assets/screenshots/14_workspace_architecture.jpg" alt="Know platform/portal/workspace internals screenshot" />
+          <div>
+            <span class="pill">Implement</span>
+            <h3>Know platform/portal/workspace internals</h3>
+            <p>Rendering differs by UI surface, but the concept remains the same.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="concept" class="section split">
+      <div>
+        <p class="eyebrow">Concept</p>
+        <h2>What is a Table Variable / MRVS?</h2>
+        <p>
+          A table variable is ServiceNow’s way to collect repeating, row-based information while a user orders or submits a catalog item.
+          It is also called a <strong>Multi Row Variable Set</strong>.
+        </p>
+        <div class="callout">
+          <strong>Simple example:</strong> ordering multiple mobile devices. One request may contain several rows, and every row has the same columns:
+          Device Type, Storage, Color, Quantity.
+        </div>
+        <ul class="check-list">
+          <li>Use it when the user must enter multiple similar records.</li>
+          <li>Use child variables as the table columns.</li>
+          <li>Use row index / answer grouping to understand how values are saved.</li>
+          <li>Test in the exact UI surface your users will use: Platform, Portal, or Workspace.</li>
+        </ul>
+      </div>
+      <figure class="screenshot">
+        <img src="assets/screenshots/02_definition.jpg" alt="Definition slide explaining MRVS" />
+        <figcaption>Slide: definition of table variable / MRVS.</figcaption>
+      </figure>
+    </section>
+
+    <section id="configure" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Hands-on configuration</p>
+        <h2>Build the MRVS on a catalog item</h2>
+      </div>
+
+      <div class="steps">
+        <article class="step">
+          <span class="num">1</span>
+          <div>
+            <h3>Open the catalog item</h3>
+            <p>In the demo, the first item is <strong>Standard Laptop</strong>. The presenter goes to the related lists and opens the <strong>Variable Sets</strong> tab.</p>
+            <figure class="screenshot wide"><img src="assets/screenshots/03_catalog_item_variable_sets.jpg" alt="Catalog item Variable Sets related list" /><figcaption>Catalog item related list where MRVS is created or associated.</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="step">
+          <span class="num">2</span>
+          <div>
+            <h3>Create a Variable Set with type Multi Row</h3>
+            <p>Important fields from the demo:</p>
+            <table>
+              <thead><tr><th>Field</th><th>Demo value</th><th>Why it matters</th></tr></thead>
+              <tbody>
+                <tr><td>Title</td><td>MRVS</td><td>Display name of the variable set.</td></tr>
+                <tr><td>Internal name</td><td>mrvs</td><td>Stable name used internally.</td></tr>
+                <tr><td>Order</td><td>100</td><td>Controls display order on the catalog item.</td></tr>
+                <tr><td>Type</td><td>Multi Row</td><td>This is what makes the variable set behave like a table/grid.</td></tr>
+                <tr><td>Layout</td><td>1 Column Wide</td><td>Layout for how fields are displayed in the row dialog.</td></tr>
+              </tbody>
+            </table>
+            <figure class="screenshot wide"><img src="assets/screenshots/04_mrvs_variable_set_form.jpg" alt="MRVS variable set form" /><figcaption>Variable Set record configured as Multi Row.</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="step">
+          <span class="num">3</span>
+          <div>
+            <h3>Add variables inside the MRVS</h3>
+            <p>The child variables become the grid columns. The demo creates <code>var1</code> and <code>var2</code> as Single Line Text variables, then later shows a realistic Mobile Devices Set with Device Type, Storage, Color, and Quantity.</p>
+            <figure class="screenshot wide"><img src="assets/screenshots/05_mrvs_variables.jpg" alt="Variables inside MRVS" /><figcaption>MRVS has two child variables, var1 and var2.</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="step">
+          <span class="num">4</span>
+          <div>
+            <h3>Attach the MRVS to a catalog item</h3>
+            <p>The relationship record connects a catalog item and a variable set. In the demo, <strong>Standard Laptop</strong> is linked to <strong>MRVS</strong> with order 100.</p>
+            <figure class="screenshot wide"><img src="assets/screenshots/06_catalog_variable_set_association.jpg" alt="Catalog variable set association" /><figcaption>Catalog Variable Sets list confirming the item-to-variable-set association.</figcaption></figure>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="portal" class="section split">
+      <div>
+        <p class="eyebrow">End-user behavior</p>
+        <h2>How it appears to the requester</h2>
+        <p>
+          In the order form, the MRVS is rendered as a table with an <strong>Add</strong> action. Clicking Add opens a modal. The modal contains the child variables for one row.
+        </p>
+        <p>
+          After the user adds a row, the row appears in the grid. Users can add multiple rows, edit rows, or remove rows depending on UI behavior and permissions.
+        </p>
+        <div class="tip">
+          For usability, keep the MRVS columns focused. Too many columns make the row modal and grid harder to use.
+        </div>
+      </div>
+      <figure class="screenshot">
+        <img src="assets/screenshots/07_portal_add_row.jpg" alt="MRVS Add Row dialog in portal" />
+        <figcaption>Add Row modal with var1 and var2 fields.</figcaption>
+      </figure>
+    </section>
+
+    <section class="section split alt">
+      <figure class="screenshot">
+        <img src="assets/screenshots/08_mobile_devices_portal.jpg" alt="Mobile Devices Set table in catalog item" />
+        <figcaption>Realistic MRVS example: Mobile Devices Set.</figcaption>
+      </figure>
+      <div>
+        <p class="eyebrow">Realistic example</p>
+        <h2>Mobile Devices Set</h2>
+        <p>The second example is easier to remember because it uses a real business scenario:</p>
+        <ul class="check-list">
+          <li>Catalog item: Corporate Mobile Devices - Bulk Orders.</li>
+          <li>MRVS: Mobile Devices Set.</li>
+          <li>Columns: Device Type, Storage, Color, Quantity.</li>
+          <li>Each row represents one device selection.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="storage" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Persistence model</p>
+        <h2>Where MRVS values are stored</h2>
+        <p>
+          The demo opens the <strong>Multi Row Question Answers</strong> list to show how row data is persisted.
+          Think of each table cell as an answer record, and the <strong>row index</strong> ties multiple answers together into one row.
+        </p>
+      </div>
+      <div class="grid two">
+        <figure class="screenshot"><img src="assets/screenshots/09_answer_table.jpg" alt="Multi Row Question Answers table" /><figcaption>Backend answer table showing question, value, row index, parent table, and multi row set.</figcaption></figure>
+        <div class="model-card">
+          <h3>Storage mental model</h3>
+          <ol>
+            <li>The MRVS itself defines the table shape.</li>
+            <li>Child variables define the columns.</li>
+            <li>During ordering, values may be tied to cart-level records.</li>
+            <li>After submission, values can be tied to requested-item records.</li>
+            <li>The row index groups individual question answers into one grid row.</li>
+          </ol>
+          <div class="code-block">
+            <code>
+MRVS row<br/>
+├── Device Type = Apple iPhone 8<br/>
+├── Storage = 64GB<br/>
+├── Color = Black<br/>
+└── Quantity = 1
+            </code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Implementation architecture</p>
+        <h2>How the same MRVS renders in different UI surfaces</h2>
+        <p>The demo separates implementation details into Platform, Portal, and Workspace.</p>
+      </div>
+
+      <div class="arch-grid">
+        <article class="arch-card">
+          <h3>Platform</h3>
+          <ul>
+            <li>Data cache: <code>window.tableVariableCache</code></li>
+            <li>Templates: <code>question_table.xml</code>, <code>question_table_variable_template.xml</code>, <code>question_table_variable_row.xml</code></li>
+            <li>APIs: <code>TableVariableService.js</code>, <code>TableVariable.js</code></li>
+          </ul>
+          <img src="assets/screenshots/10_platform_architecture.jpg" alt="Platform architecture slide" />
+        </article>
+
+        <article class="arch-card">
+          <h3>Service Portal</h3>
+          <ul>
+            <li>Templates: <code>sp_form_field.xml</code>, <code>sp_element_sc_multi_row.xml</code></li>
+            <li>Widget: <code>sc-multi-row-active-row</code></li>
+            <li>Directive: <code>spScMultiRowElement.js</code></li>
+          </ul>
+          <img src="assets/screenshots/11_portal_architecture.jpg" alt="Portal architecture slide" />
+        </article>
+
+        <article class="arch-card">
+          <h3>Workspace</h3>
+          <ul>
+            <li>Component: <code>&lt;sn-catalog-form-multi-row-variable&gt;</code></li>
+            <li>GraphQL fragment/type: <code>AppCatalog_MultiRowVariableSetType</code></li>
+            <li>Builder: <code>QuestionElementType.buildMultiRowVariableSetType()</code></li>
+            <li>Widget call: <code>sc-multi-row-active-row</code></li>
+          </ul>
+          <img src="assets/screenshots/14_workspace_architecture.jpg" alt="Workspace architecture slide" />
+        </article>
+      </div>
+    </section>
+
+    <section class="section split">
+      <div>
+        <p class="eyebrow">Developer walkthrough</p>
+        <h2>Portal directive behavior</h2>
+        <p>The code walkthrough shows the directive controlling row display, clearing values, and opening the active-row modal.</p>
+        <ul class="check-list">
+          <li><code>refreshMultiRowDisplayValue()</code> refreshes the display value for the MRVS.</li>
+          <li><code>clearAllValue()</code> clears the full grid value and sends a confirmation/status message.</li>
+          <li><code>clearValue()</code> asks for confirmation and removes all rows.</li>
+          <li><code>createRow()</code> opens the Add Row flow using active-row widget data.</li>
+        </ul>
+      </div>
+      <figure class="screenshot">
+        <img src="assets/screenshots/12_portal_directive_code.jpg" alt="spScMultiRowElement directive code" />
+        <figcaption>Code walkthrough for portal multi-row directive behavior.</figcaption>
+      </figure>
+    </section>
+
+    <section class="section split alt">
+      <figure class="screenshot">
+        <img src="assets/screenshots/13_workspace_record.jpg" alt="Workspace requested item showing MRVS values" />
+        <figcaption>Workspace rendering of the Mobile Devices Set MRVS on a requested item.</figcaption>
+      </figure>
+      <div>
+        <p class="eyebrow">Workspace</p>
+        <h2>Requested Item display</h2>
+        <p>
+          In Workspace, the requested item form displays the Variables section and renders the MRVS grid.
+          The demo shows submitted rows with values such as Apple iPhone 8, 64GB, Black, and quantity values.
+        </p>
+        <div class="tip">
+          Do not assume Portal and Workspace use identical rendering paths. Test MRVS behavior in all supported surfaces.
+        </div>
+      </div>
+    </section>
+
+    <section id="checklist" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Practice</p>
+        <h2>Hands-on checklist</h2>
+      </div>
+      <div class="check-grid">
+        <label><input type="checkbox" /> Create a new catalog item for practice.</label>
+        <label><input type="checkbox" /> Create a Variable Set with Type = Multi Row.</label>
+        <label><input type="checkbox" /> Add 3–4 child variables that represent columns.</label>
+        <label><input type="checkbox" /> Attach the MRVS to the catalog item.</label>
+        <label><input type="checkbox" /> Open the item as a requester and add multiple rows.</label>
+        <label><input type="checkbox" /> Submit the item and inspect the requested item.</label>
+        <label><input type="checkbox" /> Open Multi Row Question Answers and verify row index grouping.</label>
+        <label><input type="checkbox" /> Test behavior in Portal and Workspace if both are in scope.</label>
+      </div>
+    </section>
+
+    <section id="quiz" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Self-check</p>
+        <h2>Quick quiz</h2>
+      </div>
+      <details><summary>1. What makes a Variable Set behave like a table?</summary><p>Its Type is set to <strong>Multi Row</strong>.</p></details>
+      <details><summary>2. What do child variables become inside an MRVS?</summary><p>They become the columns/questions shown in the Add Row modal and grid.</p></details>
+      <details><summary>3. How are multiple cell values grouped into one logical row?</summary><p>By the row index in the Multi Row Question Answers data.</p></details>
+      <details><summary>4. Why should you test in Portal and Workspace separately?</summary><p>They use different rendering components/templates/directives even though the catalog concept is the same.</p></details>
+    </section>
+
+    <section id="transcript" class="section transcript">
+      <div class="section-head">
+        <p class="eyebrow">Download</p>
+        <h2>Complete transcript</h2>
+        <p>
+          The transcript is included as a downloadable Markdown and text file. It is a full time-coded visual/learning transcript created from the screen recording.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="complete_transcript.md" download>Download Markdown transcript</a>
+          <a class="button ghost" href="complete_transcript.txt" download>Download text transcript</a>
+        </div>
+      </div>
+      <iframe src="complete_transcript.md" title="Transcript preview"></iframe>
+    </section>
+  </main>
+
+  <footer>
+    <p>Generated from the uploaded demo video: Service Catalog - Table Variable.</p>
+  </footer>
+</body>
+</html>

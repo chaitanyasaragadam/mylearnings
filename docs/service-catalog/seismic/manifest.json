@@ -1,0 +1,312 @@
+{
+  "title": "Service Catalog - Seismic",
+  "source_video": "9. Service Catalog - Seismic-20221213_082209(1).mp4",
+  "duration_seconds": 4346,
+  "screenshots": [
+    {
+      "name": "01_title",
+      "time": 120,
+      "timestamp": "02:00",
+      "caption": "Opening title: Seismic \u2014 UI Framework on Next Experience",
+      "file": "assets/screenshots/01_title.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "02_intro",
+      "time": 240,
+      "timestamp": "04:00",
+      "caption": "Seismic introduction: ServiceNow JavaScript framework built on Web Components standards",
+      "file": "assets/screenshots/02_intro.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "03_web_components",
+      "time": 600,
+      "timestamp": "10:00",
+      "caption": "Web Components foundations: lifecycle, shadow DOM, and slots",
+      "file": "assets/screenshots/03_web_components.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "04_seismic_component",
+      "time": 720,
+      "timestamp": "12:00",
+      "caption": "Seismic component structure using createCustomElement(tag, options)",
+      "file": "assets/screenshots/04_seismic_component.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "05_component_properties",
+      "time": 840,
+      "timestamp": "14:00",
+      "caption": "Component configuration options: view, properties, actions, handlers, renderer, state, behaviors",
+      "file": "assets/screenshots/05_component_properties.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "06_view_function",
+      "time": 1080,
+      "timestamp": "18:00",
+      "caption": "View function: renders returned JSX and receives state/helpers",
+      "file": "assets/screenshots/06_view_function.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "07_properties",
+      "time": 1200,
+      "timestamp": "20:00",
+      "caption": "Properties: default, schema, required, reflect, computed",
+      "file": "assets/screenshots/07_properties.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "08_state",
+      "time": 1560,
+      "timestamp": "26:00",
+      "caption": "State pipeline: property values, defaults, computed values, transformState and view",
+      "file": "assets/screenshots/08_state.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "09_actions",
+      "time": 1800,
+      "timestamp": "30:00",
+      "caption": "Actions: dispatch arguments and DOM bubbling model",
+      "file": "assets/screenshots/09_actions.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "10_action_handlers",
+      "time": 1920,
+      "timestamp": "32:00",
+      "caption": "Action handlers: effects, interceptors, modifiers, and stopPropagation",
+      "file": "assets/screenshots/10_action_handlers.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "11_lifecycle_actions",
+      "time": 2160,
+      "timestamp": "36:00",
+      "caption": "Lifecycle actions emitted during component connection, rendering, property changes, disconnection and errors",
+      "file": "assets/screenshots/11_lifecycle_actions.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "12_docs_ui_framework",
+      "time": 2400,
+      "timestamp": "40:00",
+      "caption": "Documentation page: UI Framework on Next Experience / Seismic",
+      "file": "assets/screenshots/12_docs_ui_framework.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "13_config_api",
+      "time": 2520,
+      "timestamp": "42:00",
+      "caption": "Documentation section for Configuration API",
+      "file": "assets/screenshots/13_config_api.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "14_vscode_project",
+      "time": 2760,
+      "timestamp": "46:00",
+      "caption": "Developer environment in VS Code for Seismic component/source work",
+      "file": "assets/screenshots/14_vscode_project.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "15_create_question_wizard",
+      "time": 2880,
+      "timestamp": "48:00",
+      "caption": "Create Question wizard: question type, subtype, label, and live preview",
+      "file": "assets/screenshots/15_create_question_wizard.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "16_fulfillment_config",
+      "time": 3000,
+      "timestamp": "50:00",
+      "caption": "Catalog Builder: Standard Laptop fulfillment configuration",
+      "file": "assets/screenshots/16_fulfillment_config.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "17_questions_config",
+      "time": 3120,
+      "timestamp": "52:00",
+      "caption": "Catalog Builder: question structure and inserted test question",
+      "file": "assets/screenshots/17_questions_config.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "18_sc_cat_item_table",
+      "time": 3240,
+      "timestamp": "54:00",
+      "caption": "Database/table inspection of sc_cat_item records",
+      "file": "assets/screenshots/18_sc_cat_item_table.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "19_catalog_item_record",
+      "time": 3360,
+      "timestamp": "56:00",
+      "caption": "Catalog item/record view and application navigation",
+      "file": "assets/screenshots/19_catalog_item_record.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "20_record_producer_form",
+      "time": 3480,
+      "timestamp": "58:00",
+      "caption": "Composite Record Producer form with related lists",
+      "file": "assets/screenshots/20_record_producer_form.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "21_code_inspection",
+      "time": 3840,
+      "timestamp": "01:04:00",
+      "caption": "Source code inspection of Service Catalog Seismic implementation",
+      "file": "assets/screenshots/21_code_inspection.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "22_more_code",
+      "time": 4080,
+      "timestamp": "01:08:00",
+      "caption": "Further code review around component implementation",
+      "file": "assets/screenshots/22_more_code.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "23_final_code",
+      "time": 4200,
+      "timestamp": "01:10:00",
+      "caption": "Closing code inspection near the end of the demo",
+      "file": "assets/screenshots/23_final_code.jpg",
+      "size": [
+        1280,
+        720
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "overview",
+      "title": "1. What this demo teaches",
+      "summary": "The recording explains how ServiceNow Service Catalog work is implemented in Seismic, the UI Framework used for Next Experience pages and builders."
+    },
+    {
+      "id": "web-components",
+      "title": "2. Web Components foundation",
+      "summary": "Seismic builds reusable UI units using web component concepts. The demo highlights three important web-component ideas."
+    },
+    {
+      "id": "component-anatomy",
+      "title": "3. Anatomy of a Seismic component",
+      "summary": "A UI Framework component is created with createCustomElement from @seismic/core. It receives two key arguments."
+    },
+    {
+      "id": "view",
+      "title": "4. View function",
+      "summary": "The view function returns the markup that Seismic renders into the DOM."
+    },
+    {
+      "id": "properties-state",
+      "title": "5. Properties and state pipeline",
+      "summary": "Properties are the mechanism for passing data into components. State combines property values, defaults, persisted values and computed values before rendering."
+    },
+    {
+      "id": "actions",
+      "title": "6. Actions and action handlers",
+      "summary": "Actions are the eventing mechanism for notifying the component, ancestor components, or the application that something happened."
+    },
+    {
+      "id": "lifecycle",
+      "title": "7. Lifecycle actions",
+      "summary": "The framework emits lifecycle actions to expose major component lifecycle moments."
+    },
+    {
+      "id": "docs-demo",
+      "title": "8. Documentation and developer workflow",
+      "summary": "After the concept slides, the demo switches into documentation, source code, and runtime inspection."
+    },
+    {
+      "id": "service-catalog-demo",
+      "title": "9. Service Catalog demo flow",
+      "summary": "The demo validates Seismic behavior in Service Catalog authoring screens."
+    },
+    {
+      "id": "code-review",
+      "title": "10. Code review section",
+      "summary": "The final section of the demo returns to implementation details in the codebase."
+    }
+  ]
+}

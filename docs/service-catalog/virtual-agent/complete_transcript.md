@@ -1,0 +1,177 @@
+# Complete Visual Transcript — Service Catalog: Virtual Agent
+
+Source video: `10. Service Catalog - Virtual Agent-20221213_082527.mp4`
+
+Duration: approximately 65 minutes 39 seconds.
+
+Note: This is a complete time-coded visual and learning transcript based on the demo screen flow. It is not a verbatim spoken-audio transcript. The environment used here does not include an offline speech-to-text model.
+
+## Timeline
+
+### 00:00
+Video opens on a black/blank transition before the ServiceNow deck begins.
+
+### 01:00
+Slide: Virtual Agent Platform. Components listed are Conversational Interface, Virtual Agent Designer, and Live Agent Support as out of scope. Plugins listed are Glide Virtual Agent and Service Management Virtual Agent Topic Blocks.
+
+### 03:00
+Slide: Virtual Agent Designer — Topics & Topic Blocks. Topics are conversation blueprints between VA and users. Topic blocks are reusable sub-flows, not standalone/discoverable, and typically do not define keywords or NLU properties.
+
+### 05:00
+Slide: Demo plan. Create a topic using out-of-box components: User input, Bot Response, Utilities, Variables. Then test the created topic and publish it.
+
+### 06:00
+Virtual Agent Designer list opens. Many existing topics are visible, including system and ITSM actionable topics. The Create tile is selected to start a topic.
+
+### 07:00
+A new topic named test topic opens in the Designer canvas. The left palette shows User Input, Bot Response, Utilities, and Variables. The canvas starts with Start connected directly to End.
+
+### 08:00
+A Text input node is added. The node is named greeting, creates a greeting variable, and prompts: Welcome to New Hire training? What is your name?
+
+### 09:00
+The topic is previewed in the Virtual Agent Designer test window. The Now Support chat panel opens with topic discovery enabled.
+
+### 11:00
+The canvas returns to the greeting node. The presenter prepares to add a Bot Response node after the text input.
+
+### 12:00
+A Text response node named greet_user is added. The response message uses the earlier input variable and asks whether the user is willing to learn something new today.
+
+### 13:00
+The topic is expanded into a full sample flow: user_name input, greeting response, learn boolean input, a decision node, and true/false response branches.
+
+### 14:00
+The decision branch is configured so the true path goes toward an end or success response and the false path goes to a separate response path.
+
+### 15:00
+A false-path response node is created and the designer indicates incomplete nodes until required properties are filled.
+
+### 16:00
+A Script Variable dialog opens. Variable name is test_variables and the default value is Hello World.
+
+### 17:00
+The topic preview runs. The Now Support preview asks the user: Welcome to New Hire training? What is your name?
+
+### 18:00
+Slide: VA Render Type. Conversation render runs within the VA chat window and has restrictions: only supported variables, non-scripted UI policies, no client scripts, and variable order limitations. Popup opens a popup for seamless experience. Window navigates to a new window for unsupported variables or certain item types such as Content Item and Order Guide.
+
+### 20:00
+Employee Center portal is shown with the Now Support chat panel. The user types Apple iPhone 13 pro and the chat is processing the catalog request.
+
+### 21:00
+Virtual Agent Designer opens the out-of-box Request Catalog Item topic block. The flow is large and zoomed out, showing many decisions and script actions.
+
+### 22:00
+The Request Catalog Item topic block is tested. The preview Variables tab shows input variables such as proceed, proceed_with_default, add_attachment, order_item, submit_producer, upload_attachment, and question_attachment.
+
+### 23:00
+A Script Action Utility named Validate Catalog Item is opened. Code reads vaInputs.catalog_item_id, retrieves GlideappCatalogItem, checks canView, and sets vaVars.isValidCatItem accordingly.
+
+### 26:00
+The Apple iPhone 13 Pro catalog item record is shown. Related links include Item Diagnostic and Show VA render type. Variables include original phone number, requested-for user, manager, and required-by date.
+
+### 27:00
+The Microsoft Access software catalog item is shown. It includes a Products variable set, illustrating how variable sets also participate in catalog item rendering.
+
+### 28:00
+The Apple iPhone 13 Pro variables list is revisited, showing variable order values and active status.
+
+### 31:00
+The presenter switches to another portal URL, briefly landing on a ServiceNow instance home page.
+
+### 32:00
+Back in Employee Center, Now Support shows topic discovery and open issues, including the Show me everything button.
+
+### 33:00
+A user request create incident is typed. The VA starts processing but the request is not handled as a clear catalog request in this flow.
+
+### 34:00
+The chat shows fallback handling: the bot says it did not understand the request and asks the user to try a different way or use short sentences.
+
+### 35:00
+The Validate Catalog Item script is revisited while debugging the flow and item validation logic.
+
+### 36:00
+The Request Catalog Item topic block is viewed at 21% zoom. The large flow shows the overall path from item validation through question rendering and order decisions.
+
+### 37:00
+The large topic flow is panned to another section, showing long connector paths and nested branches.
+
+### 38:00
+A render-branch area is shown. The flow includes Date Question, Text Type Question, Unsupported Variable, Email Question, Preview, Order, and Checkout Cart paths.
+
+### 39:00
+Preview shows a reference question: Select the user for who requires this. The user picker list appears with names, and variables are displayed in the right panel.
+
+### 40:00
+Post Response script action opens. The code stores selected answers into itemJson variables, executes data lookup/dynamic value logic, serializes itemJSON, and resets validation flags.
+
+### 41:00
+The preview asks What was the original phone number? Then it asks the requested-for reference question and accepts a user value.
+
+### 42:00
+The preview confirms a manager value and asks whether the user wants to proceed with this value. The user answers Yes.
+
+### 43:00
+The preview asks for the required-by date and receives a date value, Friday, December 16 2022.
+
+### 44:00
+The flow shows the Questions Done branch, attachment branch, Submit Producer path, and Order Item path.
+
+### 45:00
+Checkout Cart script action opens. The code checks out the cart, retrieves the request and requested item records, and moves attachment references where needed.
+
+### 46:00
+The checkout section is shown on the canvas with multiple decision paths and script actions for checkout, submit producer, and attachment processing.
+
+### 47:00
+VS Code / IDE opens CatalogConversationHelperJS.java. Constants include table/field names such as SC_ITEM, REFERENCE, QUESTION, OPTIONS, CONTAINER, CHECKBOX_CONTAINER, VARIABLE, CONVERSATION, WINDOW, POPUP_SEISMIC, and supported class/type lists.
+
+### 48:00
+In IntelliJ, jsFunction_getItem retrieves a catalog item, initializes questions and answers, sets class name, name, description, picture, attachment flags, and determines VA support.
+
+### 49:00
+The hasVASupport logic checks item class, question count limit, readable/supported questions, client scripts, supported UI policies, data lookups, and dynamic values.
+
+### 50:00
+The code checks supportedQuestion and maps questions by order. Unsupported questions cause conversation render to be rejected.
+
+### 51:00
+supportedQuestion returns true only when the question itself has VA support or is a formatter question. Additional methods evaluate VA-supported UI policies.
+
+### 52:00
+ReferenceQuestion.hasVASupport is inspected. It rejects unsupported reference qualifiers and can apply a choice-count limit for synchronous rendered references.
+
+### 53:00
+hasVASupportedDynamicValue code checks dynamic trigger and target field order to ensure dynamic values do not break conversational rendering constraints.
+
+### 54:00
+Back in the helper code, the conversation object is built with supported questions, variables, request method, policy/data lookup/dynamic value flags, and on-load policies/dynamic values.
+
+### 55:00
+The Microsoft Access catalog item is shown again with product, category, pricing, and variable-set tabs.
+
+### 56:00
+Final preview shows collected values returned as JSON, including order id, sys_id, original phone number, requested-for user, manager, and required date.
+
+### 57:00
+A conditional script dialog shows how a node is hidden or shown based on itemJSON variable value.
+
+### 58:00
+The dynamic value runtime method runDynamicValue is shown. It computes target fields from dynamic value configuration and populates dependent answers.
+
+### 59:00
+The code review continues around dynamic value handling and catalog conversation helper behavior.
+
+### 60:00
+Employee Center is shown again with the chat flow ready for another test.
+
+### 61:00
+The IDE is shown again as the presenter continues tracing the implementation.
+
+### 62:00
+Another portal preview/chat test is visible while validating topic behavior end to end.
+
+### 65:00
+Closing slide: Service Catalog Topic Blocks. Key blocks include Request Catalog Item and related catalog helper blocks. The flow diagram shows the topic block sequence used in Service Catalog ordering.

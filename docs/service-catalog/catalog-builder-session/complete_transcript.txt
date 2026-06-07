@@ -1,0 +1,150 @@
+ 13. Service Catalog - Catalog Builder — Complete Visual Learning Transcript
+
+This transcript is a time-coded visual/learning transcript created from the screen recording. It summarizes the visible slides, ServiceNow screens, navigation, tables, forms, and configuration records shown in the demo. It is not a verbatim audio speech-to-text transcript.
+
+ Quick summary
+
+The demo explains Catalog Builder as a guided ServiceNow experience for creating catalog items and templates. It connects the builder UI to UI Builder, Catalog Wizards, Catalog Templates, Composite Record Producers, Producer Sets, questions/variables, category mapping, and service fulfillment step configurations.
+
+ Key concepts
+- Catalog Builder: A guided experience for creating catalog items and catalog item templates without exposing every classic catalog configuration record directly.
+- UI Builder / UIB: The shell and dashboard experience: cards, lists, modals, event handlers, routes, and client scripts.
+- Catalog Wizard: The ordered guided flow. The demo shows a Create catalog item wizard with Details, Location, Questions, Settings, Access, Fulfillment, and Review.
+- Wizard Sections: Step-level sections that group questions and content inside the wizard.
+- Questions / Variables: Requester-facing fields created through the question modal. They become the catalog item questions users answer during request submission.
+- Catalog Item Templates: Reusable templates that predefine values and constraints, making item creation faster and more governed.
+- Overrides: Template controls that decide what the user can edit, what must be specified, and which multi-select options are allowed.
+- Composite Record Producer: Backend record producer layer that collects wizard answers and produces one or more target records.
+- Producer Set: A grouped producer configuration, used in the demo for multi-row/many-to-many category mapping.
+- Fulfillment Step Configurations: Reusable task/approval building blocks wired to service fulfillment subflows.
+
+ Time-coded transcript
+
+ 00:00 — Opening / setup
+The video begins with a black screen before the Catalog Builder session content appears.
+
+ 02:00 — Intro to Catalog Builder
+Agenda slide: what Catalog Builder is, what it solves, what services it provides, and who can access it. Personas called out include Catalog Builder Editor and Catalog Admin.
+
+ 03:00 — Catalog Builder application opens
+The ServiceNow Catalog Builder homepage/dashboard loads, showing the guided workspace for creating items and templates.
+
+ 04:00 — Create action on homepage
+A modal/action from the dashboard is shown for adding/removing or selecting what can be created from the homepage experience.
+
+ 05:00 — Architecture explanation
+The architecture slide shows Catalog Builder above UIB, Catalog Templates, Catalog Wizards, Composite Record Producers, and Producer Sets.
+
+ 07:00 — Classic instance loading
+The demo switches into ServiceNow UI screens and waits for the environment to load.
+
+ 08:00 — UI Builder homepage design
+The Catalog Builder homepage is opened in UI Builder. The canvas includes CTA cards and a Recent items list, with component properties on the right.
+
+ 09:00 — UI Builder event mapping
+The List Snapshot component has event handlers and client scripts such as opening a checkout modal and routing to the Catalog items tab.
+
+ 10:00 — Publishing/loading behavior
+A publishing or loading sequence is shown while changes to the Catalog Builder homepage are applied or refreshed.
+
+ 11:00 — Classic form / record setup
+The recording moves through classic ServiceNow records that back the builder experience.
+
+ 12:00 — Create a catalog item — Details step
+A catalog item named IntelliJ IDEA is configured with a short description and description content. The right guidance panel explains what the item details mean.
+
+ 13:00 — Template selection
+The Select your item template screen shows templates such as IT issues and Standard items in Service Catalog.
+
+ 15:00 — Composite Record Producer
+The Composite Record Producer record for Catalog Item Builder is inspected, including script behavior and redirect options.
+
+ 18:00 — Catalog Wizard record
+The Create catalog item wizard record is opened. It shows type Composite Record Producer, active state, layout, review step settings, and related wizard steps.
+
+ 19:00 — Wizard step editing
+A wizard step or section record is opened and related questions are shown.
+
+ 20:00 — Questions step section
+A Catalog Wizard Section connects the Questions wizard step with Catalog Wizard Questions.
+
+ 22:00 — Create a question
+The question modal captures Type, Question subtype, Question label, Name, and previews the resulting field.
+
+ 23:00 — Settings step
+Portal settings such as submit button label and checkout/request UI visibility options are shown.
+
+ 24:00 — Fulfillment step
+A step-based request fulfillment process is selected and the UI shows that no fulfillment steps have been added yet, with an Add task option available.
+
+ 25:00 — Review and submit
+The review screen summarizes the item, categories, questions, settings, and fulfillment configuration before the item is saved/submitted.
+
+ 26:00 — Catalog item templates list
+Catalog item templates are listed, including IT issues and Standard items in Service Catalog.
+
+ 29:00 — Create/edit a template
+A Template new record captures template name, short description, template scope behavior, and availability criteria.
+
+ 30:00 — Template questions/details
+The template flow moves through question and detail configuration for reusable template creation.
+
+ 31:00 — Template overrides
+The Overrides step defines what users can edit, what they must specify, and restricted selections for multi-select fields.
+
+ 32:00 — Template save/review flow
+The template creation process continues with review and submit behavior.
+
+ 34:00 — Additional template/record wiring
+The demo moves between template and catalog item records to validate the generated or linked configuration.
+
+ 35:00 — Category selection modal
+A Selected categories modal explains how catalog items are placed into categories and how multiple categories can be chosen.
+
+ 36:00 — Generated item / record navigation
+The recording moves between generated catalog item records and related configuration records.
+
+ 39:00 — Catalog Template backend record
+The Catalog Template record shows wizard steps under related lists: Question, Choices, Additional details, Default value, Auto-populate, and Annotation.
+
+ 40:00 — Classic application navigator
+The left application navigator is opened, likely to find fulfillment configuration or Service Catalog records.
+
+ 41:00 — Fulfillment step configurations list
+The Service Fulfillment Step Configurations list shows Task, Custom approval, and Manager approval options.
+
+ 42:00 — Task fulfillment configuration
+The Task configuration record has dynamic title, producer, order, hide flag, and Service fulfillment subflow fields.
+
+ 43:00 — Task configuration continued
+The task fulfillment configuration is inspected to understand reusable task behavior.
+
+ 44:00 — Flow / linkage inspection
+The demo navigates through related records and visual flow/configuration connections.
+
+ 45:00 — Classic records and producer linkage
+Catalog builder configuration is opened from classic records for deeper inspection.
+
+ 46:00 — Categories M2M Producer Set
+A Producer Set titled Categories M2M is shown as Multi Row, mapped to Catalog Item Category with parent reference field Catalog item.
+
+ 47:00 — Producer Set variables
+The related variables list shows a reference variable sc_category_record for selected categories.
+
+ Backend records and tables observed
+
+- sc_cat_item — Catalog item records shown through the homepage list and catalog item tabs.
+- sc_cat_item_composite_producer — Composite Record Producer for Catalog Item Builder.
+- sc_wizard — Catalog Wizard records such as Create catalog item.
+- sc_wizard_section — Step/section records under a wizard.
+- sc_service_fulfillment_step_configuration — Reusable fulfillment step configuration records such as Task, Custom approval, and Manager approval.
+- item_option_new_producer_set — Producer Set used for grouped producer/question behavior such as Categories M2M.
+- sc_cat_item_category — Catalog item/category relationship target shown in the Categories M2M producer set.
+
+ Study checklist
+
+- Start with the architecture: Remember the five implementation pillars: UIB, Catalog Templates, Catalog Wizards, Composite Record Producers, and Producer Sets.
+- Follow the item creation journey: Trace how a builder moves through Details → Location → Questions → Settings → Access → Fulfillment → Review.
+- Map each UI step to backend records: For every wizard screen, identify which table stores that configuration and which related lists define children.
+- Study templates as governance: Templates are not just copy/paste starters; they can define scope, availability, editable fields, mandatory fields, and restricted options.
+- Connect fulfillment to automation: The fulfillment step chooses reusable task/approval configurations that point to subflows.

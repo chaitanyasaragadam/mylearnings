@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Service Catalog — Virtual Agent Learning Guide</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">ServiceNow Service Catalog Learning Website</div>
+    <h1>Service Catalog — Virtual Agent</h1>
+    <p>A structured guide built from the demo video. Use it to understand Virtual Agent platform basics, topic creation, topic blocks, catalog item rendering, conversation support rules, and checkout internals.</p>
+    <div class="meta">
+      <span class="pill">Source: 10. Service Catalog - Virtual Agent</span>
+      <span class="pill">Duration: ~65m 39s</span>
+      <span class="pill">Screenshots: 33</span>
+      <span class="pill">Transcript: Visual + learning timeline</span>
+    </div>
+    <div class="download">
+      <a class="btn" href="complete_transcript.md" download>Download transcript .md</a>
+      <a class="btn secondary" href="complete_transcript.txt" download>Download transcript .txt</a>
+    </div>
+  </div>
+</header>
+<div class="layout">
+  <nav class="toc">
+    <h3>Contents</h3>
+    <a href="#how-to-use">How to use this</a>
+    <a href="#overview">1. Platform overview</a><a href="#simple-topic">2. Build a simple topic in Virtual Agent Designer</a><a href="#render-types">3. Understand VA render types for catalog items</a><a href="#portal-testing">4. Test the topic from Employee Center / Service Portal</a><a href="#oob-topic-block">5. Request Catalog Item topic block</a><a href="#catalog-item-variables">6. Catalog item configuration that affects VA behavior</a><a href="#scripts">7. Script actions and checkout internals</a><a href="#code">8. Backend support rules in code</a>
+    <a href="#checklist">Implementation checklist</a>
+    <a href="#gallery">Screenshot gallery</a>
+  </nav>
+  <main>
+    <section class="card" id="how-to-use"><div class="content">
+      <h2>How to use this guide</h2>
+      <p>Read the modules in order if you are new to Virtual Agent. If you already know VA Designer, jump directly to the Request Catalog Item topic block and backend support rules sections.</p>
+      <div class="callout"><strong>Core idea:</strong> Service Catalog in Virtual Agent is not only a chat UI. It is a decision-driven render engine that decides whether each catalog item and variable can run in conversation, popup, or full-page window mode.</div>
+      <div class="learn">
+        <div class="box"><h4>Fast path</h4><ul><li>Platform overview</li><li>Build a simple topic</li><li>VA render types</li><li>Request Catalog Item topic block</li></ul></div>
+        <div class="box"><h4>Deep path</h4><ul><li>Catalog item variables</li><li>Script actions and checkout internals</li><li>Backend code support rules</li><li>Dynamic value and reference support logic</li></ul></div>
+      </div>
+      <p class="note"><strong>Transcript note:</strong> the downloadable transcript is a complete time-coded visual/learning transcript from the screen flow. It is not a verbatim speech-to-text transcript.</p>
+    </div></section>
+    
+<section class="card" id="overview">
+  <div class="content">
+    <span class="time">01:00–03:00</span>
+    <h2>1. Platform overview</h2>
+    <p>The session starts by positioning Virtual Agent as a conversational layer for Service Catalog. The main pieces shown are the conversational interface, Virtual Agent Designer, and supporting plugins. Live Agent Support is mentioned as outside this demo scope.</p>
+    <div class="learn">
+      <div class="box"><h4>What to learn</h4><ul><li>Virtual Agent has two sides: the user-facing chat interface and the designer/admin build experience.</li><li>A topic is a conversation blueprint; a topic block is reusable logic that can be called from a topic.</li><li>Topic blocks are not independently discoverable, so they generally do not need user-facing NLU keywords.</li></ul></div>
+      <div class="box"><h4>What to observe in the demo</h4><ul><li>Glide Virtual Agent plugin</li><li>Service Management Virtual Agent Topic Blocks plugin</li><li>difference between a topic and a topic block</li></ul></div>
+    </div>
+  </div>
+  <div class="content"><div class="grid"><figure class="shot"><img src="assets/screenshots/01_platform_overview.jpg" alt="Virtual Agent Platform overview: components and plugins"><figcaption><strong>01:00</strong> — Virtual Agent Platform overview: components and plugins</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/02_topics_topic_blocks.jpg" alt="Topics and Topic Blocks: reusable conversation sub-flows"><figcaption><strong>03:00</strong> — Topics and Topic Blocks: reusable conversation sub-flows</figcaption></figure></div></div>
+</section>
+
+<section class="card" id="simple-topic">
+  <div class="content">
+    <span class="time">05:00–17:00</span>
+    <h2>2. Build a simple topic in Virtual Agent Designer</h2>
+    <p>The demo creates a custom topic using out-of-box components. It starts from an empty Start → End canvas, adds a text input, stores values in variables, sends bot responses, uses a boolean/decision branch, adds script variables, and tests the topic in the preview window.</p>
+    <div class="learn">
+      <div class="box"><h4>What to learn</h4><ul><li>Designer uses drag-and-drop nodes from a left palette.</li><li>User Input nodes collect values and create variables.</li><li>Bot Response nodes display text, images, cards, links, HTML, tables, or scripts depending on need.</li><li>Decision nodes split the conversation into true/false or branch-based paths.</li><li>The Test modal lets you validate a topic before publishing.</li></ul></div>
+      <div class="box"><h4>What to observe in the demo</h4><ul><li>Node name vs variable name</li><li>Prompt field</li><li>Input format / NLU entity</li><li>Include topic discovery checkbox</li><li>Variables tab in preview</li></ul></div>
+    </div>
+  </div>
+  <div class="content"><div class="grid"><figure class="shot"><img src="assets/screenshots/03_demo_plan.jpg" alt="Demo agenda: create, test, and publish a Virtual Agent topic"><figcaption><strong>05:00</strong> — Demo agenda: create, test, and publish a Virtual Agent topic</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/04_designer_topic_list.jpg" alt="Virtual Agent Designer topic list and Create tile"><figcaption><strong>06:00</strong> — Virtual Agent Designer topic list and Create tile</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/05_empty_topic_canvas.jpg" alt="New topic canvas with User Input, Bot Response, Utilities, and Variables palette"><figcaption><strong>07:00</strong> — New topic canvas with User Input, Bot Response, Utilities, and Variables palette</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/06_text_input_node.jpg" alt="Text input node collecting the user name and storing it as a variable"><figcaption><strong>08:00</strong> — Text input node collecting the user name and storing it as a variable</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/08_text_response_node.jpg" alt="Bot text response using an input variable"><figcaption><strong>12:00</strong> — Bot text response using an input variable</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/09_decision_flow.jpg" alt="Completed sample flow with variable, response, boolean, decision, and branches"><figcaption><strong>13:00</strong> — Completed sample flow with variable, response, boolean, decision, and branches</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/10_script_variable.jpg" alt="Script variable dialog used to store computed or default values"><figcaption><strong>16:00</strong> — Script variable dialog used to store computed or default values</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/11_topic_preview.jpg" alt="Preview mode showing the greeting question"><figcaption><strong>17:00</strong> — Preview mode showing the greeting question</figcaption></figure></div></div>
+</section>
+
+<section class="card" id="render-types">
+  <div class="content">
+    <span class="time">18:00–20:00</span>
+    <h2>3. Understand VA render types for catalog items</h2>
+    <p>The demo explains why catalog item questions do not always render the same way in chat. Virtual Agent can render eligible variables directly in the conversation, open a popup for semi-supported cases, or navigate to a window when the item is unsupported for chat rendering.</p>
+    <div class="learn">
+      <div class="box"><h4>What to learn</h4><ul><li>Conversation render stays inside the VA chat window.</li><li>Popup render opens a seamless modal-style experience without sending the user to a separate browser tab.</li><li>Window render navigates the user to a full page when the item cannot be safely rendered inside the chat.</li></ul></div>
+      <div class="box"><h4>What to observe in the demo</h4><ul><li>Supported variables</li><li>non-scripted UI policies</li><li>unsupported variables</li><li>content item/order guide conditions</li></ul></div>
+    </div>
+  </div>
+  <div class="content"><div class="grid"><figure class="shot"><img src="assets/screenshots/12_va_render_type.jpg" alt="VA Render Type rules: Conversation, Popup, and Window"><figcaption><strong>18:00</strong> — VA Render Type rules: Conversation, Popup, and Window</figcaption></figure></div></div>
+</section>
+
+<section class="card" id="portal-testing">
+  <div class="content">
+    <span class="time">20:00–34:00</span>
+    <h2>4. Test the topic from Employee Center / Service Portal</h2>
+    <p>The user-facing side is demonstrated from the Employee Center portal. The assistant opens as Now Support, shows open issues, handles typed input, provides topic discovery, and falls back when it cannot understand a request.</p>
+    <div class="learn">
+      <div class="box"><h4>What to learn</h4><ul><li>The same topic can be tested in the Designer preview and from the actual portal chat widget.</li><li>Topic discovery can display suggested topics or a browse-all option.</li><li>Poorly matched user input triggers a fallback prompt asking the user to rephrase.</li></ul></div>
+      <div class="box"><h4>What to observe in the demo</h4><ul><li>Now Support chat launcher</li><li>Show me everything button</li><li>open issue messages</li><li>fallback/no-match wording</li></ul></div>
+    </div>
+  </div>
+  <div class="content"><div class="grid"><figure class="shot"><img src="assets/screenshots/13_employee_center_chat.jpg" alt="Employee Center with Virtual Agent chat panel"><figcaption><strong>20:00</strong> — Employee Center with Virtual Agent chat panel</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/19_topic_discovery_chat.jpg" alt="Topic discovery and Show me everything in the VA chat"><figcaption><strong>32:00</strong> — Topic discovery and Show me everything in the VA chat</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/20_no_match_handling.jpg" alt="Fallback / no-match handling when the request is not understood"><figcaption><strong>34:00</strong> — Fallback / no-match handling when the request is not understood</figcaption></figure></div></div>
+</section>
+
+<section class="card" id="oob-topic-block">
+  <div class="content">
+    <span class="time">21:00–46:00</span>
+    <h2>5. Request Catalog Item topic block</h2>
+    <p>The large out-of-box Request Catalog Item topic block is inspected. It takes input variables, validates the selected item, determines the right render path, asks supported questions, handles attachments, and proceeds toward preview/order/checkout behavior.</p>
+    <div class="learn">
+      <div class="box"><h4>What to learn</h4><ul><li>The topic block encapsulates reusable catalog ordering logic.</li><li>Input variables include catalog item id and flags such as proceed, add attachment, order item, submit producer, and upload attachment.</li><li>Multiple decisions handle supported/unsupported question types and whether to preview, order, or route to another UI.</li></ul></div>
+      <div class="box"><h4>What to observe in the demo</h4><ul><li>Request Catalog Item topic block</li><li>Script action utility nodes</li><li>Decision nodes</li><li>Checkout Cart branch</li><li>Submit Producer vs Order Item paths</li></ul></div>
+    </div>
+  </div>
+  <div class="content"><div class="grid"><figure class="shot"><img src="assets/screenshots/14_request_catalog_topic_block.jpg" alt="OOB Request Catalog Item topic block canvas overview"><figcaption><strong>21:00</strong> — OOB Request Catalog Item topic block canvas overview</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/15_topic_block_variables.jpg" alt="Request Catalog Item topic block variables during preview"><figcaption><strong>22:00</strong> — Request Catalog Item topic block variables during preview</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/21_large_request_flow.jpg" alt="Request Catalog Item topic flow at zoomed-out level"><figcaption><strong>36:00</strong> — Request Catalog Item topic flow at zoomed-out level</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/22_render_branching.jpg" alt="Render branching for question types and checkout path"><figcaption><strong>38:00</strong> — Render branching for question types and checkout path</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/27_attachment_and_order_paths.jpg" alt="Attachment and order/producer decision paths"><figcaption><strong>44:00</strong> — Attachment and order/producer decision paths</figcaption></figure></div></div>
+</section>
+
+<section class="card" id="catalog-item-variables">
+  <div class="content">
+    <span class="time">26:00–44:00</span>
+    <h2>6. Catalog item configuration that affects VA behavior</h2>
+    <p>The demo jumps into catalog item records such as Apple iPhone 13 Pro and Microsoft Access. It shows variables, variable sets, Show VA render type, reference questions, date questions, and how values are collected and confirmed in the chat.</p>
+    <div class="learn">
+      <div class="box"><h4>What to learn</h4><ul><li>Catalog variables are not just form fields; they determine how VA must ask questions.</li><li>Reference variables can render as a searchable selector when supported.</li><li>Date variables can be rendered inside chat as selectable choices.</li><li>Variable sets attached to catalog items must also be assessed for VA support.</li></ul></div>
+      <div class="box"><h4>What to observe in the demo</h4><ul><li>Variables related list</li><li>Variable Sets related list</li><li>Show VA render type related link</li><li>Reference variable question</li><li>date question</li></ul></div>
+    </div>
+  </div>
+  <div class="content"><div class="grid"><figure class="shot"><img src="assets/screenshots/17_catalog_item_variables.jpg" alt="Apple iPhone catalog item variables and Show VA render type link"><figcaption><strong>26:00</strong> — Apple iPhone catalog item variables and Show VA render type link</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/18_variable_set_relation.jpg" alt="Catalog item variable set relation and product variable set"><figcaption><strong>27:00</strong> — Catalog item variable set relation and product variable set</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/23_reference_question_picker.jpg" alt="Reference question rendered as a searchable list in chat"><figcaption><strong>39:00</strong> — Reference question rendered as a searchable list in chat</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/25_reference_value_confirm.jpg" alt="Reference value confirmation before proceeding"><figcaption><strong>42:00</strong> — Reference value confirmation before proceeding</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/26_date_question.jpg" alt="Date question rendered in the chat flow"><figcaption><strong>43:00</strong> — Date question rendered in the chat flow</figcaption></figure></div></div>
+</section>
+
+<section class="card" id="scripts">
+  <div class="content">
+    <span class="time">23:00–46:00</span>
+    <h2>7. Script actions and checkout internals</h2>
+    <p>Several Script Action Utility nodes are opened. These scripts validate that the catalog item exists and is visible, serialize user answers into item JSON, execute dynamic value logic, reset validation flags, and perform cart checkout to create request records.</p>
+    <div class="learn">
+      <div class="box"><h4>What to learn</h4><ul><li>Script action nodes can read VA inputs with vaInputs and write shared values using vaVars.</li><li>Validation scripts prevent invisible or invalid catalog items from continuing.</li><li>Post-response logic stores answers as item JSON and can trigger dynamic values for dependent variables.</li><li>Checkout logic uses a cart request, then retrieves request/item records and moves attachments as required.</li></ul></div>
+      <div class="box"><h4>What to observe in the demo</h4><ul><li>vaInputs.catalog_item_id</li><li>GlideappCatalogItem.get()</li><li>catItem.canView()</li><li>itemJSON</li><li>cartObj.checkoutCart(true)</li><li>sc_request and sc_req_item lookup</li></ul></div>
+    </div>
+  </div>
+  <div class="content"><div class="grid"><figure class="shot"><img src="assets/screenshots/16_validate_catalog_item_script.jpg" alt="Validate catalog item script action checks catalog item id and canView"><figcaption><strong>23:00</strong> — Validate catalog item script action checks catalog item id and canView</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/24_post_response_script.jpg" alt="Post Response script stores answers and executes dynamic values"><figcaption><strong>40:00</strong> — Post Response script stores answers and executes dynamic values</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/28_checkout_cart_script.jpg" alt="Checkout Cart script action creates cart request and related records"><figcaption><strong>45:00</strong> — Checkout Cart script action creates cart request and related records</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/32_final_preview_values.jpg" alt="Final preview returns collected topic values as JSON"><figcaption><strong>56:00</strong> — Final preview returns collected topic values as JSON</figcaption></figure></div></div>
+</section>
+
+<section class="card" id="code">
+  <div class="content">
+    <span class="time">47:00–58:00</span>
+    <h2>8. Backend support rules in code</h2>
+    <p>The last part moves into code to explain how catalog items are converted into a conversation object and how VA support is computed. The code checks catalog class support, variable support, UI policies, client scripts, data lookups, dynamic values, reference qualifiers, and question limits.</p>
+    <div class="learn">
+      <div class="box"><h4>What to learn</h4><ul><li>CatalogConversationHelperJS builds a conversation object from a catalog item.</li><li>Unsupported catalog classes include content item, wizard, standard change, and order guide style classes.</li><li>questionLimit constrains how many flat questions/containers can render conversationally.</li><li>ReferenceQuestion.hasVASupport rejects unsupported reference qualifier cases and high-choice-count scenarios.</li><li>Dynamic value code must respect ordering so lower-order variables are not modified by higher-order variables in unsupported ways.</li></ul></div>
+      <div class="box"><h4>What to observe in the demo</h4><ul><li>SC_PROP_CONVERSATIONAL_REQUEST_QUESTION_LIMIT</li><li>SC_PROP_VA_REF_QUESTION_CHOICES_LIMIT</li><li>hasVASupportedUIPolicies</li><li>hasVASupportedDataLookups</li><li>hasVASupportedDynamicValue</li><li>supportedQuestion(q)</li></ul></div>
+    </div>
+  </div>
+  <div class="content"><div class="grid"><figure class="shot"><img src="assets/screenshots/29_helper_code_constants.jpg" alt="CatalogConversationHelperJS constants for supported UI types/classes"><figcaption><strong>47:00</strong> — CatalogConversationHelperJS constants for supported UI types/classes</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/30_support_validation_code.jpg" alt="hasVASupport validation: limits, UI policies, data lookup, and dynamic values"><figcaption><strong>49:00</strong> — hasVASupport validation: limits, UI policies, data lookup, and dynamic values</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/31_reference_question_support.jpg" alt="ReferenceQuestion.hasVASupport: qualifier and choice limit checks"><figcaption><strong>52:00</strong> — ReferenceQuestion.hasVASupport: qualifier and choice limit checks</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/33_dynamic_value_code.jpg" alt="Dynamic value runtime code populates dependent variable values"><figcaption><strong>58:00</strong> — Dynamic value runtime code populates dependent variable values</figcaption></figure></div></div>
+</section>
+
+    <section class="card" id="checklist"><div class="content">
+      <h2>Implementation checklist</h2>
+      <p>Use this as a quick review checklist when designing Service Catalog experiences for Virtual Agent.</p>
+      <div class="tablewrap"><table class="matrix"><thead><tr><th>Area</th><th>What to verify</th></tr></thead><tbody><tr><td><strong>Topic setup</strong></td><td>Create topic, add NLU/topic discovery only when the topic should be discoverable.</td></tr><tr><td><strong>Input collection</strong></td><td>Use Text, Boolean, Static Choice, Reference, Date/Time, File Picker, or other supported User Input nodes.</td></tr><tr><td><strong>Variable handling</strong></td><td>Use input variables for user-provided values and script variables for computed/internal values.</td></tr><tr><td><strong>Bot response</strong></td><td>Use Text/HTML/Card/Table/Script responses to guide the user.</td></tr><tr><td><strong>Branching</strong></td><td>Use Decision nodes to separate yes/no, supported/unsupported, preview/order, and attachment paths.</td></tr><tr><td><strong>Testing</strong></td><td>Use Designer preview first, then portal chat to validate real user experience.</td></tr><tr><td><strong>Catalog render</strong></td><td>Check Show VA render type to confirm Conversation, Popup, or Window behavior.</td></tr><tr><td><strong>Support rules</strong></td><td>Review unsupported client scripts, scripted UI policies, data lookups, dynamic values, and unsupported variable types.</td></tr><tr><td><strong>Checkout</strong></td><td>Validate the item, collect variables, create cart item, checkout cart, and map request/RITM records.</td></tr></tbody></table></div>
+    </div></section>
+    <section class="card" id="gallery"><div class="content"><h2>Screenshot gallery</h2><p>All selected screenshots extracted from the demo, in sequence.</p><div class="grid"><figure class="shot"><img src="assets/screenshots/01_platform_overview.jpg" alt="Virtual Agent Platform overview: components and plugins"><figcaption><strong>01:00</strong> — Virtual Agent Platform overview: components and plugins</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/02_topics_topic_blocks.jpg" alt="Topics and Topic Blocks: reusable conversation sub-flows"><figcaption><strong>03:00</strong> — Topics and Topic Blocks: reusable conversation sub-flows</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/03_demo_plan.jpg" alt="Demo agenda: create, test, and publish a Virtual Agent topic"><figcaption><strong>05:00</strong> — Demo agenda: create, test, and publish a Virtual Agent topic</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/04_designer_topic_list.jpg" alt="Virtual Agent Designer topic list and Create tile"><figcaption><strong>06:00</strong> — Virtual Agent Designer topic list and Create tile</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/05_empty_topic_canvas.jpg" alt="New topic canvas with User Input, Bot Response, Utilities, and Variables palette"><figcaption><strong>07:00</strong> — New topic canvas with User Input, Bot Response, Utilities, and Variables palette</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/06_text_input_node.jpg" alt="Text input node collecting the user name and storing it as a variable"><figcaption><strong>08:00</strong> — Text input node collecting the user name and storing it as a variable</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/07_test_preview_first.jpg" alt="Test modal for previewing the topic in Now Support"><figcaption><strong>09:00</strong> — Test modal for previewing the topic in Now Support</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/08_text_response_node.jpg" alt="Bot text response using an input variable"><figcaption><strong>12:00</strong> — Bot text response using an input variable</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/09_decision_flow.jpg" alt="Completed sample flow with variable, response, boolean, decision, and branches"><figcaption><strong>13:00</strong> — Completed sample flow with variable, response, boolean, decision, and branches</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/10_script_variable.jpg" alt="Script variable dialog used to store computed or default values"><figcaption><strong>16:00</strong> — Script variable dialog used to store computed or default values</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/11_topic_preview.jpg" alt="Preview mode showing the greeting question"><figcaption><strong>17:00</strong> — Preview mode showing the greeting question</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/12_va_render_type.jpg" alt="VA Render Type rules: Conversation, Popup, and Window"><figcaption><strong>18:00</strong> — VA Render Type rules: Conversation, Popup, and Window</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/13_employee_center_chat.jpg" alt="Employee Center with Virtual Agent chat panel"><figcaption><strong>20:00</strong> — Employee Center with Virtual Agent chat panel</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/14_request_catalog_topic_block.jpg" alt="OOB Request Catalog Item topic block canvas overview"><figcaption><strong>21:00</strong> — OOB Request Catalog Item topic block canvas overview</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/15_topic_block_variables.jpg" alt="Request Catalog Item topic block variables during preview"><figcaption><strong>22:00</strong> — Request Catalog Item topic block variables during preview</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/16_validate_catalog_item_script.jpg" alt="Validate catalog item script action checks catalog item id and canView"><figcaption><strong>23:00</strong> — Validate catalog item script action checks catalog item id and canView</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/17_catalog_item_variables.jpg" alt="Apple iPhone catalog item variables and Show VA render type link"><figcaption><strong>26:00</strong> — Apple iPhone catalog item variables and Show VA render type link</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/18_variable_set_relation.jpg" alt="Catalog item variable set relation and product variable set"><figcaption><strong>27:00</strong> — Catalog item variable set relation and product variable set</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/19_topic_discovery_chat.jpg" alt="Topic discovery and Show me everything in the VA chat"><figcaption><strong>32:00</strong> — Topic discovery and Show me everything in the VA chat</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/20_no_match_handling.jpg" alt="Fallback / no-match handling when the request is not understood"><figcaption><strong>34:00</strong> — Fallback / no-match handling when the request is not understood</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/21_large_request_flow.jpg" alt="Request Catalog Item topic flow at zoomed-out level"><figcaption><strong>36:00</strong> — Request Catalog Item topic flow at zoomed-out level</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/22_render_branching.jpg" alt="Render branching for question types and checkout path"><figcaption><strong>38:00</strong> — Render branching for question types and checkout path</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/23_reference_question_picker.jpg" alt="Reference question rendered as a searchable list in chat"><figcaption><strong>39:00</strong> — Reference question rendered as a searchable list in chat</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/24_post_response_script.jpg" alt="Post Response script stores answers and executes dynamic values"><figcaption><strong>40:00</strong> — Post Response script stores answers and executes dynamic values</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/25_reference_value_confirm.jpg" alt="Reference value confirmation before proceeding"><figcaption><strong>42:00</strong> — Reference value confirmation before proceeding</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/26_date_question.jpg" alt="Date question rendered in the chat flow"><figcaption><strong>43:00</strong> — Date question rendered in the chat flow</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/27_attachment_and_order_paths.jpg" alt="Attachment and order/producer decision paths"><figcaption><strong>44:00</strong> — Attachment and order/producer decision paths</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/28_checkout_cart_script.jpg" alt="Checkout Cart script action creates cart request and related records"><figcaption><strong>45:00</strong> — Checkout Cart script action creates cart request and related records</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/29_helper_code_constants.jpg" alt="CatalogConversationHelperJS constants for supported UI types/classes"><figcaption><strong>47:00</strong> — CatalogConversationHelperJS constants for supported UI types/classes</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/30_support_validation_code.jpg" alt="hasVASupport validation: limits, UI policies, data lookup, and dynamic values"><figcaption><strong>49:00</strong> — hasVASupport validation: limits, UI policies, data lookup, and dynamic values</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/31_reference_question_support.jpg" alt="ReferenceQuestion.hasVASupport: qualifier and choice limit checks"><figcaption><strong>52:00</strong> — ReferenceQuestion.hasVASupport: qualifier and choice limit checks</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/32_final_preview_values.jpg" alt="Final preview returns collected topic values as JSON"><figcaption><strong>56:00</strong> — Final preview returns collected topic values as JSON</figcaption></figure>
+<figure class="shot"><img src="assets/screenshots/33_dynamic_value_code.jpg" alt="Dynamic value runtime code populates dependent variable values"><figcaption><strong>58:00</strong> — Dynamic value runtime code populates dependent variable values</figcaption></figure></div></div></section>
+  </main>
+</div>
+<footer class="footer">Generated as a local static learning website from the uploaded demo video.</footer>
+</body></html>

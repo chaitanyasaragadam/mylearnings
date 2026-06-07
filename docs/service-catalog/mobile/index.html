@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Service Catalog Mobile Learning Guide</title>
+  <style>
+:root {
+  --bg: #071018;
+  --panel: #0e1a24;
+  --panel-2: #132332;
+  --text: #e9f2f7;
+  --muted: #a7b6c2;
+  --accent: #7dd3fc;
+  --accent-2: #a78bfa;
+  --line: rgba(255,255,255,.13);
+  --paper: #f8fafc;
+  --ink: #17212b;
+  --soft: #eaf3f9;
+  --success: #6ee7b7;
+  --warn: #fde68a;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at 20% -10%, #1f3c58 0, transparent 34%), radial-gradient(circle at 90% 5%, #2b1d55 0, transparent 32%), var(--bg);
+  line-height: 1.6;
+}
+a { color: inherit; }
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  background: rgba(7, 16, 24, .78);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px min(5vw, 64px);
+}
+.topnav .brand { font-weight: 800; margin-right: auto; letter-spacing: .01em; }
+.topnav a { text-decoration: none; color: var(--muted); font-size: .95rem; }
+.topnav a:hover { color: var(--text); }
+.hero {
+  padding: 74px min(5vw, 64px) 40px;
+}
+.hero-grid {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+  gap: 38px;
+  align-items: center;
+}
+.eyebrow {
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: .78rem;
+  letter-spacing: .18em;
+  font-weight: 800;
+  margin: 0 0 12px;
+}
+h1, h2, h3 { line-height: 1.12; margin: 0; }
+h1 { font-size: clamp(2.5rem, 6vw, 5.8rem); letter-spacing: -.06em; }
+h2 { font-size: clamp(1.9rem, 4vw, 3.2rem); letter-spacing: -.04em; }
+h3 { font-size: 1.25rem; }
+.subtitle {
+  font-size: clamp(1.06rem, 2vw, 1.28rem);
+  color: var(--muted);
+  max-width: 760px;
+  margin: 20px 0 26px;
+}
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.button {
+  display: inline-flex;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #071018;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 18px 40px rgba(125, 211, 252, .18);
+}
+.button.ghost {
+  color: var(--text);
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+.hero-shot, .callout, .panel, .learn-card, .quiz-card {
+  background: rgba(255,255,255,.07);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.26);
+}
+.hero-shot { padding: 12px; margin: 0; }
+.hero-shot img, figure img { width: 100%; display: block; border-radius: 16px; }
+figcaption { color: var(--muted); font-size: .9rem; padding: 10px 4px 0; }
+.section {
+  padding: 56px min(5vw, 64px);
+}
+.section-inner { max-width: 1240px; margin: 0 auto; }
+.section-head { max-width: 920px; margin-bottom: 28px; }
+.section-head p:not(.eyebrow) { color: var(--muted); font-size: 1.06rem; }
+.callout {
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: start;
+  margin: 24px 0;
+}
+.callout .icon {
+  width: 46px; height: 46px; display: grid; place-items: center;
+  border-radius: 14px; background: rgba(125, 211, 252, .14); color: var(--accent); font-weight: 900;
+}
+.path-grid { display: grid; gap: 18px; }
+.learn-card {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(320px, .82fr) minmax(0, 1.18fr);
+  gap: 0;
+}
+.learn-card figure { margin: 0; padding: 12px; background: rgba(0,0,0,.16); }
+.learn-body { padding: 24px; }
+.learn-body p { color: var(--muted); }
+.learn-body ul { padding-left: 1.15rem; margin-bottom: 0; }
+.learn-body li { margin: 7px 0; }
+.diagram {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: center;
+}
+.node {
+  padding: 16px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255,255,255,.08);
+  text-align: center;
+  font-weight: 800;
+  min-height: 78px;
+  display: grid;
+  place-items: center;
+}
+.arrow { color: var(--accent); text-align: center; font-size: 1.4rem; }
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255,255,255,.05);
+}
+table { width: 100%; border-collapse: collapse; min-width: 760px; }
+th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--accent); background: rgba(125,211,252,.08); }
+td:first-child { font-weight: 800; color: #fff; }
+.panel { padding: 24px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.checklist li {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255,255,255,.06);
+}
+.checklist li::before {
+  content: "✓";
+  color: var(--success);
+  font-weight: 900;
+  margin-right: 10px;
+}
+.gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.gallery-item {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255,255,255,.06);
+}
+.gallery-item img { aspect-ratio: 16/10; object-fit: cover; }
+.timeline {
+  display: grid;
+  gap: 10px;
+}
+.timeline-item {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255,255,255,.055);
+  overflow: hidden;
+}
+.timeline-item summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  color: var(--muted);
+}
+.timeline-item summary span {
+  display: inline-block;
+  min-width: 120px;
+  color: var(--accent);
+  font-weight: 900;
+}
+.timeline-item p { padding: 0 16px 16px; margin: 0; color: var(--text); }
+.downloads {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.footer {
+  padding: 40px min(5vw, 64px);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  text-align: center;
+}
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.badge { border: 1px solid var(--line); color: var(--text); padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.07); font-weight: 700; font-size: .9rem; }
+kbd { background: rgba(255,255,255,.12); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 6px; color: var(--text); }
+@media (max-width: 940px) {
+  .hero-grid, .learn-card, .two-col { grid-template-columns: 1fr; }
+  .topnav { overflow-x: auto; }
+  .gallery-grid { grid-template-columns: 1fr 1fr; }
+  .diagram { grid-template-columns: 1fr; }
+  .arrow { transform: rotate(90deg); }
+}
+@media (max-width: 620px) {
+  .gallery-grid { grid-template-columns: 1fr; }
+  .hero { padding-top: 42px; }
+  h1 { font-size: 2.7rem; }
+}
+</style>
+</head>
+<body>
+  <nav class="topnav">
+    <div class="brand">Service Catalog Mobile</div>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#model">Model</a>
+    <a href="#flow">Flow</a>
+    <a href="#walkthrough">Walkthrough</a>
+    <a href="#screenshots">Screenshots</a>
+    <a href="#transcript">Transcript</a>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Demo converted into a learning website</p>
+        <h1>Service Catalog - Mobile</h1>
+        <p class="subtitle">A structured guide to building and understanding ServiceNow mobile catalog experiences using Mobile App Builder, Mobile Card Builder, launcher screens, list screens, record screens, search, cards, and functions.</p>
+        <div class="hero-actions">
+          <a class="button" href="#roadmap">Start learning</a>
+          <a class="button ghost" href="complete_transcript.md" download>Download transcript</a>
+        </div>
+        <div class="badges">
+          <span class="badge">Now Mobile</span>
+          <span class="badge">Mobile App Builder</span>
+          <span class="badge">Mobile Card Builder</span>
+          <span class="badge">Catalog Item Widget</span>
+          <span class="badge">Search + Topics</span>
+        </div>
+      </div>
+      <figure class="hero-shot">
+        <img class="" src="assets/screenshots/02_mobile_app_config.jpg" alt="Mobile App Builder and iPhone simulator" loading="lazy" />
+        <figcaption>The demo constantly maps builder configuration to the live iPhone simulator experience.</figcaption>
+      </figure>
+    </div>
+  </header>
+
+  <main>
+    <section id="roadmap" class="section">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Learning roadmap</p>
+          <h2>Learn it in this order</h2>
+          <p>The clean mental model is: <strong>app config → navigation → launcher/search/sections → list data → cards → record screens → actions → simulator validation</strong>.</p>
+        </div>
+        <div class="path-grid">
+          
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/01_mobile_core_components.jpg" alt="1. Start with the mobile component hierarchy" loading="lazy" /><figcaption>The demo introduces the Now Mobile configuration as a tree of objects: app config, navigation bar, tabs, launcher screens, screens, screen segments, item streams, data items, item configurations, and functions.</figcaption></figure>
+  <div class="learn-body">
+    <h3>1. Start with the mobile component hierarchy</h3>
+    <p>The demo introduces the Now Mobile configuration as a tree of objects: app config, navigation bar, tabs, launcher screens, screens, screen segments, item streams, data items, item configurations, and functions.</p>
+    <ul><li>Treat the mobile app config as the root.</li><li>Navigation tabs decide what the user sees at the bottom of the app.</li><li>Launcher screens are landing pages; record/list screens are task or object-specific pages.</li><li>Functions are reusable actions or navigation targets attached to screens, cards, and buttons.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/02_mobile_app_config.jpg" alt="2. Understand the Mobile App Builder shell" loading="lazy" /><figcaption>The builder shows the mobile app tree on the left, the editable selected record in the center, and a mobile interface example on the right. The iPhone simulator gives the real runtime view.</figcaption></figure>
+  <div class="learn-body">
+    <h3>2. Understand the Mobile App Builder shell</h3>
+    <p>The builder shows the mobile app tree on the left, the editable selected record in the center, and a mobile interface example on the right. The iPhone simulator gives the real runtime view.</p>
+    <ul><li>Left tree = configuration structure.</li><li>Center form = selected artifact&#x27;s properties, data, conditions, and relationships.</li><li>Right preview = conceptual rendering for that artifact type.</li><li>Simulator = actual experience for the user.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/05_navigation_bar_tabs.jpg" alt="3. Configure global navigation" loading="lazy" /><figcaption>The Now Mobile navigation contains tabs such as Home, Support, Notifications, and Settings. The demo also opens the Notifications tab to show label, active flag, and icon configuration.</figcaption></figure>
+  <div class="learn-body">
+    <h3>3. Configure global navigation</h3>
+    <p>The Now Mobile navigation contains tabs such as Home, Support, Notifications, and Settings. The demo also opens the Notifications tab to show label, active flag, and icon configuration.</p>
+    <ul><li>Navigation bar tabs are ordered: Home, Support, Notifications, Settings.</li><li>Each tab references a launcher screen or a special tab behavior.</li><li>The notification tab has its own label, active flag, and icon.</li><li>Changing navigation structure changes the bottom mobile tab experience.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/06_launcher_screen_concept.jpg" alt="4. Wire the launcher screen" loading="lazy" /><figcaption>A launcher screen is built from a header, global search, and UI sections. In the demo, the Home and Support tabs are launcher-style pages with cards, sections, and search experiences.</figcaption></figure>
+  <div class="learn-body">
+    <h3>4. Wire the launcher screen</h3>
+    <p>A launcher screen is built from a header, global search, and UI sections. In the demo, the Home and Support tabs are launcher-style pages with cards, sections, and search experiences.</p>
+    <ul><li>Header gives the user context.</li><li>Global search sits near the top and uses a search configuration.</li><li>UI sections arrange records/cards such as Quick links, My items, Recommended for you, Popular topics, and Browse all topics.</li><li>Each section can point to a destination screen or open a function.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/07_screen_vs_screen_segment.jpg" alt="5. Learn screen vs screen segment" loading="lazy" /><figcaption>A screen is the full page or list; a screen segment is a reusable area inside a screen, such as details, updates, fields, or activity.</figcaption></figure>
+  <div class="learn-body">
+    <h3>5. Learn screen vs screen segment</h3>
+    <p>A screen is the full page or list; a screen segment is a reusable area inside a screen, such as details, updates, fields, or activity.</p>
+    <ul><li>List screens show many records.</li><li>Record screens show one record.</li><li>Segments divide a screen into tabs or regions like Details and Updates.</li><li>Segments can host fields, activity streams, and function instances.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/09_my_tasks_list_stream.jpg" alt="6. Build list experiences from stream → data item → list item config" loading="lazy" /><figcaption>The My Tasks example shows an item stream named Approval To-do, a data item using Approval [sysapproval_approver], and separate list item configs for REQ and RITM approval rows.</figcaption></figure>
+  <div class="learn-body">
+    <h3>6. Build list experiences from stream → data item → list item config</h3>
+    <p>The My Tasks example shows an item stream named Approval To-do, a data item using Approval [sysapproval_approver], and separate list item configs for REQ and RITM approval rows.</p>
+    <ul><li>Item stream selects a table and the record feed.</li><li>Data item defines the data source.</li><li>List item config decides row layout and behavior.</li><li>Conditions decide which list item config applies when multiple configurations exist.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/11_details_screen_fields_actions.jpg" alt="7. Configure approval details and actions" loading="lazy" /><figcaption>The approval details screen includes fields, a Details screen segment, field function instances, and footer function instances. The runtime shows buttons such as Reject, Approve &amp; Comment, and Approve.</figcaption></figure>
+  <div class="learn-body">
+    <h3>7. Configure approval details and actions</h3>
+    <p>The approval details screen includes fields, a Details screen segment, field function instances, and footer function instances. The runtime shows buttons such as Reject, Approve &amp; Comment, and Approve.</p>
+    <ul><li>The record screen uses the same source table as the list item.</li><li>Screen fields expose key approval/request fields.</li><li>Footer function instances become primary/secondary action buttons.</li><li>Function records can navigate, submit actions, or collect comments.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/16_card_builder_template.jpg" alt="8. Customize cards in Mobile Card Builder" loading="lazy" /><figcaption>The Catalog Approval Template is edited in Mobile Card Builder. Elements such as approval text, number, price label, price, requested-for avatar, and requested-for text are arranged into containers.</figcaption></figure>
+  <div class="learn-body">
+    <h3>8. Customize cards in Mobile Card Builder</h3>
+    <p>The Catalog Approval Template is edited in Mobile Card Builder. Elements such as approval text, number, price label, price, requested-for avatar, and requested-for text are arranged into containers.</p>
+    <ul><li>Card templates are flexible layouts for mobile list rows and record cards.</li><li>UI rules can switch visibility, labels, or values by condition.</li><li>Card element IDs help map builder elements to data and styling.</li><li>Preview the template against the simulator to avoid layout mismatch.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/04_search_configuration.jpg" alt="9. Connect search and topic sections" loading="lazy" /><figcaption>Search configuration uses a search engine and multiple sources. The demo shows sources like Services, Articles, and People, then configures launcher sections such as Recommended for you, Popular topics, and Browse all topics.</figcaption></figure>
+  <div class="learn-body">
+    <h3>9. Connect search and topic sections</h3>
+    <p>Search configuration uses a search engine and multiple sources. The demo shows sources like Services, Articles, and People, then configures launcher sections such as Recommended for you, Popular topics, and Browse all topics.</p>
+    <ul><li>Search application configuration controls the search engine and result limits.</li><li>Application search sources determine which content types appear.</li><li>Support launcher sections can be horizontal, free-scroll, capped by item count, and hidden if empty.</li><li>Each topic/card can open a destination screen or function.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/22_new_hire_topic_page.jpg" alt="10. Validate runtime behavior in the mobile simulator" loading="lazy" /><figcaption>The demo frequently switches between configuration and the iPhone simulator. This is important because some preview panes are abstract while the simulator shows the actual mobile UX.</figcaption></figure>
+  <div class="learn-body">
+    <h3>10. Validate runtime behavior in the mobile simulator</h3>
+    <p>The demo frequently switches between configuration and the iPhone simulator. This is important because some preview panes are abstract while the simulator shows the actual mobile UX.</p>
+    <ul><li>Refresh/reopen the app after configuration changes.</li><li>Test the bottom navigation tabs.</li><li>Open list rows, record screens, and topic pages.</li><li>Check buttons, detail sections, search results, and catalog item pages.</li></ul>
+  </div>
+</article>
+
+
+<article class="learn-card">
+  <figure><img class="" src="assets/screenshots/23_service_portal_widget_html.jpg" alt="11. Know where Service Portal still participates" loading="lazy" /><figcaption>Near the end, the demo opens the Service Portal SC Catalog Item widget. The widget contains native-mobile-aware HTML and client script behavior such as attachments, order button logic, breadcrumbs, and native mobile options.</figcaption></figure>
+  <div class="learn-body">
+    <h3>11. Know where Service Portal still participates</h3>
+    <p>Near the end, the demo opens the Service Portal SC Catalog Item widget. The widget contains native-mobile-aware HTML and client script behavior such as attachments, order button logic, breadcrumbs, and native mobile options.</p>
+    <ul><li>Mobile catalog rendering can still involve Service Portal widgets.</li><li>The SC Catalog Item widget checks native mobile options.</li><li>HTML and client script influence the mobile catalog item experience.</li><li>Do not assume Mobile App Builder is the only layer involved.</li></ul>
+  </div>
+</article>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="model" class="section">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Core model</p>
+          <h2>The hierarchy you should remember</h2>
+          <p>Use this as your anchor while watching the demo or troubleshooting a mobile catalog issue.</p>
+        </div>
+        <div class="panel">
+          <div class="diagram">
+            <div class="node">Mobile app config</div><div class="arrow">→</div>
+            <div class="node">Navigation bar + tabs</div><div class="arrow">→</div>
+            <div class="node">Launcher / list / record screens</div><div class="arrow">→</div>
+            <div class="node">Segments, cards, functions</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <div class="icon">!</div>
+          <div>
+            <h3>Important distinction</h3>
+            <p>A <strong>screen</strong> is a full mobile page. A <strong>screen segment</strong> is a region inside that page. A <strong>list item config</strong> controls how rows render. A <strong>function</strong> controls what happens when the user taps something.</p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Artifact</th><th>Meaning in the demo</th></tr></thead>
+            <tbody><tr><td>Mobile app config</td><td>Root configuration for Now Mobile. It groups navigation, theme, app behavior, and child configuration records.</td></tr>
+<tr><td>Navigation bar</td><td>Container for bottom tabs. In the demo, the Now Mobile Nav contains Home, Support, Notifications, and Settings.</td></tr>
+<tr><td>Navigation tab</td><td>A tab shown at the bottom of the mobile app. It usually points to a launcher screen or special tab function.</td></tr>
+<tr><td>Launcher screen</td><td>Landing screen with header, search, and UI sections. Example: Home and Support.</td></tr>
+<tr><td>Record section</td><td>A section on a launcher screen showing cards or results. Example: Recommended for you, Popular topics, Browse all topics.</td></tr>
+<tr><td>Search config</td><td>Defines search behavior, source list, empty states, result limit, and suggestion limit.</td></tr>
+<tr><td>List screen</td><td>A screen that displays a list of records; usually backed by an item stream.</td></tr>
+<tr><td>Item stream</td><td>Defines the record stream/table and possibly interleaving/order behavior.</td></tr>
+<tr><td>Data item</td><td>The data source for a stream or screen.</td></tr>
+<tr><td>List item config</td><td>Defines how each row is rendered and when the configuration applies.</td></tr>
+<tr><td>Card / card template</td><td>Visual template for rows/cards, edited in Mobile Card Builder.</td></tr>
+<tr><td>Record screen</td><td>A detail page for one record such as a RITM, request, topic, or approval.</td></tr>
+<tr><td>Screen segment</td><td>A subsection inside a screen, such as Details, Updates, Activity, or field areas.</td></tr>
+<tr><td>Function</td><td>An action or navigation behavior. Examples: open catalog item, open topic page, jump to RITM, approve, reject, approve with comment.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="flow" class="section">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">End-to-end flow</p>
+          <h2>What happens when the user taps through the app?</h2>
+          <p>This table converts the demo into an implementation flow you can use while designing or debugging.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User moment</th><th>Configuration layer</th><th>Runtime result</th></tr></thead>
+            <tbody><tr><td>User taps bottom tab</td><td>Navigation bar tab</td><td>Routes user to Home, Support, Notifications, or Settings.</td></tr>
+<tr><td>User searches Support</td><td>Search app config + sources</td><td>Returns Services, Articles, People, or topic results.</td></tr>
+<tr><td>User opens My Tasks</td><td>List screen → item stream</td><td>Shows Approval To-do records.</td></tr>
+<tr><td>A row is rendered</td><td>List item config + card template</td><td>Displays highlighted text, item title, secondary info, image/avatar, and numbers.</td></tr>
+<tr><td>User opens a row</td><td>Record screen + screen segments</td><td>Shows approval/request details, fields, attachments, and updates.</td></tr>
+<tr><td>User taps action</td><td>Footer function instance</td><td>Runs approve/reject/navigation/comment behavior.</td></tr>
+<tr><td>User opens topic</td><td>Record section/list config/function</td><td>Opens topic page such as New Hire or Computers.</td></tr>
+<tr><td>User opens catalog item</td><td>URL/navigation function + Service Portal widget</td><td>Shows the mobile catalog item page with quantity, attachments, and order button.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="walkthrough" class="section">
+      <div class="section-inner two-col">
+        <div class="panel">
+          <p class="eyebrow">Configuration checklist</p>
+          <h2>Build checklist</h2>
+          <ul class="checklist">
+            <li>Create or choose the mobile app config.</li>
+            <li>Verify navigation bar tabs and their order.</li>
+            <li>Attach launcher screens to tabs such as Home and Support.</li>
+            <li>Configure global search and search sources.</li>
+            <li>Add record sections like Recommended for you and Popular topics.</li>
+            <li>Create list screens with item streams and data items.</li>
+            <li>Add list item configs and card templates for row display.</li>
+            <li>Create record screens and screen segments for details.</li>
+            <li>Add function instances for open, approve, reject, comment, and navigation.</li>
+            <li>Validate every path in the mobile simulator.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <p class="eyebrow">Debugging checklist</p>
+          <h2>When something does not show</h2>
+          <ul class="checklist">
+            <li>Check the selected application scope and original scope warning.</li>
+            <li>Confirm the record is Active.</li>
+            <li>Check visibility conditions and filter conditions.</li>
+            <li>Check whether section is hidden when empty.</li>
+            <li>Check item stream table and data item source.</li>
+            <li>Check list item config conditions when multiple configs exist.</li>
+            <li>Open Mobile Card Builder if the card content is wrong.</li>
+            <li>Check function context and link URL if tapping does nothing.</li>
+            <li>Check Service Portal widget code for catalog item rendering issues.</li>
+            <li>Refresh/reopen simulator after changes.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenshots" class="section">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Screenshot index</p>
+          <h2>Key screenshots extracted from the video</h2>
+          <p>Open any screenshot to view it larger. These are the screenshots used to structure the guide.</p>
+        </div>
+        <figure class="hero-shot">
+          <img class="" src="assets/screenshots/00_screenshot_index.jpg" alt="Screenshot index" loading="lazy" />
+          <figcaption>Contact sheet of the extracted key frames.</figcaption>
+        </figure>
+        <div class="gallery-grid">
+          
+<figure class="gallery-item">
+  <a href="assets/screenshots/01_mobile_core_components.jpg"><img class="" src="assets/screenshots/01_mobile_core_components.jpg" alt="Slide: mobile core components" loading="lazy" /></a>
+  <figcaption><strong>01. 01:00</strong> — Slide: mobile core components</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/02_mobile_app_config.jpg"><img class="" src="assets/screenshots/02_mobile_app_config.jpg" alt="Now Mobile app config in Mobile App Builder" loading="lazy" /></a>
+  <figcaption><strong>02. 02:00</strong> — Now Mobile app config in Mobile App Builder</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/03_notifications_tab.jpg"><img class="" src="assets/screenshots/03_notifications_tab.jpg" alt="Notification tab configuration" loading="lazy" /></a>
+  <figcaption><strong>03. 05:00</strong> — Notification tab configuration</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/04_search_configuration.jpg"><img class="" src="assets/screenshots/04_search_configuration.jpg" alt="Search Applications Configuration" loading="lazy" /></a>
+  <figcaption><strong>04. 08:00</strong> — Search Applications Configuration</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/05_navigation_bar_tabs.jpg"><img class="" src="assets/screenshots/05_navigation_bar_tabs.jpg" alt="Navigation bar and tabs" loading="lazy" /></a>
+  <figcaption><strong>05. 16:00</strong> — Navigation bar and tabs</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/06_launcher_screen_concept.jpg"><img class="" src="assets/screenshots/06_launcher_screen_concept.jpg" alt="Slide: Launcher screen anatomy" loading="lazy" /></a>
+  <figcaption><strong>06. 17:00</strong> — Slide: Launcher screen anatomy</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/07_screen_vs_screen_segment.jpg"><img class="" src="assets/screenshots/07_screen_vs_screen_segment.jpg" alt="Slide: Screen versus screen segment" loading="lazy" /></a>
+  <figcaption><strong>07. 18:00</strong> — Slide: Screen versus screen segment</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/08_catalog_item_open_function.jpg"><img class="" src="assets/screenshots/08_catalog_item_open_function.jpg" alt="Catalog item open function URL" loading="lazy" /></a>
+  <figcaption><strong>08. 13:00</strong> — Catalog item open function URL</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/09_my_tasks_list_stream.jpg"><img class="" src="assets/screenshots/09_my_tasks_list_stream.jpg" alt="My Tasks list stream" loading="lazy" /></a>
+  <figcaption><strong>09. 21:00</strong> — My Tasks list stream</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/10_approval_list_item_config.jpg"><img class="" src="assets/screenshots/10_approval_list_item_config.jpg" alt="REQ approval list item config" loading="lazy" /></a>
+  <figcaption><strong>10. 22:00</strong> — REQ approval list item config</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/11_details_screen_fields_actions.jpg"><img class="" src="assets/screenshots/11_details_screen_fields_actions.jpg" alt="Details screen fields and actions" loading="lazy" /></a>
+  <figcaption><strong>11. 27:00</strong> — Details screen fields and actions</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/12_list_config_concept.jpg"><img class="" src="assets/screenshots/12_list_config_concept.jpg" alt="Slide: List config" loading="lazy" /></a>
+  <figcaption><strong>12. 28:00</strong> — Slide: List config</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/13_functions_concept.jpg"><img class="" src="assets/screenshots/13_functions_concept.jpg" alt="Slide: Functions" loading="lazy" /></a>
+  <figcaption><strong>13. 29:00</strong> — Slide: Functions</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/14_ritm_record_screen.jpg"><img class="" src="assets/screenshots/14_ritm_record_screen.jpg" alt="RITM record screen" loading="lazy" /></a>
+  <figcaption><strong>14. 31:00</strong> — RITM record screen</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/15_footer_action_function.jpg"><img class="" src="assets/screenshots/15_footer_action_function.jpg" alt="Approve RITM with comment function" loading="lazy" /></a>
+  <figcaption><strong>15. 35:00</strong> — Approve RITM with comment function</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/16_card_builder_template.jpg"><img class="" src="assets/screenshots/16_card_builder_template.jpg" alt="Mobile Card Builder template" loading="lazy" /></a>
+  <figcaption><strong>16. 37:00</strong> — Mobile Card Builder template</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/17_search_m2m_configs.jpg"><img class="" src="assets/screenshots/17_search_m2m_configs.jpg" alt="Search M2M item configurations and UI rules" loading="lazy" /></a>
+  <figcaption><strong>17. 39:00</strong> — Search M2M item configurations and UI rules</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/18_card_view_config.jpg"><img class="" src="assets/screenshots/18_card_view_config.jpg" alt="Approval card view config" loading="lazy" /></a>
+  <figcaption><strong>18. 42:00</strong> — Approval card view config</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/19_support_search_people.jpg"><img class="" src="assets/screenshots/19_support_search_people.jpg" alt="Support search People configuration" loading="lazy" /></a>
+  <figcaption><strong>19. 45:00</strong> — Support search People configuration</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/20_popular_topics_section.jpg"><img class="" src="assets/screenshots/20_popular_topics_section.jpg" alt="Popular topics record section" loading="lazy" /></a>
+  <figcaption><strong>20. 47:00</strong> — Popular topics record section</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/21_browse_all_topics.jpg"><img class="" src="assets/screenshots/21_browse_all_topics.jpg" alt="Browse all topics list config" loading="lazy" /></a>
+  <figcaption><strong>21. 51:00</strong> — Browse all topics list config</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/22_new_hire_topic_page.jpg"><img class="" src="assets/screenshots/22_new_hire_topic_page.jpg" alt="New Hire topic page in mobile" loading="lazy" /></a>
+  <figcaption><strong>22. 52:00</strong> — New Hire topic page in mobile</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/23_service_portal_widget_html.jpg"><img class="" src="assets/screenshots/23_service_portal_widget_html.jpg" alt="SC Catalog Item widget HTML" loading="lazy" /></a>
+  <figcaption><strong>23. 54:00</strong> — SC Catalog Item widget HTML</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/24_service_portal_widget_script.jpg"><img class="" src="assets/screenshots/24_service_portal_widget_script.jpg" alt="SC Catalog Item widget client script" loading="lazy" /></a>
+  <figcaption><strong>24. 57:00</strong> — SC Catalog Item widget client script</figcaption>
+</figure>
+
+
+<figure class="gallery-item">
+  <a href="assets/screenshots/25_questions.jpg"><img class="" src="assets/screenshots/25_questions.jpg" alt="Questions slide" loading="lazy" /></a>
+  <figcaption><strong>25. 63:00</strong> — Questions slide</figcaption>
+</figure>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="transcript" class="section">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Transcript</p>
+          <h2>Complete time-coded visual transcript</h2>
+          <p>The transcript captures visible slides, screens, records, configuration actions, and runtime validation from the screen recording.</p>
+        </div>
+        <div class="downloads">
+          <a class="button" href="complete_transcript.md" download>Download Markdown</a>
+          <a class="button ghost" href="complete_transcript.txt" download>Download TXT</a>
+        </div>
+        <div class="callout">
+          <div class="icon">i</div>
+          <div>
+            <h3>Transcript note</h3>
+            <p>This package contains a full visual/learning transcript. It is not a verbatim spoken-audio transcript because a speech-to-text model was not available locally.</p>
+          </div>
+        </div>
+        <div class="timeline">
+          <details class="timeline-item"><summary><span>00:00–01:00</span>The recording starts and moves into a slide deck titled Catalog Mobile. The topic is the Ser…</summary><p>The recording starts and moves into a slide deck titled Catalog Mobile. The topic is the ServiceNow mobile catalog experience.</p></details>
+<details class="timeline-item"><summary><span>01:00–02:00</span>Slide: Mobile core components. The demo lists the main building blocks: mobile app config, n…</summary><p>Slide: Mobile core components. The demo lists the main building blocks: mobile app config, navigation bar, navigation bar tabs, launcher screens, screens, screen segments, item streams, data items, item configurations, and functions.</p></details>
+<details class="timeline-item"><summary><span>02:00–03:00</span>The presenter opens Mobile App Builder for Now Mobile. The builder tree shows Now Mobile, No…</summary><p>The presenter opens Mobile App Builder for Now Mobile. The builder tree shows Now Mobile, Now Mobile Nav, Settings tab, Support tab, Open Cart function instance, homepage search config, People genius result sections, and catalog item result configuration. The iPhone simulator shows the runtime Home experience.</p></details>
+<details class="timeline-item"><summary><span>03:00–04:00</span>The root Now Mobile app config is reviewed. The right panel shows a mobile interface example…</summary><p>The root Now Mobile app config is reviewed. The right panel shows a mobile interface example explaining how the app configuration appears on a device. Properties, navigation, and client theme areas are visible.</p></details>
+<details class="timeline-item"><summary><span>04:00–05:00</span>The Notifications tab is selected. The form shows label, active state, and icon settings. Th…</summary><p>The Notifications tab is selected. The form shows label, active state, and icon settings. The simulator continues to show the Home tab with Quick links and My items.</p></details>
+<details class="timeline-item"><summary><span>05:00–06:00</span>A support/settings area is explored. Settings, data, conditions, and view-using sections app…</summary><p>A support/settings area is explored. Settings, data, conditions, and view-using sections appear in the builder. The UI emphasizes that each selected tree node has its own configuration form.</p></details>
+<details class="timeline-item"><summary><span>06:00–07:00</span>The demo scrolls through the mobile app tree and opens related configuration panes. Multiple…</summary><p>The demo scrolls through the mobile app tree and opens related configuration panes. Multiple child records are visible under homepage search, default empty state, and card templates.</p></details>
+<details class="timeline-item"><summary><span>07:00–08:00</span>Search Applications Configuration is opened for NowMobile App Search Configurations. The for…</summary><p>Search Applications Configuration is opened for NowMobile App Search Configurations. The form shows search engine Zing, result limit, suggestion limit, and application search sources including Services, Articles, and People.</p></details>
+<details class="timeline-item"><summary><span>08:00–09:00</span>A catalog item detail is visible in the simulator: Standard Laptop / Lenovo Carbon x1. The f…</summary><p>A catalog item detail is visible in the simulator: Standard Laptop / Lenovo Carbon x1. The function record Catalog Item &gt; Open Catalog Item is opened. It uses a URL-style function with a relative URL to open the catalog item page.</p></details>
+<details class="timeline-item"><summary><span>09:00–10:00</span>The catalog item function conditions are inspected. The condition area filters catalog items…</summary><p>The catalog item function conditions are inspected. The condition area filters catalog items and avoids unsupported item classes such as order guides or other special item types.</p></details>
+<details class="timeline-item"><summary><span>10:00–11:00</span>Catalog item and homepage search related configurations are inspected. The simulator shows c…</summary><p>Catalog item and homepage search related configurations are inspected. The simulator shows catalog item content, optional software checkboxes, and an Order Now button.</p></details>
+<details class="timeline-item"><summary><span>11:00–12:00</span>The Now Mobile navigation bar is reviewed. Navigation tabs include Settings, Support, Home, …</summary><p>The Now Mobile navigation bar is reviewed. Navigation tabs include Settings, Support, Home, and Notifications, each with order and application scope.</p></details>
+<details class="timeline-item"><summary><span>12:00–13:00</span>The demo shows the Home launcher screen. It contains the mobile header, search, welcome cont…</summary><p>The demo shows the Home launcher screen. It contains the mobile header, search, welcome content, Quick links, and My items. The right preview shows how launcher screen sections map to mobile UI.</p></details>
+<details class="timeline-item"><summary><span>13:00–14:00</span>A launcher screen slide explains the three visible layers: header, global search, and UI sec…</summary><p>A launcher screen slide explains the three visible layers: header, global search, and UI sections.</p></details>
+<details class="timeline-item"><summary><span>14:00–15:00</span>The slide compares a screen and a screen segment. A screen is the full list or record view; …</summary><p>The slide compares a screen and a screen segment. A screen is the full list or record view; a screen segment is a region inside a detail screen, such as Details or Updates.</p></details>
+<details class="timeline-item"><summary><span>15:00–16:00</span>The Support launcher screen is explored. The builder shows sections and function instances u…</summary><p>The Support launcher screen is explored. The builder shows sections and function instances under the Support tab. The simulator shows a mobile catalog item and support navigation.</p></details>
+<details class="timeline-item"><summary><span>16:00–17:00</span>The My Tasks list screen is selected. The builder tree expands My To-dos, Approval To-do ite…</summary><p>The My Tasks list screen is selected. The builder tree expands My To-dos, Approval To-do item stream, Approval To-dos data item, REQ Approval Main Item, RITM Approval Main Item, and their card views and record screens.</p></details>
+<details class="timeline-item"><summary><span>17:00–18:00</span>The REQ Approval Main Item list item config is opened. It defines how request approval recor…</summary><p>The REQ Approval Main Item list item config is opened. It defines how request approval records appear in the list. The table is Approval [sysapproval_approver], with list item order and conditions.</p></details>
+<details class="timeline-item"><summary><span>18:00–19:00</span>The list item configuration continues. Data, screen fields, field function instances, and ca…</summary><p>The list item configuration continues. Data, screen fields, field function instances, and card settings are visible. The simulator shows approval rows with requested-for information and prices.</p></details>
+<details class="timeline-item"><summary><span>19:00–20:00</span>Screen vs screen segment is revisited in the slide deck, reinforcing that list screens show …</summary><p>Screen vs screen segment is revisited in the slide deck, reinforcing that list screens show rows while record screens contain multiple segments.</p></details>
+<details class="timeline-item"><summary><span>20:00–21:00</span>The Approval To-do item stream is shown in Mobile App Builder. It uses the Approval table an…</summary><p>The Approval To-do item stream is shown in Mobile App Builder. It uses the Approval table and an interleaved due_date field. The simulator shows My Tasks approval rows.</p></details>
+<details class="timeline-item"><summary><span>21:00–22:00</span>REQ Approval Main Item properties are shown again. The configuration controls list order, ta…</summary><p>REQ Approval Main Item properties are shown again. The configuration controls list order, table, and conditions for when this list item config should be used.</p></details>
+<details class="timeline-item"><summary><span>22:00–23:00</span>UI parameters and data settings are inspected for approval configuration. The simulator show…</summary><p>UI parameters and data settings are inspected for approval configuration. The simulator shows approve/reject style controls in the mobile task experience.</p></details>
+<details class="timeline-item"><summary><span>23:00–24:00</span>The RITM Approval Main Item is opened. The demo shows conditions for RITM approval rows and …</summary><p>The RITM Approval Main Item is opened. The demo shows conditions for RITM approval rows and field-related configuration.</p></details>
+<details class="timeline-item"><summary><span>24:00–25:00</span>The presenter navigates into approval details and list item records, demonstrating how a lis…</summary><p>The presenter navigates into approval details and list item records, demonstrating how a list row maps to a record screen.</p></details>
+<details class="timeline-item"><summary><span>25:00–26:00</span>The details screen for an approval requested item is visible in the simulator. Details and U…</summary><p>The details screen for an approval requested item is visible in the simulator. Details and Updates tabs appear, along with fields such as Approval for, Adobe Acrobat, Adobe Photoshop, and attachments.</p></details>
+<details class="timeline-item"><summary><span>26:00–27:00</span>The Details screen configuration is shown. Screen fields are listed, field function instance…</summary><p>The Details screen configuration is shown. Screen fields are listed, field function instances exist, and footer function instances are used for actions.</p></details>
+<details class="timeline-item"><summary><span>27:00–28:00</span>The list config slide appears. It explains three layers: item stream, data item, and list it…</summary><p>The list config slide appears. It explains three layers: item stream, data item, and list item config.</p></details>
+<details class="timeline-item"><summary><span>28:00–29:00</span>The functions slide appears. Functions are categorized as actions, navigation, and smart but…</summary><p>The functions slide appears. Functions are categorized as actions, navigation, and smart buttons. The slide highlights an Add Comment button on a record screen.</p></details>
+<details class="timeline-item"><summary><span>29:00–30:00</span>The RITM record screen My Request is shown. Settings include fetch type Prefetch and view us…</summary><p>The RITM record screen My Request is shown. Settings include fetch type Prefetch and view using Card. The simulator shows a request stage timeline and fields.</p></details>
+<details class="timeline-item"><summary><span>30:00–31:00</span>Function deployment areas are inspected. Functions may appear as footer functions, leading a…</summary><p>Function deployment areas are inspected. Functions may appear as footer functions, leading actions, or more-menu actions depending on configuration.</p></details>
+<details class="timeline-item"><summary><span>31:00–32:00</span>A function named Approve RITM with comment is selected. It is an action item in record conte…</summary><p>A function named Approve RITM with comment is selected. It is an action item in record context and contributes to footer action behavior.</p></details>
+<details class="timeline-item"><summary><span>32:00–33:00</span>The approval record screen continues to show footer buttons: Reject, Approve &amp; Comment, and …</summary><p>The approval record screen continues to show footer buttons: Reject, Approve &amp; Comment, and Approve. These actions are backed by function instances.</p></details>
+<details class="timeline-item"><summary><span>33:00–34:00</span>Input item and screen-field configuration are reviewed. The tree shows function instances an…</summary><p>Input item and screen-field configuration are reviewed. The tree shows function instances and screen field records under RITM approval configuration.</p></details>
+<details class="timeline-item"><summary><span>34:00–35:00</span>The demo moves into Mobile Card Builder. A Catalog Approval Template is opened, showing cont…</summary><p>The demo moves into Mobile Card Builder. A Catalog Approval Template is opened, showing containers and elements such as approval text, number, price, and requested-for fields.</p></details>
+<details class="timeline-item"><summary><span>35:00–36:00</span>The ServiceNow platform form shows search M2M item configurations under a homepage search co…</summary><p>The ServiceNow platform form shows search M2M item configurations under a homepage search configuration. The list includes People Genius Result Main Item, Catalog Item Genius Result Main Item, Knowledge Article Search Main Item, and related configurations.</p></details>
+<details class="timeline-item"><summary><span>36:00–37:00</span>The demo searches for Mobile UI Rules. These rules can influence card or item behavior depen…</summary><p>The demo searches for Mobile UI Rules. These rules can influence card or item behavior depending on conditions.</p></details>
+<details class="timeline-item"><summary><span>37:00–38:00</span>An approval card view is opened. The builder explains that a card displays information from …</summary><p>An approval card view is opened. The builder explains that a card displays information from different records and can be customized in Mobile Card Builder.</p></details>
+<details class="timeline-item"><summary><span>38:00–39:00</span>The card view continues. The table is Approval [sysapproval_approver], and the card template…</summary><p>The card view continues. The table is Approval [sysapproval_approver], and the card template is referenced. The right preview shows how the card will look in the mobile list.</p></details>
+<details class="timeline-item"><summary><span>39:00–40:00</span>Support search and homepage sections are revisited. The simulator shows Support with Recomme…</summary><p>Support search and homepage sections are revisited. The simulator shows Support with Recommended for you, Popular topics, and Browse all topics.</p></details>
+<details class="timeline-item"><summary><span>40:00–41:00</span>The People search configuration is opened. It uses the NowMobile app search configuration an…</summary><p>The People search configuration is opened. It uses the NowMobile app search configuration and has default and filtered empty-state records.</p></details>
+<details class="timeline-item"><summary><span>41:00–42:00</span>The Recommended for you section is configured. Source settings and item count/order style ar…</summary><p>The Recommended for you section is configured. Source settings and item count/order style are reviewed.</p></details>
+<details class="timeline-item"><summary><span>42:00–43:00</span>The Popular topics record section is opened. It shows destination screen, orientation, scrol…</summary><p>The Popular topics record section is opened. It shows destination screen, orientation, scrolling type, max item display count, active state, and hide-section-if-empty behavior.</p></details>
+<details class="timeline-item"><summary><span>43:00–44:00</span>Source settings and record-section details continue. The simulator shows horizontal cards un…</summary><p>Source settings and record-section details continue. The simulator shows horizontal cards under Popular topics and a Browse all topics section.</p></details>
+<details class="timeline-item"><summary><span>44:00–45:00</span>A details or card configuration under Support is inspected. The screen highlights the connec…</summary><p>A details or card configuration under Support is inspected. The screen highlights the connection between sections, cards, and destination screens.</p></details>
+<details class="timeline-item"><summary><span>45:00–46:00</span>Browse all topics is opened. The list screen uses a topic data source and a Topic list item …</summary><p>Browse all topics is opened. The list screen uses a topic data source and a Topic list item config with a Topic card.</p></details>
+<details class="timeline-item"><summary><span>46:00–47:00</span>The open-topic-page function is selected. Its link URL points to a mobile portal page/templa…</summary><p>The open-topic-page function is selected. Its link URL points to a mobile portal page/template route and is used when a topic card is tapped.</p></details>
+<details class="timeline-item"><summary><span>47:00–48:00</span>The simulator shows a New Hire topic page. The mobile page includes a New Hire image, servic…</summary><p>The simulator shows a New Hire topic page. The mobile page includes a New Hire image, service overview, required fields, and a Next button.</p></details>
+<details class="timeline-item"><summary><span>48:00–49:00</span>The topic page and open-topic function settings continue. Conditions and button attributes a…</summary><p>The topic page and open-topic function settings continue. Conditions and button attributes are visible in the builder.</p></details>
+<details class="timeline-item"><summary><span>49:00–50:00</span>The demo tests the Computers topic and catalog item path. The simulator opens an Apple MacBo…</summary><p>The demo tests the Computers topic and catalog item path. The simulator opens an Apple MacBook Pro catalog item page.</p></details>
+<details class="timeline-item"><summary><span>50:00–51:00</span>The Service Portal widget editor is opened for SC Catalog Item. The HTML template is visible…</summary><p>The Service Portal widget editor is opened for SC Catalog Item. The HTML template is visible with native-mobile-aware logic.</p></details>
+<details class="timeline-item"><summary><span>51:00–52:00</span>The HTML template includes mobile-specific rendering around attachments and order button beh…</summary><p>The HTML template includes mobile-specific rendering around attachments and order button behavior. The simulator shows the catalog item with Quantity, Add attachments, and Order Now.</p></details>
+<details class="timeline-item"><summary><span>52:00–53:00</span>The Client Script section of the SC Catalog Item widget is opened. The code includes request…</summary><p>The Client Script section of the SC Catalog Item widget is opened. The code includes request/submit logic, labels, breadcrumbs, and behavior tied to catalog item state.</p></details>
+<details class="timeline-item"><summary><span>53:00–54:00</span>The client script continues. The simulator remains on the Apple MacBook Pro catalog item whi…</summary><p>The client script continues. The simulator remains on the Apple MacBook Pro catalog item while code is reviewed.</p></details>
+<details class="timeline-item"><summary><span>54:00–55:00</span>The demo returns to list views and catalog item records. Catalog item records and mobile ite…</summary><p>The demo returns to list views and catalog item records. Catalog item records and mobile item configuration records are inspected.</p></details>
+<details class="timeline-item"><summary><span>55:00–56:00</span>The simulator returns to the Now Mobile home page. The platform list shows related mobile co…</summary><p>The simulator returns to the Now Mobile home page. The platform list shows related mobile configuration rows.</p></details>
+<details class="timeline-item"><summary><span>56:00–57:00</span>More catalog item rows and configuration records are reviewed. The focus remains on validati…</summary><p>More catalog item rows and configuration records are reviewed. The focus remains on validating mobile catalog behavior through data and builder configuration.</p></details>
+<details class="timeline-item"><summary><span>57:00–58:00</span>The simulator shows search or list results while the platform displays configuration details…</summary><p>The simulator shows search or list results while the platform displays configuration details.</p></details>
+<details class="timeline-item"><summary><span>58:00–59:00</span>The demo continues checking catalog item and route behavior, confirming that mobile pages ar…</summary><p>The demo continues checking catalog item and route behavior, confirming that mobile pages are tied to the right portal/widget/configuration records.</p></details>
+<details class="timeline-item"><summary><span>59:00–60:00</span>The mobile app returns to Support and topic/catalog pages. The platform side shows mobile it…</summary><p>The mobile app returns to Support and topic/catalog pages. The platform side shows mobile item and function configuration records.</p></details>
+<details class="timeline-item"><summary><span>60:00–61:00</span>Additional table/list views are inspected to verify the correct configuration records and re…</summary><p>Additional table/list views are inspected to verify the correct configuration records and relationships.</p></details>
+<details class="timeline-item"><summary><span>61:00–62:00</span>The recording shows a final platform form with mobile route/widget-related fields while the …</summary><p>The recording shows a final platform form with mobile route/widget-related fields while the simulator shows a catalog item/search path.</p></details>
+<details class="timeline-item"><summary><span>62:00–63:00</span>Final validation continues. The mobile simulator and configuration forms confirm the end-to-…</summary><p>Final validation continues. The mobile simulator and configuration forms confirm the end-to-end flow from Support sections to topics to catalog items.</p></details>
+<details class="timeline-item"><summary><span>63:00–63:21</span>The slide deck returns to a Questions slide, ending the demo.</summary><p>The slide deck returns to a Questions slide, ending the demo.</p></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Built from the uploaded demo recording: <kbd>8. Service Catalog - Mobile-20221205_123714(1).mp4</kbd>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,216 @@
+Service Catalog - Mobile — Complete visual transcript
+
+Source video: 8. Service Catalog - Mobile-20221205_123714(1).mp4
+
+This is a complete time-coded visual/learning transcript derived from visible screen content, not verbatim speech-to-text audio.
+
+TIME-CODED TRANSCRIPT
+
+00:00–01:00
+The recording starts and moves into a slide deck titled Catalog Mobile. The topic is the ServiceNow mobile catalog experience.
+
+01:00–02:00
+Slide: Mobile core components. The demo lists the main building blocks: mobile app config, navigation bar, navigation bar tabs, launcher screens, screens, screen segments, item streams, data items, item configurations, and functions.
+
+02:00–03:00
+The presenter opens Mobile App Builder for Now Mobile. The builder tree shows Now Mobile, Now Mobile Nav, Settings tab, Support tab, Open Cart function instance, homepage search config, People genius result sections, and catalog item result configuration. The iPhone simulator shows the runtime Home experience.
+
+03:00–04:00
+The root Now Mobile app config is reviewed. The right panel shows a mobile interface example explaining how the app configuration appears on a device. Properties, navigation, and client theme areas are visible.
+
+04:00–05:00
+The Notifications tab is selected. The form shows label, active state, and icon settings. The simulator continues to show the Home tab with Quick links and My items.
+
+05:00–06:00
+A support/settings area is explored. Settings, data, conditions, and view-using sections appear in the builder. The UI emphasizes that each selected tree node has its own configuration form.
+
+06:00–07:00
+The demo scrolls through the mobile app tree and opens related configuration panes. Multiple child records are visible under homepage search, default empty state, and card templates.
+
+07:00–08:00
+Search Applications Configuration is opened for NowMobile App Search Configurations. The form shows search engine Zing, result limit, suggestion limit, and application search sources including Services, Articles, and People.
+
+08:00–09:00
+A catalog item detail is visible in the simulator: Standard Laptop / Lenovo Carbon x1. The function record Catalog Item > Open Catalog Item is opened. It uses a URL-style function with a relative URL to open the catalog item page.
+
+09:00–10:00
+The catalog item function conditions are inspected. The condition area filters catalog items and avoids unsupported item classes such as order guides or other special item types.
+
+10:00–11:00
+Catalog item and homepage search related configurations are inspected. The simulator shows catalog item content, optional software checkboxes, and an Order Now button.
+
+11:00–12:00
+The Now Mobile navigation bar is reviewed. Navigation tabs include Settings, Support, Home, and Notifications, each with order and application scope.
+
+12:00–13:00
+The demo shows the Home launcher screen. It contains the mobile header, search, welcome content, Quick links, and My items. The right preview shows how launcher screen sections map to mobile UI.
+
+13:00–14:00
+A launcher screen slide explains the three visible layers: header, global search, and UI sections.
+
+14:00–15:00
+The slide compares a screen and a screen segment. A screen is the full list or record view; a screen segment is a region inside a detail screen, such as Details or Updates.
+
+15:00–16:00
+The Support launcher screen is explored. The builder shows sections and function instances under the Support tab. The simulator shows a mobile catalog item and support navigation.
+
+16:00–17:00
+The My Tasks list screen is selected. The builder tree expands My To-dos, Approval To-do item stream, Approval To-dos data item, REQ Approval Main Item, RITM Approval Main Item, and their card views and record screens.
+
+17:00–18:00
+The REQ Approval Main Item list item config is opened. It defines how request approval records appear in the list. The table is Approval [sysapproval_approver], with list item order and conditions.
+
+18:00–19:00
+The list item configuration continues. Data, screen fields, field function instances, and card settings are visible. The simulator shows approval rows with requested-for information and prices.
+
+19:00–20:00
+Screen vs screen segment is revisited in the slide deck, reinforcing that list screens show rows while record screens contain multiple segments.
+
+20:00–21:00
+The Approval To-do item stream is shown in Mobile App Builder. It uses the Approval table and an interleaved due_date field. The simulator shows My Tasks approval rows.
+
+21:00–22:00
+REQ Approval Main Item properties are shown again. The configuration controls list order, table, and conditions for when this list item config should be used.
+
+22:00–23:00
+UI parameters and data settings are inspected for approval configuration. The simulator shows approve/reject style controls in the mobile task experience.
+
+23:00–24:00
+The RITM Approval Main Item is opened. The demo shows conditions for RITM approval rows and field-related configuration.
+
+24:00–25:00
+The presenter navigates into approval details and list item records, demonstrating how a list row maps to a record screen.
+
+25:00–26:00
+The details screen for an approval requested item is visible in the simulator. Details and Updates tabs appear, along with fields such as Approval for, Adobe Acrobat, Adobe Photoshop, and attachments.
+
+26:00–27:00
+The Details screen configuration is shown. Screen fields are listed, field function instances exist, and footer function instances are used for actions.
+
+27:00–28:00
+The list config slide appears. It explains three layers: item stream, data item, and list item config.
+
+28:00–29:00
+The functions slide appears. Functions are categorized as actions, navigation, and smart buttons. The slide highlights an Add Comment button on a record screen.
+
+29:00–30:00
+The RITM record screen My Request is shown. Settings include fetch type Prefetch and view using Card. The simulator shows a request stage timeline and fields.
+
+30:00–31:00
+Function deployment areas are inspected. Functions may appear as footer functions, leading actions, or more-menu actions depending on configuration.
+
+31:00–32:00
+A function named Approve RITM with comment is selected. It is an action item in record context and contributes to footer action behavior.
+
+32:00–33:00
+The approval record screen continues to show footer buttons: Reject, Approve & Comment, and Approve. These actions are backed by function instances.
+
+33:00–34:00
+Input item and screen-field configuration are reviewed. The tree shows function instances and screen field records under RITM approval configuration.
+
+34:00–35:00
+The demo moves into Mobile Card Builder. A Catalog Approval Template is opened, showing containers and elements such as approval text, number, price, and requested-for fields.
+
+35:00–36:00
+The ServiceNow platform form shows search M2M item configurations under a homepage search configuration. The list includes People Genius Result Main Item, Catalog Item Genius Result Main Item, Knowledge Article Search Main Item, and related configurations.
+
+36:00–37:00
+The demo searches for Mobile UI Rules. These rules can influence card or item behavior depending on conditions.
+
+37:00–38:00
+An approval card view is opened. The builder explains that a card displays information from different records and can be customized in Mobile Card Builder.
+
+38:00–39:00
+The card view continues. The table is Approval [sysapproval_approver], and the card template is referenced. The right preview shows how the card will look in the mobile list.
+
+39:00–40:00
+Support search and homepage sections are revisited. The simulator shows Support with Recommended for you, Popular topics, and Browse all topics.
+
+40:00–41:00
+The People search configuration is opened. It uses the NowMobile app search configuration and has default and filtered empty-state records.
+
+41:00–42:00
+The Recommended for you section is configured. Source settings and item count/order style are reviewed.
+
+42:00–43:00
+The Popular topics record section is opened. It shows destination screen, orientation, scrolling type, max item display count, active state, and hide-section-if-empty behavior.
+
+43:00–44:00
+Source settings and record-section details continue. The simulator shows horizontal cards under Popular topics and a Browse all topics section.
+
+44:00–45:00
+A details or card configuration under Support is inspected. The screen highlights the connection between sections, cards, and destination screens.
+
+45:00–46:00
+Browse all topics is opened. The list screen uses a topic data source and a Topic list item config with a Topic card.
+
+46:00–47:00
+The open-topic-page function is selected. Its link URL points to a mobile portal page/template route and is used when a topic card is tapped.
+
+47:00–48:00
+The simulator shows a New Hire topic page. The mobile page includes a New Hire image, service overview, required fields, and a Next button.
+
+48:00–49:00
+The topic page and open-topic function settings continue. Conditions and button attributes are visible in the builder.
+
+49:00–50:00
+The demo tests the Computers topic and catalog item path. The simulator opens an Apple MacBook Pro catalog item page.
+
+50:00–51:00
+The Service Portal widget editor is opened for SC Catalog Item. The HTML template is visible with native-mobile-aware logic.
+
+51:00–52:00
+The HTML template includes mobile-specific rendering around attachments and order button behavior. The simulator shows the catalog item with Quantity, Add attachments, and Order Now.
+
+52:00–53:00
+The Client Script section of the SC Catalog Item widget is opened. The code includes request/submit logic, labels, breadcrumbs, and behavior tied to catalog item state.
+
+53:00–54:00
+The client script continues. The simulator remains on the Apple MacBook Pro catalog item while code is reviewed.
+
+54:00–55:00
+The demo returns to list views and catalog item records. Catalog item records and mobile item configuration records are inspected.
+
+55:00–56:00
+The simulator returns to the Now Mobile home page. The platform list shows related mobile configuration rows.
+
+56:00–57:00
+More catalog item rows and configuration records are reviewed. The focus remains on validating mobile catalog behavior through data and builder configuration.
+
+57:00–58:00
+The simulator shows search or list results while the platform displays configuration details.
+
+58:00–59:00
+The demo continues checking catalog item and route behavior, confirming that mobile pages are tied to the right portal/widget/configuration records.
+
+59:00–60:00
+The mobile app returns to Support and topic/catalog pages. The platform side shows mobile item and function configuration records.
+
+60:00–61:00
+Additional table/list views are inspected to verify the correct configuration records and relationships.
+
+61:00–62:00
+The recording shows a final platform form with mobile route/widget-related fields while the simulator shows a catalog item/search path.
+
+62:00–63:00
+Final validation continues. The mobile simulator and configuration forms confirm the end-to-end flow from Support sections to topics to catalog items.
+
+63:00–63:21
+The slide deck returns to a Questions slide, ending the demo.
+
+KEY ARTIFACTS
+
+Mobile app config: Root configuration for Now Mobile. It groups navigation, theme, app behavior, and child configuration records.
+Navigation bar: Container for bottom tabs. In the demo, the Now Mobile Nav contains Home, Support, Notifications, and Settings.
+Navigation tab: A tab shown at the bottom of the mobile app. It usually points to a launcher screen or special tab function.
+Launcher screen: Landing screen with header, search, and UI sections. Example: Home and Support.
+Record section: A section on a launcher screen showing cards or results. Example: Recommended for you, Popular topics, Browse all topics.
+Search config: Defines search behavior, source list, empty states, result limit, and suggestion limit.
+List screen: A screen that displays a list of records; usually backed by an item stream.
+Item stream: Defines the record stream/table and possibly interleaving/order behavior.
+Data item: The data source for a stream or screen.
+List item config: Defines how each row is rendered and when the configuration applies.
+Card / card template: Visual template for rows/cards, edited in Mobile Card Builder.
+Record screen: A detail page for one record such as a RITM, request, topic, or approval.
+Screen segment: A subsection inside a screen, such as Details, Updates, Activity, or field areas.
+Function: An action or navigation behavior. Examples: open catalog item, open topic page, jump to RITM, approve, reject, approve with comment.
